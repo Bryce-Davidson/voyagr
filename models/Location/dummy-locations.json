@@ -14,7 +14,9 @@
         "view_count": 33,
         "tags": ["books", "store", "cheap"],
         "comments": [{ "body": "So nice, love it here"}]
-        }
+        },
+        "likes": 92,
+        "numberOfComments": 1
     },
     {
         "name": "James's Cafe",
@@ -31,7 +33,9 @@
             "view_count": 22,
             "tags": ["coffee", "store", "cheap"],
             "comments": [{"body": "Alway's a good atmospshere"}]
-            }
+            },
+        "likes": 22,
+        "numberOfComments": 1
     },
     {
         "name": "Ogeden Point",
@@ -48,7 +52,9 @@
             "view_count": 110,
             "tags": ["lookout", "water", "view", "sunset"],
             "comments": [{"body": "better when there are no cruise ships"}]
-            }
+            },
+        "likes": 200,
+        "numberOfComments": 1
     },
     {
         "name": "James Park",
@@ -65,7 +71,9 @@
             "view_count": 200,
             "tags": ["park", "grass", "sitting", "sunset"],
             "comments": [{"body": "great place to see the sunsets"}]
-            }
+            },
+        "likes": 1,
+        "numberOfComments": 1
     },
     {
         "name": "Dallas Beach",
@@ -82,7 +90,9 @@
             "view_count": 500,
             "tags": ["beach", "sand", "sitting", "sunset"],
             "comments": [{"body": "great place to see the sunset"}]
-            }
+            },
+        "likes": 82,
+        "numberOfComments": 1
     },
     {
         "name": "Kinto Beach",
@@ -99,7 +109,9 @@
             "view_count": 350,
             "tags": ["sand", "surfing", "sunshine", "sunset"],
             "comments": [{"body": "great place to see the sunsets"}]
-            }
+            },
+        "likes": 32,
+        "numberOfComments": 1
     }
     
 ]

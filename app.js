@@ -55,6 +55,8 @@ app.use('/test', require('./tests/routes/tester-routes'))
 
 // ROUTES ---------------------------------------------------------------------
 app.use('/', require('./routes/Auth/auth-route'));
+app.use('/trips', require('./routes/Models/Trips/Trip-Routes'));
+app.use('/days', require('./routes/Models/Days/Day-Routes'));
 app.use('/locations', require('./routes/Models/Locations/Location-Routes'));
 
 

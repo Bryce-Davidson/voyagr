@@ -1,19 +1,22 @@
 const mongoose = require('mongoose');
 const bcrypt   = require('bcrypt-nodejs');
+const Locations = require('../Location/LocationSchema').Schema;
 
 var userSchema = mongoose.Schema({
     local: {
       email: {
         type: String,
-        lowercase: true
+        lowercase: true,
+        required: true
       },
-      password: String,
+      password: {type: String, required: true},
       username: String
     },
     socialMediaHandles: {
       type: Map,
       of: String
-    }
+    },
+    locations: [{type: mongoose.Schema.Types.ObjectId, ref: 'Location'}]
   });
 
 userSchema.pre('save', function save(next) {

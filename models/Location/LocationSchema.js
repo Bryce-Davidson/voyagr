@@ -1,10 +1,13 @@
-var mongoose        = require("mongoose");
-var { pointSchema } = require('../Schema-Types/GeoSchemas')
-
+var mongoose              = require('mongoose');
+var commentSchemaNested   = require('../Comment/CommentSchema').Schema;
+var { pointSchema }       = require('../Geoschema-Types/GeoSchemas');
+  
 
 const LocationSchema = new mongoose.Schema({
   name: String,
-  user: String,
+  user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  trips: [{type: mongoose.Schema.Types.ObjectId, ref: 'Trip'}],
+  days: [{type: mongoose.Schema.Types.ObjectId, ref: 'Day'}],
   blurb: String,
   location: {
     type: pointSchema,
@@ -14,18 +17,14 @@ const LocationSchema = new mongoose.Schema({
     private: Boolean
   },
   meta: {
-    created_at: { type : Date, default: Date.now },
+    created: { type : Date, default: Date.now },
     view_count: {type: Number, default: 0},
     tags: [String],
-    comments: [{
-          body: { type: String, maxLength: [240, "post body is too long"]}, 
-          date: {type: Date, default: Date.now},
-          likes: {type: Number, default: 0}
-    }],
     likes: {type: Number, default: 0},
     numberOfComments: {type: Number, default: 0}
     },
-    typeof: String
+    comments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
+    typeoflocation: String
 });
 
 // QUERIES
