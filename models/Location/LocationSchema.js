@@ -1,9 +1,11 @@
 var mongoose              = require('mongoose');
-var commentSchemaNested   = require('../Comment/CommentSchema').Schema;
 var { pointSchema }       = require('../Geoschema-Types/GeoSchemas');
-  
+var slug = require('mongoose-slug-generator');
+
+mongoose.plugin(slug);
 
 const LocationSchema = new mongoose.Schema({
+  slug: {type: String, slug: "name", unique: true},  
   name: String,
   user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   trips: [{type: mongoose.Schema.Types.ObjectId, ref: 'Trip'}],
@@ -21,13 +23,18 @@ const LocationSchema = new mongoose.Schema({
     view_count: {type: Number, default: 0},
     tags: [String],
     likes: {type: Number, default: 0},
-    numberOfComments: {type: Number, default: 0}
+    numberOfComments: {type: Number, default: 0},
+    numberOfShares: {type: Number, default: 0}
     },
     comments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
     typeoflocation: String
 });
 
-// QUERIES
+// INDEXES ---------------------------------------------------
+
+LocationSchema.index({name: 'text'});
+
+// QUERIES ---------------------------------------------------
 
 LocationSchema.query.nearPoint = function(coordinates, maxDistance) {
  return this.where('location')

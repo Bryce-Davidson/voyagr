@@ -1,5 +1,6 @@
 const Trip = require('../../../models/Trip/TripSchema');
 const Comment = require('../../../models/Comment/CommentSchema');
+const User = require('../../../models/User/UserSchema');
 const Day = require('../../../models/Day/DaySchema');
 
 // - /featured?pagenation=NUMBER
@@ -24,34 +25,24 @@ const viewDay = (req, res, next) => {
 
 // POST -------------------------------------------------------------------------
 
-// - /:id/addcomment
-const addComment = (req, res, next) => {
-    Comment.create({
-        "postid": req.params.id,
-        "user": req.session.passport.user,
-        "body": req.body.body
-      })
-      .then(comment => {
-        return Day.findByIdAndUpdate(req.params.id, {
-          $inc: {'meta.numberOfComments': 1},
-          $push: {comments: comment._id}
-        }, {new: true})
-        .then(tripWithComment => res.send(tripWithComment))
-      }).catch(next)
-};
-
 // - /newday
 const newDay = (req, res, next) => {
+    let userid = req.session.passport.user;
     const { name, description } = req.body;
     Day.create({
-        user: req.session.passport.user,
+        user: userid,
         name, description
     })
-    .then(data => res.send(data))
+    .then(day => {
+        return User.findByIdAndUpdate(userid, {
+            $push: {'posts.days': day._id}
+        })
+        .then(user => res.send(day))
+    })
     .catch(next)
 };
 
-// /:id/location/:locationid
+// /:id/addlocation/:locationid
 const addLocationToDay = (req, res, next) => {
     Day.findByIdAndUpdate(req.params.id, {$push: {days: req.params.locationid}}, {new: true})
     .then(data => res.send(data))
@@ -62,6 +53,5 @@ module.exports = {
     newDay,
     viewDay,
     featuredDays,
-    addLocationToDay,
-    addComment
+    addLocationToDay
 };

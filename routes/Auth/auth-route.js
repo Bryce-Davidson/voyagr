@@ -1,7 +1,7 @@
 const passport                = require('../../config/passport');
 var express                   = require('express');
 var router                    = express.Router();
-const {loggedInRedirect}      = require('../../util/auth-util');
+const {loggedInRedirect}      = require('../../util/middleware/auth-util');
 const {
   signup,
   login

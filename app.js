@@ -59,7 +59,16 @@ app.use('/trips', require('./routes/Models/Trips/Trip-Routes'));
 app.use('/days', require('./routes/Models/Days/Day-Routes'));
 app.use('/locations', require('./routes/Models/Locations/Location-Routes'));
 
+// SEED ---------------------------------------------------------------------- 
 
+app.get('/seed/:model/:ndocs', (req, res, next) => {
+  const model = req.params.model;
+  const num = parseInt(req.params.ndocs);
+  if(model == 'trip') {
+    require('./util/database/Trip-Seeder')(num)
+    res.send('seeded trips')
+  }
+})
 
 // INDEX ----------------------------------------------------------------------
 app.get('/', (req, res, next) => {

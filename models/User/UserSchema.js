@@ -7,7 +7,8 @@ var userSchema = mongoose.Schema({
       email: {
         type: String,
         lowercase: true,
-        required: true
+        required: true,
+        unique: true
       },
       password: {type: String, required: true},
       username: String
@@ -16,8 +17,13 @@ var userSchema = mongoose.Schema({
       type: Map,
       of: String
     },
-    locations: [{type: mongoose.Schema.Types.ObjectId, ref: 'Location'}]
-  });
+    stories: [{type: mongoose.Schema.Types.ObjectId, ref: 'Story'}],
+    posts: {
+      trips: [{type: mongoose.Schema.Types.ObjectId, ref: 'Trips'}],
+      days: [{type: mongoose.Schema.Types.ObjectId, ref: 'Days'}],
+      locations: [{type: mongoose.Schema.Types.ObjectId, ref: 'Locations'}]
+    }
+});
 
 userSchema.pre('save', function save(next) {
   const user = this;

@@ -1,5 +1,6 @@
 const Location = require('../../../models/Location/LocationSchema');
 const Comment = require('../../../models/Comment/CommentSchema');
+const User = require('../../../models/User/UserSchema');
 
 // SEARCH -----------------------------------------------------------------------
 
@@ -33,36 +34,25 @@ const viewLocation = (req, res, next) => {
 
 // POST -------------------------------------------------------------------------
 
-// locations/:id/addcomment
-const addComment = (req, res, next) => {
-  // console.log(req.params.id)
-  Comment.create({
-    "postid": req.params.id,
-    "user": req.session.passport.user,
-    "body": req.body.body
-  })
-  .then(comment => {
-    return Location.findByIdAndUpdate(req.params.id, {
-      $inc: {'meta.numberOfComments': 1},
-      $push: {comments: comment._id}
-    }, {new: true})
-    .then(data => res.send(data))
-  }).catch(next)
-}
-
 const newLocation = (req, res, next) => {
   const {coordinates, name } = req.body
+  let userid = req.session.passport.user;
   // SWITCH from [lat, long] to [long, lat] for mongo
   coordinates.reverse();
   Location.create({
     "name": name,
-    "user": req.session.passport.user,
+    "user": userid,
     "location": {
       "type": "Point",
       "coordinates": coordinates
     },
   })
-  .then(location => res.send(location))
+  .then(location => {
+      return User.findByIdAndUpdate(userid, {
+        $push: {'posts.locations': location._id}
+    })
+    .then(user => res.send(location))
+  })
   .catch(next)
 }
 
@@ -70,6 +60,5 @@ module.exports = {
   findNear, 
   newLocation, 
   featuredLocations, 
-  addComment,
   viewLocation
 }

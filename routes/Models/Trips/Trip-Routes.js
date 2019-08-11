@@ -1,36 +1,52 @@
 const express = require('express');
 const router = express.Router();
-const { isLoggedIn } = require('../../../util/auth-util');
+const { isLoggedIn } = require('../../../util/middleware/auth-util');
+const { 
+    addCommentUtil,
+    LikePostUtil,
+    deletePostUtil
+ } = require('../../../util/middleware/post-actions-util');
 const {
     newTrip,
     addDayToTrip,
     viewTrip,
-    addComment,
     featuredTrips
 } = require('../../../controllers/Models/Trip/Trip-Controller');
 
 // MODEL
 const Trip = require('../../../models/Trip/TripSchema');
 
-// GET 
+// GET ----------------------------------------------------------------------
 
 router.route('/featured')
-    .get(featuredTrips)
+    .get(featuredTrips);
 
 router.route('/:id')
-    .get(viewTrip)
+    .get(viewTrip);
 
-// POST 
+// POST ---------------------------------------------------------------------
+
+// NEW TRIP
 router.route('/newtrip')
     .get(isLoggedIn)
-    .post(isLoggedIn, newTrip)
+    .post(isLoggedIn, newTrip);
 
+// ADD DAY
 router.route('/:id/addday/:dayid')
-    .post(isLoggedIn, addDayToTrip)
+    .post(isLoggedIn, addDayToTrip);
 
+// ADD COMMENT
 router.route('/:id/addcomment')
-    .post(isLoggedIn, addComment)
+    .post(isLoggedIn, addCommentUtil(Trip));
+
+// LIKE POST
+router.route('/:id/like')
+    .post(isLoggedIn, LikePostUtil(Trip));
 
 
+// DELETE -----------------------------------------------
+
+router.route('/:id/delete')
+    .delete(isLoggedIn, deletePostUtil(Trip))
 
 module.exports = router;

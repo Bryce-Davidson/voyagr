@@ -1,6 +1,7 @@
 const Trip = require('../../../models/Trip/TripSchema');
 const Comment = require('../../../models/Comment/CommentSchema');
 const Day = require('../../../models/Day/DaySchema');
+const User = require('../../../models/User/UserSchema');
 // SEARCH -----------------------------------------------------------------------
 
 // - /featured
@@ -16,7 +17,7 @@ const featuredTrips = (req, res, next) => {
 // - /:id
 const viewTrip = (req, res, next) => {
     Trip.findByIdAndUpdate(req.params.id, {'$inc': {'meta.view_count': 1}}, {new: true})
-    .populate('comments')
+    .populate('comments', '-postid')
     .populate('days')
     .then(data => {
         res.send((data));
@@ -26,32 +27,22 @@ const viewTrip = (req, res, next) => {
 
 // POST -------------------------------------------------------------------------
 
-// - /:id/addcomment
-const addComment = (req, res, next) => {
-    Comment.create({
-        "postid": req.params.id,
-        "user": req.session.passport.user,
-        "body": req.body.body
-      })
-      .then(comment => {
-        return Trip.findByIdAndUpdate(req.params.id, {
-          $inc: {'meta.numberOfComments': 1},
-          $push: {comments: comment._id}
-        }, {new: true})
-        .then(tripWithComment => res.send(tripWithComment))
-      }).catch(next)
-};
-
 // - /newtrip
 const newTrip = (req, res, next) => {
     const {name, description, tags, private} = req.body;
+    let userid = req.session.passport.user;
     Trip.create({
-        user: req.session.passport.user,
+        user: userid,
         name, description, private,
         settings: {private},
         meta: {tags}
     })
-    .then(data => res.send(data))
+    .then(trip => {
+        return User.findByIdAndUpdate(userid, {
+            $push: {'posts.trips': trip._id}
+        })
+        .then(user => res.send(trip))
+    })
     .catch(next)
 };
 
@@ -66,6 +57,5 @@ module.exports = {
     newTrip,
     addDayToTrip,
     viewTrip,
-    featuredTrips,
-    addComment
+    featuredTrips
 };
