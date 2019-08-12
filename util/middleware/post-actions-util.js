@@ -1,7 +1,19 @@
 const Comment = require('../../models/Comment/CommentSchema');
-const User = require('../../models/User/UserSchema');
 
-// ADD POST TO USER ------------------------------------------------
+// TEXT SEARCH POST NAMES -----------------------------------------
+
+textSearchPostUtil = function(Model) {
+    return function (req, res, next) {
+        let query = req.query.q;
+        Model.find({$text: { $search: query }}, 
+                   { score: { $meta: "textScore" } })
+        .sort( { score: { $meta: "textScore" } } )
+        .then(docs => {
+            res.send(docs)
+        })
+        .catch(next)
+    }
+}
 
 // COMMENT ON POST -------------------------------------------------
 
@@ -52,4 +64,4 @@ deletePostUtil = function(Post) {
 
 // SAVE POST TO STORY ----------------------------------------------
 
-module.exports = { addCommentUtil, LikePostUtil, deletePostUtil };
+module.exports = { addCommentUtil, LikePostUtil, deletePostUtil, textSearchPostUtil };

@@ -3,22 +3,23 @@
 const { getRandom, getRandomInt } = require('../local-functions/randomFunctions');
 
 // Trips -------------------------------------
-const Trip = require('../../models/Trip/TripSchema');
+const Day = require('../../models/Day/DaySchema');
 
-const locationNames = ["Europe", "Mexico", "Spain", "France", "Canada", "USA"]
-const peopleNames   = ["Bryce", "Kate", "Robert", "Gabby", "Teressa", "Lamp"]
-const descriptions  = ["love", "it", "here", "can't", "sunset", "beach", "open", "water", "walking", 'wait', 'when', 'we', 'went', 'never', 'leave']
-const tags          = ['water', 'boats', 'fishing', 'family', 'sunset', 'flowers', 'harbour', 'running', 'relaxing']
+const dayNames      = "Harbour Day-Walking Day-Swimming Day-History Day-Art Day".split('-');
+const cityNames     = "Paris Venice Florence Nice".split(' ');
+const tags          = "Love Walking Harbour Cafe Bagels Coffee Art ".toLocaleLowerCase().split(' ');
+const descriptions  = "a wonderful walk for a couple of people that really wan't to stay in a remote location for love".split(' ')
 
 module.exports = function(ndocs) {
     for (i = 0; i < ndocs; i++) { 
-            Trip.create({
-                name: `${locationNames[getRandomInt(0, 6)]} ${getRandomInt(2019, 2050)} - ${peopleNames[getRandomInt(0, 6)]}`,
+            Day.create({
+                name: `${getRandom(dayNames, 1)} ${getRandom(cityNames, 1)} - ${getRandomInt(2019, 2050)}`,
                 description: getRandom(descriptions, 8).join(' '),
                 settings: {
                     private: Math.random() > 0.8
                 },
                 meta: {
+                    view_count: getRandomInt(0, 3000),
                     tags: getRandom(tags, 5),
                     numberOfComments: getRandomInt(0, 300),
                     likes: getRandomInt(0, 100),

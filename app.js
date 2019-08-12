@@ -19,7 +19,7 @@ var app = express()
 app.use(helmet());
 // app.use(rateLimit({
 //   windowMs: 20 * 60 * 1000, // 20 minutes
-//   max: 100 // 100 requests per 15 minutes
+//   max: 100 // 100 requests per 20 minutes
 // }));
 app.use(morgan('dev'));
 app.use(cookieParser());
@@ -66,7 +66,11 @@ app.get('/seed/:model/:ndocs', (req, res, next) => {
   const num = parseInt(req.params.ndocs);
   if(model == 'trip') {
     require('./util/database/Trip-Seeder')(num)
-    res.send('seeded trips')
+    res.send(`Seeded ${num} Trips`)
+  }
+  else if (model == 'day') {
+    require('./util/database/Day-Seeder')(num)
+    res.send(`Seeded ${num} Days`)
   }
 })
 

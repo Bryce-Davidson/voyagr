@@ -2,20 +2,20 @@ var express                   = require('express');
 var router                    = express.Router();
 const Location                = require('../../models/Location/LocationSchema')
 const User                    = require('../../models/User/UserSchema');
-const Trip                    = require('../../models/User/UserSchema');
+const Trip                    = require('../../models/Trip/TripSchema');
 
 // TEST ROUTES ----------------------------------------------------------------
 
 router.route('/searchtrips')
   .post((req, res, next) => {
     let query = req.query.q;
-
     Trip.find({
       $text: { $search: query }
     }, { score: { $meta: "textScore" } }
     ).sort( { score: { $meta: "textScore" } } )
     .then(q => {
-      console.log(q); res.send(q)
+      console.log(q); 
+      res.send(q)
     })
     .catch(next)
   });

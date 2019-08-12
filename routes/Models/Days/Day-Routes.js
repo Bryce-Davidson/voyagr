@@ -4,14 +4,14 @@ const { isLoggedIn } = require('../../../util//middleware/auth-util');
 const { 
     addCommentUtil,
     LikePostUtil,
-    deletePostUtil
+    deletePostUtil,
+    textSearchPostUtil
  } = require('../../../util/middleware/post-actions-util');
 const {
     newDay,
     viewDay,
     featuredDays,
-    addLocationToDay,
-    addComment
+    addLocationToDay
 } = require('../../../controllers/Models/Days/Day-Controller');
 
 // MODEL
@@ -25,6 +25,9 @@ router.route('/:id')
     .get(viewDay)
 
 // POST 
+
+router.route('/search')
+    .post(textSearchPostUtil(Day));
 
 router.route('/newday')
     .get(isLoggedIn)

@@ -1,11 +1,7 @@
 var mongoose = require('mongoose');
-var slug = require('mongoose-slug-generator');
-
-mongoose.plugin(slug);
 
 const DaySchema = new mongoose.Schema({
-  slug: {type: String, slug: "name", unique: true},
-  name: {type: String, required:true, maxlength: [100, 'Name must be less than 100 characters']},
+  name: {type: String, required: true, maxlength: [100, 'Name must be less than 100 characters']},
   user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   trip: {type: mongoose.Schema.Types.ObjectId, ref: 'Trip'},
   locations: [{type: mongoose.Schema.Types.ObjectId, ref: 'Location'}],
@@ -26,10 +22,17 @@ const DaySchema = new mongoose.Schema({
 
 // INDEXES ---------------------------------------------------
 
-DaySchema.index({name: 'text'});
-
 DaySchema.options.autoIndex = true;
 
+DaySchema.index({
+  name: 'text',
+  description: 'text',
+}, {
+  weights: {
+    name: 5,
+    description: 3,
+  },
+});
 
 var Day = mongoose.model("Day", DaySchema);
 

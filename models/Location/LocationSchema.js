@@ -1,11 +1,7 @@
 var mongoose              = require('mongoose');
 var { pointSchema }       = require('../Geoschema-Types/GeoSchemas');
-var slug = require('mongoose-slug-generator');
-
-mongoose.plugin(slug);
 
 const LocationSchema = new mongoose.Schema({
-  slug: {type: String, slug: "name", unique: true},  
   name: String,
   user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   trips: [{type: mongoose.Schema.Types.ObjectId, ref: 'Trip'}],

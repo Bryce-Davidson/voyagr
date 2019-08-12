@@ -4,7 +4,8 @@ const { isLoggedIn } = require('../../../util/middleware/auth-util');
 const { 
     addCommentUtil,
     LikePostUtil,
-    deletePostUtil
+    deletePostUtil,
+    textSearchPostUtil
  } = require('../../../util/middleware/post-actions-util');
 const {
     newTrip,
@@ -26,6 +27,10 @@ router.route('/:id')
 
 // POST ---------------------------------------------------------------------
 
+// SEARCH TRIPS
+router.route('/search')
+    .post(textSearchPostUtil(Trip))
+
 // NEW TRIP
 router.route('/newtrip')
     .get(isLoggedIn)
@@ -42,7 +47,6 @@ router.route('/:id/addcomment')
 // LIKE POST
 router.route('/:id/like')
     .post(isLoggedIn, LikePostUtil(Trip));
-
 
 // DELETE -----------------------------------------------
 
