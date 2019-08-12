@@ -6,6 +6,16 @@ const Trip                    = require('../../models/Trip/TripSchema');
 
 // TEST ROUTES ----------------------------------------------------------------
 
+router.route('/search')
+  .get((req, res, next) => {
+    let filter = req.body.filter;
+    Trip.find(filter)
+      .then(docs => {
+        res.send(docs)
+      })
+      .catch(next)
+  })
+
 router.route('/searchtrips')
   .post((req, res, next) => {
     let query = req.query.q;

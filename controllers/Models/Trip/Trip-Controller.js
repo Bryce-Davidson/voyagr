@@ -2,22 +2,13 @@ const Trip = require('../../../models/Trip/TripSchema');
 const Comment = require('../../../models/Comment/CommentSchema');
 const Day = require('../../../models/Day/DaySchema');
 const User = require('../../../models/User/UserSchema');
-// SEARCH -----------------------------------------------------------------------
-
-// - /featured
-const featuredTrips = (req, res, next) => {
-    const pagenation = parseInt(req.query.pagenation);
-    Trip.find({}).sort({'meta.view_count': -1, 'meta.numberOfComments': -1, 'meta.likes': -1}).limit(pagenation)
-    .then(data => res.send(data))
-    .catch(next)
-};
 
 // GET --------------------------------------------------------------------------
 
 // - /:id
 const viewTrip = (req, res, next) => {
     Trip.findByIdAndUpdate(req.params.id, {'$inc': {'meta.view_count': 1}}, {new: true})
-    .populate('comments', '-postid')
+    .populate('comments')
     .populate('days')
     .then(data => {
         res.send((data));
@@ -53,9 +44,41 @@ const addDayToTrip = (req, res, next) => {
     .catch(next)
 }
 
+const makeChildrenPrivate = (req, res, next) => {
+    Trip.findById(req.params.id)
+        .populate('days')
+        .then(trip => {
+            trip.days.forEach(day => {
+                day.settings.private = true;
+                day.save(function(err, day) {
+                    if(err)
+                        next(err)
+                })
+            });
+            res.send(trip)
+        })
+        .catch(next)
+}
+
+const makeChildrenPublic = (req, res, next) => {
+    Trip.findById(req.params.id)
+        .populate('days')
+        .then(trip => {
+            trip.days.forEach(day => {
+                day.settings.private = false;
+                day.save(function(err) {
+                    if(err) next(err)
+                })
+            });
+            res.send(trip)
+        })
+        .catch(next)
+}
+
 module.exports = {
     newTrip,
     addDayToTrip,
     viewTrip,
-    featuredTrips
+    makeChildrenPrivate,
+    makeChildrenPublic
 };

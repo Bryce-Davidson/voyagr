@@ -4,36 +4,35 @@ const { isLoggedIn } = require('../../../util/middleware/auth-util')
 const { 
   addCommentUtil,
   LikePostUtil,
-  deletePostUtil
- } = require('../../../util/middleware/post-actions-util');
+  deletePostUtil,
+  getFeaturedPostsUtil 
+} = require('../../../util/middleware/post-actions-util');
+
 const {
   newLocation, 
   findNear, 
-  featuredLocations,
   viewLocation
 } = require('../../../controllers/Models/Locations/Location-Controllers')
 
-// MODEL
 const Location = require('../../../models/Location/LocationSchema')
-
 
 router.route('/findnear')
   .post(findNear)
 
-router.route('/:id')
-  .get(isLoggedIn, viewLocation)
-
-router.route('/featured')
-  .get(featuredLocations)
-
 router.route('/newlocation')
   .post(isLoggedIn, newLocation)
+
+router.route('/featured')
+  .get(getFeaturedPostsUtil(Location))
+
+router.route('/:id/like')
+  .post(isLoggedIn,LikePostUtil(Location))
 
 router.route('/:id/addcomment')
   .post(isLoggedIn, addCommentUtil(Location));
 
-router.route('/:id/like')
-  .post(isLoggedIn,LikePostUtil(Location))
+router.route('/:id')
+  .get(isLoggedIn, viewLocation)
 
 // DELETE ---------------------------------------------------------
 

@@ -2,8 +2,7 @@ var mongoose              = require('mongoose');
 var { pointSchema }       = require('../Geoschema-Types/GeoSchemas');
 
 const LocationSchema = new mongoose.Schema({
-  name: String,
-  user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  name: {type: String, required: true},
   trips: [{type: mongoose.Schema.Types.ObjectId, ref: 'Trip'}],
   days: [{type: mongoose.Schema.Types.ObjectId, ref: 'Day'}],
   blurb: String,
@@ -12,7 +11,7 @@ const LocationSchema = new mongoose.Schema({
     required: true
   },
   settings: {
-    private: Boolean
+    private: {type: Boolean, required: true, default: false}
   },
   meta: {
     created: { type : Date, default: Date.now },
@@ -25,10 +24,6 @@ const LocationSchema = new mongoose.Schema({
     comments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
     typeoflocation: String
 });
-
-// INDEXES ---------------------------------------------------
-
-LocationSchema.index({name: 'text'});
 
 // QUERIES ---------------------------------------------------
 

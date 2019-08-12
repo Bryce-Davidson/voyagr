@@ -1,12 +1,28 @@
 const Comment = require('../../models/Comment/CommentSchema');
 
+// SET ALL CHILDREN PRIVATE OR PUBLIC  ----------------------------
+
+
+// GET FEATURED POSTS ---------------------------------------------
+
+getFeaturedPostsUtil = function(Model) {
+    return function (req, res, next) {
+        const pagenation = parseInt(req.query.pagenation);
+        Model.find({}).sort({'meta.view_count': -1, 'meta.numberOfComments': -1, 'meta.likes': -1}).limit(pagenation)
+            .then(data => res.send(data))
+            .catch(next)
+    }
+}
+
 // TEXT SEARCH POST NAMES -----------------------------------------
 
 textSearchPostUtil = function(Model) {
     return function (req, res, next) {
         let query = req.query.q;
-        Model.find({$text: { $search: query }}, 
-                   { score: { $meta: "textScore" } })
+        let filter = req.body.filter || {};
+        filter.$text = { $search: query }
+
+        Model.find(filter, { score: { $meta: "textScore" } })
         .sort( { score: { $meta: "textScore" } } )
         .then(docs => {
             res.send(docs)
@@ -64,4 +80,10 @@ deletePostUtil = function(Post) {
 
 // SAVE POST TO STORY ----------------------------------------------
 
-module.exports = { addCommentUtil, LikePostUtil, deletePostUtil, textSearchPostUtil };
+module.exports = { 
+    addCommentUtil, 
+    LikePostUtil, 
+    deletePostUtil, 
+    textSearchPostUtil, 
+    getFeaturedPostsUtil 
+};

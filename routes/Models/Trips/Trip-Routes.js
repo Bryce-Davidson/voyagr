@@ -5,40 +5,40 @@ const {
     addCommentUtil,
     LikePostUtil,
     deletePostUtil,
-    textSearchPostUtil
+    textSearchPostUtil,
+    getFeaturedPostsUtil
  } = require('../../../util/middleware/post-actions-util');
 const {
     newTrip,
     addDayToTrip,
     viewTrip,
-    featuredTrips
+    makeChildrenPrivate,
+    makeChildrenPublic
 } = require('../../../controllers/Models/Trip/Trip-Controller');
 
-// MODEL
 const Trip = require('../../../models/Trip/TripSchema');
 
-// GET ----------------------------------------------------------------------
-
 router.route('/featured')
-    .get(featuredTrips);
+    .get(getFeaturedPostsUtil(Trip));
 
-router.route('/:id')
-    .get(viewTrip);
-
-// POST ---------------------------------------------------------------------
-
-// SEARCH TRIPS
-router.route('/search')
-    .post(textSearchPostUtil(Trip))
-
-// NEW TRIP
 router.route('/newtrip')
     .get(isLoggedIn)
     .post(isLoggedIn, newTrip);
 
-// ADD DAY
 router.route('/:id/addday/:dayid')
     .post(isLoggedIn, addDayToTrip);
+
+router.route('/search')
+    .post(textSearchPostUtil(Trip))
+
+router.route('/:id/days/private')
+    .post(makeChildrenPrivate)
+
+router.route('/:id/days/public')
+    .post(makeChildrenPublic)
+
+router.route('/:id')
+    .get(viewTrip);
 
 // ADD COMMENT
 router.route('/:id/addcomment')

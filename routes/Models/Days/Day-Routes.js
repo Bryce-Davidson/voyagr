@@ -5,26 +5,19 @@ const {
     addCommentUtil,
     LikePostUtil,
     deletePostUtil,
-    textSearchPostUtil
+    textSearchPostUtil,
+    getFeaturedPostsUtil
  } = require('../../../util/middleware/post-actions-util');
 const {
     newDay,
     viewDay,
-    featuredDays,
     addLocationToDay
 } = require('../../../controllers/Models/Days/Day-Controller');
 
-// MODEL
 const Day = require('../../../models/Day/DaySchema');
 
-// GET 
 router.route('/featured')
-    .get(featuredDays)
-
-router.route('/:id')
-    .get(viewDay)
-
-// POST 
+    .get(getFeaturedPostsUtil(Day))
 
 router.route('/search')
     .post(textSearchPostUtil(Day));
@@ -44,5 +37,8 @@ router.route('/:id/like')
 
 router.route('/:id/delete')
     .delete(isLoggedIn, deletePostUtil(Day))
+
+    router.route('/:id')
+    .get(viewDay)
 
 module.exports = router;

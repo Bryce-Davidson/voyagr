@@ -1,5 +1,4 @@
 const Location = require('../../../models/Location/LocationSchema');
-const Comment = require('../../../models/Comment/CommentSchema');
 const User = require('../../../models/User/UserSchema');
 
 // SEARCH -----------------------------------------------------------------------
@@ -10,14 +9,6 @@ const findNear = (req, res, next) => {
   Location.find().nearPoint(coordinates, maxDistance)
       .then(data => res.send(data))
       .catch(next)
-};
-
-// featured?pagenation=NUMBER
-const featuredLocations = (req, res, next) => {
-  const pagenation = parseInt(req.query.pagenation);
-  Location.find({}).sort({'meta.view_count': -1, 'meta.numberOfComments': -1, 'meta.likes': -1}).limit(pagenation)
-    .then(data => res.send(data))
-    .catch(next)
 };
 
 // GET --------------------------------------------------------------------------
@@ -41,7 +32,6 @@ const newLocation = (req, res, next) => {
   coordinates.reverse();
   Location.create({
     "name": name,
-    "user": userid,
     "location": {
       "type": "Point",
       "coordinates": coordinates
@@ -59,6 +49,5 @@ const newLocation = (req, res, next) => {
 module.exports = { 
   findNear, 
   newLocation, 
-  featuredLocations, 
   viewLocation
 }

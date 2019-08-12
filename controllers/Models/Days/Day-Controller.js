@@ -3,14 +3,6 @@ const Comment = require('../../../models/Comment/CommentSchema');
 const User = require('../../../models/User/UserSchema');
 const Day = require('../../../models/Day/DaySchema');
 
-// - /featured?pagenation=NUMBER
-const featuredDays = (req, res, next) => {
-    const pagenation = parseInt(req.query.pagenation);
-    Day.find({}).sort({'meta.view_count': -1, 'meta.numberOfComments': -1, 'meta.likes': -1}).limit(pagenation)
-    .then(data => res.send(data))
-    .catch(next)
-};
-
 // GET --------------------------------------------------------------------------
 
 // - /:id
@@ -52,6 +44,5 @@ const addLocationToDay = (req, res, next) => {
 module.exports = {
     newDay,
     viewDay,
-    featuredDays,
     addLocationToDay
 };
