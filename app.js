@@ -59,21 +59,6 @@ app.use('/trips', require('./routes/Models/Trips/Trip-Routes'));
 app.use('/days', require('./routes/Models/Days/Day-Routes'));
 app.use('/locations', require('./routes/Models/Locations/Location-Routes'));
 
-// SEED ---------------------------------------------------------------------- 
-
-app.get('/seed/:model/:ndocs', (req, res, next) => {
-  const model = req.params.model;
-  const num = parseInt(req.params.ndocs);
-  if(model == 'trip') {
-    require('./util/database/Trip-Seeder')(num)
-    res.send(`Seeded ${num} Trips`)
-  }
-  else if (model == 'day') {
-    require('./util/database/Day-Seeder')(num)
-    res.send(`Seeded ${num} Days`)
-  }
-})
-
 // INDEX ----------------------------------------------------------------------
 app.get('/', (req, res, next) => {
     res.send("Home");
