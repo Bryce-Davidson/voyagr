@@ -1,3 +1,4 @@
+const Day = require('../../models/Day/DaySchema');
 var mongoose = require('mongoose');
 
 const TripSchema = new mongoose.Schema({
@@ -20,21 +21,36 @@ const TripSchema = new mongoose.Schema({
     comments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
 });
 
+
 // INDEXES -----------------------------------------------------
 
 TripSchema.options.autoIndex = true;
 
-TripSchema.index({
-  name: 'text',
-  description: 'text',
-}, {
-  weights: {
-    name: 5,
-    description: 3,
-  },
-});
+TripSchema.index({name: 'text', description: 'text'}, {weights: { name: 5, description: 3,}});
+
+
+// METHODS ---------------------------------------------------
+
+TripSchema.methods.changeChildStatus = async function(status) {
+  return new Promise((resolve, reject) => {
+    this.days.forEach((dayid, index) => {
+      Day.findByIdAndUpdate(dayid, {'settings.private': status})
+      .catch(reject)
+      if(index == this.days.length - 1)
+        resolve(this);
+    })
+  })
+}
+
+// QUERIES  ----------------------------------------------------
 
 // MIDDLEWARE --------------------------------------------------
+
+TripSchema.pre('find', async function() {
+  // refering to the query object
+  this.where({private: false});
+});
+
 
 var Trip = mongoose.model("Trip", TripSchema);
 

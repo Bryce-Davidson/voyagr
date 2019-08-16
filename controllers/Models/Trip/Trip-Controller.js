@@ -1,27 +1,12 @@
 const Trip = require('../../../models/Trip/TripSchema');
-const Comment = require('../../../models/Comment/CommentSchema');
 const Day = require('../../../models/Day/DaySchema');
 const User = require('../../../models/User/UserSchema');
 
-// GET --------------------------------------------------------------------------
+// CREATE -------------------------------------------------------------------------
 
-// - /:id
-const viewTrip = (req, res, next) => {
-    Trip.findByIdAndUpdate(req.params.id, {'$inc': {'meta.view_count': 1}}, {new: true})
-    .populate('comments')
-    .populate('days')
-    .then(data => {
-        res.send((data));
-    })
-    .catch(next)
-}
-
-// POST -------------------------------------------------------------------------
-
-// - /newtrip
 const newTrip = (req, res, next) => {
     const {name, description, tags, private} = req.body;
-    let userid = req.session.passport.user;
+    let userid = req.user;
     Trip.create({
         user: userid,
         name, description, private,
@@ -37,48 +22,64 @@ const newTrip = (req, res, next) => {
     .catch(next)
 };
 
-// /:id/addday/:dayid
-const addDayToTrip = (req, res, next) => {
-    Trip.findByIdAndUpdate(req.params.id, {$push: {days: req.params.dayid}}, {new: true})
-    .then(data => res.send(data))
+
+// READ --------------------------------------------------------------------------
+
+const viewTrip = (req, res, next) => {
+    Trip.findByIdAndUpdate(req.params.id, {'$inc': {'meta.view_count': 1}}, {new: true})
+    .populate('comments')
+    .populate('days')
+    .populate('user', 'local.email')
+    .then(data => {
+        res.send((data));
+    })
     .catch(next)
 }
 
-const makeChildrenPrivate = (req, res, next) => {
-    Trip.findById(req.params.id)
-        .populate('days')
+// UPDATE -----------------------------------------------------------------------------
+
+const addDayToTrip = (req, res, next) => {
+    let tripid = req.params.id;
+    let user = req.user;
+    console.log(user)
+    console.log(tripid)
+    
+    Trip.findById(tripid)
         .then(trip => {
-            trip.days.forEach(day => {
-                day.settings.private = true;
-                day.save(function(err, day) {
-                    if(err)
-                        next(err)
-                })
-            });
-            res.send(trip)
+        
         })
-        .catch(next)
 }
 
-const makeChildrenPublic = (req, res, next) => {
-    Trip.findById(req.params.id)
-        .populate('days')
+const updateTrip = (req, res, next) => {
+    let update = req.body.update;
+    let tripid = req.params.id;
+
+    Trip.findById(tripid)
         .then(trip => {
-            trip.days.forEach(day => {
-                day.settings.private = false;
-                day.save(function(err) {
-                    if(err) next(err)
-                })
-            });
-            res.send(trip)
-        })
-        .catch(next)
+            if(trip.isOwnedBy(req.user, res)) {
+                return trip.update(update, {new: true})
+                    .then(res.send(trip))
+            }
+        }).catch(next);
+}
+
+// CHILDREN FUNCTIONS --------------------------
+
+const changeChildStatus = (req, res, next) => {
+    let status = req.query.status;
+    Trip.findById(req.params.id)
+        .then(trip => {
+            if(trip.isOwnedBy(req, res)){
+                return trip.changeChildStatus(status)
+                    .then(trip => res.send(trip))
+             }
+        }).catch(next)
 }
 
 module.exports = {
     newTrip,
     addDayToTrip,
     viewTrip,
-    makeChildrenPrivate,
-    makeChildrenPublic
+    changeChildStatus,
+    updateTrip
 };

@@ -1,5 +1,5 @@
 
-const { getRandom, getRandomInt } = require('../local-functions/randomFunctions');
+const { getRandom, getRandomInt, randomGeoFromSeed } = require('../local-functions/randomFunctions');
 
 const descriptions    = "hey I love walking around here and there is so much sun for everyone that I love it and it's great lots of swimming".split(' ');
 const locationNames   = "Europe Canada Mexico France Italy USA Dubai".split(' ');
@@ -8,28 +8,38 @@ const dayNames        = "Harbour Walking Swimming Kyaking History Surfing".split
 const cityNames       = "Paris Florence Victoria Vancouver Venice Nice Rome London".split(' ');
 const tags            = "walking swimming boating boat water beach sunny view sunset sunrise breakfast dinner".split(' ');
 
+var victoria = {latitude: 48.4529784, longitude: -123.46109239999998};
+
 const emailsAndPasswords = [["lifebryce@gmail.com", "admin1"], ["bryce678@gmail.com", "froggo678"], ["katie@icloud.com", "superkid"]];
 
 const Day = require('../../models/Day/DaySchema');
 const Trip = require('../../models/Trip/TripSchema');
 const User = require('../../models/User/UserSchema');
+const Location = require('../../models/Location/LocationSchema.js');
 
 require('../../database');
 
-async function createTripWithUser(numDays) {
-    // create user for both days and trip
-    var userEP = getRandom(emailsAndPasswords, 1)[0];
-    let user = await User.create({'local.email': userEP[0], 'local.password': userEP[1]})
-    // create new trip in memory to get the trip id
-    let trip = await loadTrip(user);
-    // create days with trip id and return dayids list
-    let dayids = await createDays(3, trip, user)
-    // add days id list to trip in memory and then save
-    trip.days = dayids;
-    await trip.save().then(trip => {
-        console.log(`Seeded 1 Trip with ${numDays} Days each`)
-        process.exit()
-    }).catch(console.log)
+async function createTripWithUser(numTrips, DaysInTrip, LocsInDay) {
+    
+    // loop all code below numTrips amount of times
+    for (var i = 0; i < numTrips; i++) {
+        // create user for both days and trip
+        var userEP = getRandom(emailsAndPasswords, 1)[0];
+        let user = await User.create({'local.email': userEP[0], 'local.password': userEP[1]})
+        // create new trip in memory to get the trip id
+        let trip = await loadTrip(user);
+        // create days with trip id and return dayids list
+        
+        let daysAndLocations = await createDays(DaysInTrip, trip, user, LocsInDay)
+        // add days id list to trip in memory and then save
+        trip.days = daysAndLocations[0];
+        trip.locations = daysAndLocations[1];
+
+        await trip.save().then(trip => {
+            console.log(`Created Trip: "${trip.name}" w/ ${DaysInTrip} Days & ${DaysInTrip * LocsInDay} Locations`)
+            if (i == numTrips - 1) {process.exit()}
+        }).catch(console.log)
+    }
 }
 
 
@@ -49,12 +59,42 @@ function loadTrip(user) {
         }})
 }
 
-async function createDays(num, trip, user) {
+async function createLocations(numLocations, trip) {
+    let locations = [];
+    let coordinates = randomGeoFromSeed(victoria, 10000)
+    for(var i=0; i < numLocations; i++) {
+        await Location.create({
+            "trips": [trip],
+            "name": "A Name",
+            "description": "A Description",
+            "location": {
+              "type": "Point",
+              "coordinates": coordinates
+            },
+            meta: {
+                view_count: getRandomInt(0, 3000),
+                numberOfComments: getRandomInt(0, 300),
+                likes: getRandomInt(0, 100),
+                numberOfShares: getRandomInt(0, 30)
+            }})
+          .then(loc => {
+              locations.push(loc._id)
+          })
+          .catch(console.log)
+    }
+    return locations;
+}
+
+async function createDays(numDays, trip, user, locPerDay) {
     let days = [];
-    for (var i=0; i < num; i++) {
+    let locationsInTrip = [];
+    for (var i=0; i < numDays; i++) {
+        let locations = await createLocations(locPerDay, trip);
+        locations.forEach(loc => locationsInTrip.push(loc));
         await Day.create({
             user,
             trip,
+            locations,
             name: `${getRandom(dayNames, 1)} ${getRandom(cityNames, 1)} - ${getRandomInt(2019, 2050)}`,
             description: getRandom(descriptions, 8).join(' '),
             settings: {
@@ -73,7 +113,13 @@ async function createDays(num, trip, user) {
         })
         .catch(console.log)
     }
-    return days;
+    return [days, locationsInTrip];
 }
 
-createTripWithUser(3)
+var setUp = process.argv.slice(2)
+
+var tripsA = setUp[0];
+var daysA  = setUp[1];
+var locationspday = setUp[2];
+
+createTripWithUser(tripsA, daysA, locationspday);

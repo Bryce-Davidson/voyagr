@@ -7,7 +7,7 @@ const DaySchema = new mongoose.Schema({
   locations: [{type: mongoose.Schema.Types.ObjectId, ref: 'Location'}],
   description: {type: String, required: true, maxlength: [500, 'Description must be less than 500 characters']},
   settings: {
-      private: Boolean
+      private: {type: Boolean, required: true, default: false}
     },
   meta: {
     created: { type : Date, default: Date.now },
@@ -33,6 +33,14 @@ DaySchema.index({
     description: 3,
   },
 });
+
+// MIDDLEWARE --------------------------------------------------
+
+DaySchema.pre('find', function() {
+  // this refers to the query object
+  this.where({private: false});
+});
+
 
 var Day = mongoose.model("Day", DaySchema);
 

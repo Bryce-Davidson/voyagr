@@ -4,8 +4,8 @@ var { pointSchema }       = require('../Geoschema-Types/GeoSchemas');
 const LocationSchema = new mongoose.Schema({
   name: {type: String, required: true},
   trips: [{type: mongoose.Schema.Types.ObjectId, ref: 'Trip'}],
-  days: [{type: mongoose.Schema.Types.ObjectId, ref: 'Day'}],
-  blurb: String,
+  // days: [{type: mongoose.Schema.Types.ObjectId, ref: 'Day'}],
+  description: String,
   location: {
     type: pointSchema,
     required: true
@@ -31,6 +31,13 @@ LocationSchema.query.nearPoint = function(coordinates, maxDistance) {
  return this.where('location')
             .near({ center: { coordinates, type: 'Point' }, maxDistance, spherical: true })
 };
+
+// MIDDLEWARE --------------------------------------------------
+
+LocationSchema.pre('find', function() {
+  // this refers to the query object
+  this.where({private: false});
+});
 
 LocationSchema.options.autoIndex = true;
 

@@ -11,7 +11,8 @@ const {
 const {
     newDay,
     viewDay,
-    addLocationToDay
+    addLocationToDay,
+    updateDay
 } = require('../../../controllers/Models/Days/Day-Controller');
 
 const Day = require('../../../models/Day/DaySchema');
@@ -38,7 +39,10 @@ router.route('/:id/like')
 router.route('/:id/delete')
     .delete(isLoggedIn, deletePostUtil(Day))
 
-    router.route('/:id')
+router.route('/:id/edit')
+    .post(isLoggedIn, updateDay)
+
+router.route('/:id')
     .get(viewDay)
 
 module.exports = router;
