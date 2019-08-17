@@ -24,23 +24,9 @@ const DaySchema = new mongoose.Schema({
 
 DaySchema.options.autoIndex = true;
 
-DaySchema.index({
-  name: 'text',
-  description: 'text',
-}, {
-  weights: {
-    name: 5,
-    description: 3,
-  },
-});
+DaySchema.index({ name: 'text', description: 'text'}, {weights: {name: 5, description: 3,}});
 
 // MIDDLEWARE --------------------------------------------------
-
-DaySchema.pre('find', function() {
-  // this refers to the query object
-  this.where({private: false});
-});
-
 
 var Day = mongoose.model("Day", DaySchema);
 

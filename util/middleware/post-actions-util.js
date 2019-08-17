@@ -1,5 +1,5 @@
 const Comment = require('../../models/Comment/CommentSchema');
-
+const { userCanAlter } = require('../local-functions/schemaMethods');
 // SET ALL CHILDREN PRIVATE OR PUBLIC  ----------------------------
 
 
@@ -8,8 +8,10 @@ const Comment = require('../../models/Comment/CommentSchema');
 getFeaturedPostsUtil = function(Model) {
     return function (req, res, next) {
         const pagenation = parseInt(req.query.pagenation);
-        Model.find({}).sort({'meta.view_count': -1, 'meta.numberOfComments': -1, 'meta.likes': -1}).limit(pagenation)
-            .then(data => res.send(data))
+        Model.find({}).sort({'meta.view_count': -1, 'meta.numberOfComments': -1, 'meta.likes': -1})
+            .where({private: false})
+            .limit(pagenation)
+            .then(featured => res.send(featured))
             .catch(next)
     }
 }
@@ -23,6 +25,7 @@ textSearchPostUtil = function(Model) {
         filter.$text = { $search: query }
 
         Model.find(filter, { score: { $meta: "textScore" } })
+        .where({private: false})
         .sort( { score: { $meta: "textScore" } } )
         .then(docs => {
             res.send(docs)
@@ -35,11 +38,12 @@ textSearchPostUtil = function(Model) {
 
 addCommentUtil = function(Model) {
     return function(req, res, next) {
-        Comment.create({
+        let comment = new Comment ({
                 "postid": req.params.id,
                 "user": req.session.passport.user,
                 "body": req.body.body
-        })
+        });
+        comment.save()
         .then(comment => {
             return Model.findByIdAndUpdate(req.params.id, {
                 $inc: {'meta.numberOfComments': 1},
@@ -70,11 +74,17 @@ LikePostUtil = function(Post) {
 // redirect back to user profile
 deletePostUtil = function(Post) {
     return function(req, res, next) {
-        Post.findByIdAndDelete(req.params.id)
-            .then(docDeleted => {
-                 res.redirect('/');
+        let postid = req.params.id;
+        Post.findById(postid)
+            .then(post => {
+                if (userCanAlter(post, req.user, res)) {
+                    Post.findByIdAndDelete(postid)
+                        .then(docDeleted => {
+                             res.redirect('/');
+                        })
+                        .catch(next)
+                }
             })
-            .catch(next)
     }
 }
 

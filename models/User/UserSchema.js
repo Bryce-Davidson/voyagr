@@ -11,7 +11,7 @@ var userSchema = mongoose.Schema({
         unique: true
       },
       password: {type: String, required: true},
-      username: String
+      username: {type: String, required: true, unique: true}
     },
     socialMediaHandles: {
       type: Map,

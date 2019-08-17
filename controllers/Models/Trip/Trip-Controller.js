@@ -1,6 +1,7 @@
-const Trip = require('../../../models/Trip/TripSchema');
-const Day = require('../../../models/Day/DaySchema');
-const User = require('../../../models/User/UserSchema');
+const Trip          = require('../../../models/Trip/TripSchema');
+const Day           = require('../../../models/Day/DaySchema');
+const User          = require('../../../models/User/UserSchema');
+const { isOwner, userCanAlter } = require('../../../util/local-functions/schemaMethods');
 
 // CREATE -------------------------------------------------------------------------
 
@@ -26,53 +27,65 @@ const newTrip = (req, res, next) => {
 // READ --------------------------------------------------------------------------
 
 const viewTrip = (req, res, next) => {
-    Trip.findByIdAndUpdate(req.params.id, {'$inc': {'meta.view_count': 1}}, {new: true})
-    .populate('comments')
-    .populate('days')
-    .populate('user', 'local.email')
-    .then(data => {
-        res.send((data));
-    })
-    .catch(next)
+    Trip.findById(req.params.id)
+        .then(trip => {
+            if (trip.settings.private) {
+                if (req.user == trip.user) res.send(trip)
+                else res.status(401).send("Unauthorized");
+            } else {
+                return Trip.findByIdAndUpdate(req.params.id, {'$inc': {'meta.view_count': 1}}, {new: true})
+                .populate('comments')
+                .populate('days')
+                .populate('user', 'local.username')
+                .then(trip => { 
+                    res.send((trip));
+                })
+                .catch(next)
+            }
+        })
 }
 
 // UPDATE -----------------------------------------------------------------------------
 
 const addDayToTrip = (req, res, next) => {
     let tripid = req.params.id;
-    let user = req.user;
-    console.log(user)
-    console.log(tripid)
-    
+    let dayid  = req.params.dayid;
     Trip.findById(tripid)
         .then(trip => {
-        
-        })
+            if(userCanAlter(trip, req.user, res)) {
+                trip.days.push(dayid)
+                return trip.save().then(newTrip => res.send(newTrip))
+            }
+        }).catch(err)
 }
 
 const updateTrip = (req, res, next) => {
     let update = req.body.update;
     let tripid = req.params.id;
-
     Trip.findById(tripid)
         .then(trip => {
-            if(trip.isOwnedBy(req.user, res)) {
-                return trip.update(update, {new: true})
-                    .then(res.send(trip))
+            if(userCanAlter(trip, req.user)) {
+                return trip.findByIdAndUpdate(trip.id, update)
+                    .then(utrip => res.send(utrip))
             }
-        }).catch(next);
+        }).catch(next)
 }
 
 // CHILDREN FUNCTIONS --------------------------
 
 const changeChildStatus = (req, res, next) => {
     let status = req.query.status;
+    if (status != 'true' || 'false') {
+        return res.send("Invaid status")
+    }
     Trip.findById(req.params.id)
         .then(trip => {
-            if(trip.isOwnedBy(req, res)){
+            if(userCanAlter(trip, req.user, res)) {
                 return trip.changeChildStatus(status)
-                    .then(trip => res.send(trip))
-             }
+                    .then(trip => {
+                        res.send(trip)
+                    })
+            }
         }).catch(next)
 }
 

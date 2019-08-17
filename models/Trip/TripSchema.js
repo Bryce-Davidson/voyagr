@@ -46,12 +46,6 @@ TripSchema.methods.changeChildStatus = async function(status) {
 
 // MIDDLEWARE --------------------------------------------------
 
-TripSchema.pre('find', async function() {
-  // refering to the query object
-  this.where({private: false});
-});
-
-
 var Trip = mongoose.model("Trip", TripSchema);
 
 module.exports = Trip;

@@ -27,7 +27,8 @@ passport.use('local-signup', new LocalStrategy({
         } else {
             let newUser = new User({
               'local.email':    email,
-              'local.password': password
+              'local.password': password,
+              'local.username': req.body.username
             });
             newUser.save(function(err, user ) {
                 if (err)
@@ -37,7 +38,7 @@ passport.use('local-signup', new LocalStrategy({
             })
           }
         })
-      }));
+}));
 
 // LOGIN ----------------------------------------------------------------------
 

@@ -1,8 +1,6 @@
-const Trip = require('../../../models/Trip/TripSchema');
-const Comment = require('../../../models/Comment/CommentSchema');
 const User = require('../../../models/User/UserSchema');
 const Day = require('../../../models/Day/DaySchema');
-
+const { userCanAlter } = require('../../../util/local-functions/schemaMethods');
 
 // CREATE -------------------------------------------------------------------------
 
@@ -26,33 +24,37 @@ const newDay = (req, res, next) => {
 // READ --------------------------------------------------------------------------
 
 const viewDay = (req, res, next) => {
-    Day.findByIdAndUpdate(req.params.id, {'$inc': {'meta.view_count': 1}}, {new: true})
-    .populate('comments')
-    .populate('locations')
-    .populate('user', 'local.email')
-    .then(data => {
-        res.send((data));
-    })
-    .catch(next)
+    Day.findById(req.params.id)
+        .then(day => {
+            if (day.settings.private) {
+                if (req.user == day.user) res.send(day)
+                else res.status(401).send('Unauthorized')
+            } else {
+                return Day.findByIdAndUpdate(req.params.id, {'$inc': {'meta.view_count': 1}}, {new: true})
+                .populate('comments')
+                .populate('locations')
+                .populate('user', 'local.email')
+                .then(data => {
+                    res.send((data));
+                })
+            }
+        })
+        .catch(next)
 }
 
+// UPDATE ---------------------------------------------------------------
 
 const addLocationToDay = (req, res, next) => {
     let dayid = req.params.id;
-
+    let locid = req.params.locationid;
     Day.findById(dayid)
         .then(day => {
-            if(day.isOwnedBy(req.user, res)) {
-
+            if (userCanAlter(day, req.user, res)) {
+                day.locations.push(locid)
+                return day.save().then(uday => res.send(uday))
             }
-        })
-    Day.findByIdAndUpdate(req.params.id, {$push: {days: req.params.locationid}}, {new: true})
-    .then(data => res.send(data))
-    .catch(next)
+        }).catch(next)
 }
-
-
-// UPDATE --------------------------------------------------------------------------
 
 const updateDay = (req, res, next) => {
     let dayid = req.params.id
@@ -60,9 +62,9 @@ const updateDay = (req, res, next) => {
 
     Day.findById(dayid)
         .then(day => {
-            if(day.isOwnedBy(req.user, res)) {
-                return day.update(update, {new: true})
-                    .then(newday => res.send(newday))
+            if (userCanAlter(day, req.user, res)) {
+                return Day.findByIdAndUpdate(dayid, update)
+                    .then(uday => res.send(uday))
             }
         }).catch(next)
 }
