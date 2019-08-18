@@ -49,8 +49,8 @@ passport.use('local-login', new LocalStrategy({
   (email, password, done) => {
     User.findOne({ 'local.email' :  email }) 
         .then(user => {
-            if (!user)
-                done(null, false);
+            if (!user || !password)
+                return done(null, false);
             if (!user.validPassword(password))
                 done(null, false);
             else

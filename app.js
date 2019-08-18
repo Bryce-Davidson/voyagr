@@ -43,7 +43,7 @@ app.use(passport.session());
 app.use((err, req, res, next) => {
     if (err) {
       console.error(err);
-      res.status(500).send({msg: err})
+      res.status(500).send({msg: "There was an internal error"})
     }
     else
       next();
@@ -55,7 +55,7 @@ app.use('/test', require('./tests/routes/tester-routes'))
 
 // ROUTES ---------------------------------------------------------------------
 app.use('/', require('./routes/Auth/auth-route'));
-app.use('/trips', require('./routes/Models/Trips/Trip-Routes'));
+app.use('/trips', require('./routes/Models/Trips/Trip-Routes'), require('./routes/Photos/Trip-Photos-Route'));
 app.use('/days', require('./routes/Models/Days/Day-Routes'));
 app.use('/locations', require('./routes/Models/Locations/Location-Routes'));
 

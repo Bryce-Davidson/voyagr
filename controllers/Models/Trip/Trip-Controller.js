@@ -8,12 +8,13 @@ const { isOwner, userCanAlter } = require('../../../util/local-functions/schemaM
 const newTrip = (req, res, next) => {
     const {name, description, tags, private} = req.body;
     let userid = req.user;
-    Trip.create({
+    let newTrip = new Trip({
         user: userid,
         name, description, private,
         settings: {private},
         meta: {tags}
     })
+    newTrip.save()
     .then(trip => {
         return User.findByIdAndUpdate(userid, {
             $push: {'posts.trips': trip._id}
