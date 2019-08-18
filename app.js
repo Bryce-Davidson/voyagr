@@ -5,7 +5,7 @@ const cookieParser     = require('cookie-parser');
 const session          = require('express-session');
 const MongoStore       = require('connect-mongo')(session);
 const morgan           = require('morgan');
-const helmet           = require('helmet')
+const helmet           = require('helmet');
 const db               = require('./database');
 const { SESSION_KEYS } = require('./config/keys')
 
