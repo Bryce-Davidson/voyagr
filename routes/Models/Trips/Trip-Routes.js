@@ -12,10 +12,13 @@ const {
     newTrip,
     addDayToTrip,
     viewTrip,
-    updateTrip
+    updateTrip,
+    tripBannerUpload
 } = require('../../../controllers/Models/Trip/Trip-Controller');
 
 const Trip = require('../../../models/Trip/TripSchema');
+
+// SEARCH AND FEATURED ----------------------------------
 
 router.route('/search')
     .post(textSearchPostUtil(Trip))
@@ -23,15 +26,22 @@ router.route('/search')
 router.route('/featured')
     .get(getFeaturedPostsUtil(Trip));
 
+
+// CREATE -----------------------------------------------
+
 router.route('/newtrip')
     .get(isLoggedIn)
     .post(isLoggedIn, newTrip);
 
+// PHOTOS -----------------------------------------------
+
+router.route('/:id/upload/banner')
+    .post(isLoggedIn, tripBannerUpload)
+
+// UPDATE -----------------------------------------------
+
 router.route('/:id/addday/:dayid')
     .post(isLoggedIn, addDayToTrip);
-
-router.route('/:id')
-    .get(viewTrip);
 
 router.route('/:id/addcomment')
     .post(isLoggedIn, addCommentUtil(Trip));
@@ -41,6 +51,13 @@ router.route('/:id/like')
 
 router.route('/:id/update')
     .put(isLoggedIn, updateTrip)
+
+   
+// READ -----------------------------------------------
+    
+router.route('/:id')
+    .get(viewTrip);
+
 
 // DELETE -----------------------------------------------
 

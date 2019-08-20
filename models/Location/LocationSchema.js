@@ -21,9 +21,19 @@ const LocationSchema = new mongoose.Schema({
     numberOfComments: {type: Number, default: 0},
     numberOfShares: {type: Number, default: 0}
     },
+    photos: {
+      album: {
+        type: [String],
+        vlidate: [arrayLimit, '{PATH} exceeds the limit of 5 images']
+      }
+    },
     comments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
     typeoflocation: String
 });
+
+function arrayLimit(val) {
+  return val.length <= 5;
+}
 
 // QUERIES ---------------------------------------------------
 

@@ -1,7 +1,17 @@
-const Trip          = require('../../../models/Trip/TripSchema');
-const Day           = require('../../../models/Day/DaySchema');
-const User          = require('../../../models/User/UserSchema');
-const { isOwner, userCanAlter } = require('../../../util/local-functions/schemaMethods');
+const Trip                  = require('../../../models/Trip/TripSchema');
+const Day                   = require('../../../models/Day/DaySchema');
+const User                  = require('../../../models/User/UserSchema');
+const { userCanAlter }      = require('../../../util/local-functions/schemaMethods');
+const { tripBucket }        = require('../../../config/keys').AWS;
+const upload                = require('../../../util/middleware/photo-upload-util');
+
+
+const AWS = require('aws-sdk')
+const S3 = new AWS.S3()
+
+// TODO:
+    // [] add trips to days when adding day
+
 
 // CREATE -------------------------------------------------------------------------
 
@@ -23,6 +33,38 @@ const newTrip = (req, res, next) => {
     })
     .catch(next)
 };
+
+// PHOTOS ---------------------------------------------------------------------------
+
+const singleUpload = upload.single('banner');
+
+const tripBannerUpload = (req, res, next) => {
+    req.bucketName = tripBucket;
+    Trip.findById(req.params.id)
+        .then(trip => {
+        if(userCanAlter(trip, req.user, res)) {
+            // Upload file to S3
+            singleUpload(req, res, function(err) {
+            if(err) return next(err);
+            // if banner already exists delete from S3
+            if(trip.photos.banner) {
+                let s3BannerKey = trip.photos.banner.split('/'); 
+                    s3BannerKey = s3BannerKey[s3BannerKey.length -1];
+                let params = { Bucket: req.bucketName, Key: s3BannerKey};
+                S3.deleteObject(params).promise()
+                .catch(next)
+            } 
+            // always save newly uploaded banner to mongodb
+            trip.photos.banner = req.file.location;
+            return trip.save()
+                .then(utrip => {
+                res.send(utrip)
+                })
+            })
+        }
+        })
+        .catch(next)
+}
 
 
 // READ --------------------------------------------------------------------------
@@ -95,5 +137,6 @@ module.exports = {
     addDayToTrip,
     viewTrip,
     changeChildStatus,
-    updateTrip
+    updateTrip,
+    tripBannerUpload
 };

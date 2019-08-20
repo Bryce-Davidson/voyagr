@@ -18,7 +18,12 @@ const TripSchema = new mongoose.Schema({
       numberOfComments: {type: Number, default: 0},
       numberOfShares: {type: Number, default: 0}
   },
-    comments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
+  comments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
+  photos: {
+    banner: String,
+    bannerpx500: String,
+    bannerpx150: String
+  }
 });
 
 
@@ -27,7 +32,6 @@ const TripSchema = new mongoose.Schema({
 TripSchema.options.autoIndex = true;
 
 TripSchema.index({name: 'text', description: 'text'}, {weights: { name: 5, description: 3,}});
-
 
 // METHODS ---------------------------------------------------
 
