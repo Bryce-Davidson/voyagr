@@ -40,6 +40,7 @@ const singleUpload = upload.single('banner');
 
 const tripBannerUpload = (req, res, next) => {
     req.bucketName = tripBucket;
+    if(!req.file) return res.send('Please provide atleast one photo');
     Trip.findById(req.params.id)
         .then(trip => {
         if(userCanAlter(trip, req.user, res)) {

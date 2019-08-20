@@ -10,8 +10,5 @@ module.exports = {
         return res.redirect('/');
       else
         return next()
-    },
-    isOwner: (doc, path, userid) => {
-      return doc[path] == userid;
     }
   }

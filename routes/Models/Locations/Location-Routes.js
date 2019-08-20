@@ -11,19 +11,32 @@ const {
 const {
   newLocation, 
   findNear, 
-  viewLocation
+  viewLocation,
+  photoUploadToLocation
 } = require('../../../controllers/Models/Locations/Location-Controllers')
 
 const Location = require('../../../models/Location/LocationSchema')
 
+// SEARCH AND FEATURED ----------------------------------
+
+router.route('/featured')
+  .get(getFeaturedPostsUtil(Location))
+
 router.route('/findnear')
   .post(findNear)
+
+// CREATE ------------------------------------------------
 
 router.route('/newlocation')
   .post(isLoggedIn, newLocation)
 
-router.route('/featured')
-  .get(getFeaturedPostsUtil(Location))
+
+// PHOTOS -----------------------------------------------
+
+router.route('/:id/upload/photos')
+  .post(isLoggedIn, photoUploadToLocation)
+
+// UPDATE ------------------------------------------------
 
 router.route('/:id/like')
   .post(isLoggedIn,LikePostUtil(Location))
@@ -31,10 +44,13 @@ router.route('/:id/like')
 router.route('/:id/addcomment')
   .post(isLoggedIn, addCommentUtil(Location));
 
+
+// READ ---------------------------------------------------
+
 router.route('/:id')
   .get(isLoggedIn, viewLocation)
 
-// DELETE ---------------------------------------------------------
+// DELETE -------------------------------------------------
 
 router.route('/:id/delete')
   .delete(isLoggedIn, deletePostUtil(Location))

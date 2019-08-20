@@ -26,7 +26,6 @@ router.route('/search')
 router.route('/featured')
     .get(getFeaturedPostsUtil(Trip));
 
-
 // CREATE -----------------------------------------------
 
 router.route('/newtrip')

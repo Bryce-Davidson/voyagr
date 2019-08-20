@@ -3,8 +3,8 @@ var { pointSchema }       = require('../Geoschema-Types/GeoSchemas');
 
 const LocationSchema = new mongoose.Schema({
   name: {type: String, required: true},
+  user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   trips: [{type: mongoose.Schema.Types.ObjectId, ref: 'Trip'}],
-  // days: [{type: mongoose.Schema.Types.ObjectId, ref: 'Day'}],
   description: String,
   location: {
     type: pointSchema,
@@ -22,18 +22,15 @@ const LocationSchema = new mongoose.Schema({
     numberOfShares: {type: Number, default: 0}
     },
     photos: {
-      album: {
-        type: [String],
-        vlidate: [arrayLimit, '{PATH} exceeds the limit of 5 images']
-      }
+      image_1: String,
+      image_2: String,
+      image_3: String,
+      image_4: String,
+      image_5: String
     },
     comments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
     typeoflocation: String
 });
-
-function arrayLimit(val) {
-  return val.length <= 5;
-}
 
 // QUERIES ---------------------------------------------------
 
@@ -48,6 +45,9 @@ LocationSchema.pre('find', function() {
   // this refers to the query object
   this.where({private: false});
 });
+
+
+// INDEXES ---------------------------------------------------
 
 LocationSchema.options.autoIndex = true;
 

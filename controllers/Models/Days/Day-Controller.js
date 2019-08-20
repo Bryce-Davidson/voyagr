@@ -1,6 +1,13 @@
-const User = require('../../../models/User/UserSchema');
-const Day = require('../../../models/Day/DaySchema');
-const { userCanAlter } = require('../../../util/local-functions/schemaMethods');
+const User              = require('../../../models/User/UserSchema');
+const Day               = require('../../../models/Day/DaySchema');
+const { userCanAlter }  = require('../../../util/local-functions/schemaMethods');
+const { dayBucket }     = require('../../../config/keys').AWS;
+const upload            = require('../../../util/middleware/photo-upload-util');
+
+
+const AWS = require('aws-sdk')
+const S3 = new AWS.S3()
+
 
 // CREATE -------------------------------------------------------------------------
 
@@ -20,7 +27,38 @@ const newDay = (req, res, next) => {
     .catch(next)
 };
 
+// PHOTOS -----------------------------------------------------------------------
 
+const singleUpload = upload.single('banner');
+
+const dayBannerUpload = (req, res, next) => {
+    req.bucketName = dayBucket;
+    Day.findById(req.params.id)
+        .then(day => {
+        if(userCanAlter(day, req.user, res)) {
+            // Upload file to S3
+            singleUpload(req, res, function(err) {
+            if(err) return next(err);
+            else if(!req.file) return res.status(402).send('Please provide a banner image');
+            // if banner already exists delete from S3
+            if(day.photos.banner) {
+                let s3BannerKey = day.photos.banner.split('/'); 
+                    s3BannerKey = s3BannerKey[s3BannerKey.length -1];
+                let params = { Bucket: req.bucketName, Key: s3BannerKey};
+                S3.deleteObject(params).promise()
+                .catch(next)
+            } 
+            // always save newly uploaded banner to mongodb
+            day.photos.banner = req.file.location;
+            return day.save()
+                .then(uday => {
+                res.send(uday)
+                })
+            })
+        }
+        })
+        .catch(next)
+}
 // READ --------------------------------------------------------------------------
 
 const viewDay = (req, res, next) => {
@@ -73,5 +111,6 @@ module.exports = {
     newDay,
     viewDay,
     addLocationToDay,
-    updateDay
+    updateDay,
+    dayBannerUpload
 };
