@@ -47,6 +47,7 @@ const tripBannerUpload = (req, res, next) => {
             // Upload file to S3
             singleUpload(req, res, function(err) {
             if(err) return next(err);
+            if(!req.file) return res.send("Please include at least one photo")
             // if banner already exists delete from S3
             if(trip.photos.banner) {
                 let s3BannerKey = trip.photos.banner.split('/'); 
@@ -54,7 +55,7 @@ const tripBannerUpload = (req, res, next) => {
                 let params = { Bucket: req.bucketName, Key: s3BannerKey};
                 S3.deleteObject(params).promise()
                 .catch(next)
-            } 
+            }
             // always save newly uploaded banner to mongodb
             trip.photos.banner = req.file.location;
             return trip.save()

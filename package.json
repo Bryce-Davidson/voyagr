@@ -28,5 +28,9 @@
     "passport-local": "^1.0.0",
     "sharp": "^0.23.0",
     "uuid": "^3.3.2"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^6.2.0"
   }
 }

@@ -34,41 +34,42 @@ const newLocation = (req, res, next) => {
 
 // PHOTOS --------------------------------------------------------------------
 
-const fields = [
-    {name: 'image_1', maxCount: 1},
-    {name: 'image_2', maxCount: 1},
-    {name: 'image_3', maxCount: 1},
-    {name: 'image_4', maxCount: 1},
-    {name: 'image_5', maxCount: 1}
-]
-  
-const mulitplePhotoUpload = upload.fields(fields);
-
-// I have an array of keys
-// check an object to see if it has these keys
-// if it has the key, save the keys value
-
-function getDeletePaths(locationPhotos, reqFiles) {
+function collisionPaths(locationPhotos, reqFiles) {
+  // get keys of req.files aka: field names
   let newPhotoKeys = Object.keys(reqFiles);
   let deletePaths = [];
+  // for each field name in upload check if the location.photos 
+  // has that field name present as a key
   newPhotoKeys.forEach(key => {
+    // if the location has the key
     if (locationPhotos[key]) {
+      // take the path out of the key and get the S3 path-key to delete
       let path = locationPhotos[key].split('/')
-          path = path[path.length - 1]
+      path = path[path.length - 1]
       deletePaths.push(path)
     }
   })
   return deletePaths;
 }
 
-function updatePhotoPaths(target, filesobj) {
-    let update = {};
-    Object.entries(filesobj).forEach(([key, val]) => {
-        update[key] = val[0].location
-    });
-    return Object.assign(target, update)
+function newPhotoPaths(target, filesobj) {
+  let update = {};
+  Object.entries(filesobj).forEach(([key, val]) => {
+    update[key] = val[0].location
+  });
+  return Object.assign(target, update)
 }
- 
+
+const fields = [
+  {name: 'image_1', maxCount: 1},
+  {name: 'image_2', maxCount: 1},
+  {name: 'image_3', maxCount: 1},
+  {name: 'image_4', maxCount: 1},
+  {name: 'image_5', maxCount: 1}
+]
+
+const mulitplePhotoUpload = upload.fields(fields);
+
 const photoUploadToLocation = async function(req, res, next) {
   req.bucketName = locationBucket;
   Location.findById(req.params.id)
@@ -76,21 +77,23 @@ const photoUploadToLocation = async function(req, res, next) {
     // check if user owns document
     if(userCanAlter(location, req.user, res)) {
       mulitplePhotoUpload(req, res, function(err) {
-            // check errors
-            if(err) return next(err);
+        // check errors
+        if(err) return next(err);
             // check if photos were uploaded
             else if (!req.files) return res.send('Please provide atleast one photo');
-            // check if photos in positions already exist
-            let deletePaths = getDeletePaths(location.photos, req.files)
+            // check if photos in uplaoded spots already exist
+            let deletePaths = collisionPaths(location.photos, req.files)
             if (deletePaths.length !== 0)  {
-              // loop through delete paths and remove from amazon S3
+              // if exist delete from S3
               deletePaths.forEach(deletekey => {
                 let params = { Bucket: req.bucketName, Key: deletekey};
                 S3.deleteObject(params).promise()
                   .catch(next)
               })
             }
-            location.photos = updatePhotoPaths(location.photos, req.files)
+            // get the S3 saved locations from the req.files object
+            // merge the new upload paths into the location removing the old photos
+            location.photos = newPhotoPaths(location.photos, req.files)
             return location.save()
               .then(uloc => res.send(uloc))
           })
