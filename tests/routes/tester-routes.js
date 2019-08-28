@@ -9,7 +9,7 @@ const Trip                    = require('../../models/Trip/TripSchema');
 router.route('/query')
   .post((req, res, next) => {
     res.send(req.query)
-  })
+})
 
 
 router.route('/search')
