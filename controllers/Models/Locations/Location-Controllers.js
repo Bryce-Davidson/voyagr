@@ -1,6 +1,6 @@
 const Location = require('../../../models/Location/LocationSchema');
 const User = require('../../../models/User/UserSchema');
-const { userCanAlter } = require('../../../util/local-functions/schemaMethods');
+const { userCanAlter } = require('../../../util/local-functions/schemaValidationMethods');
 const { locationBucket } = require('../../../config/keys').AWS;
 const upload = require('../../../util/middleware/photo-upload-util');
 
@@ -107,6 +107,7 @@ const findNear = (req, res, next) => {
   var { coordinates, maxDistance } = req.body;
 
   Location.find().nearPoint(coordinates, maxDistance)
+      .populate('user', 'local.username')
       .then(data => res.send(data))
       .catch(next)
 };

@@ -20,9 +20,11 @@ const Trip = require('../../../models/Trip/TripSchema');
 
 // SEARCH AND FEATURED ----------------------------------
 
+// text search
 router.route('/search')
     .post(textSearchPostUtil(Trip))
-
+    
+// global featured
 router.route('/featured')
     .get(getFeaturedPostsUtil(Trip));
 

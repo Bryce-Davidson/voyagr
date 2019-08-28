@@ -1,6 +1,6 @@
 const User              = require('../../../models/User/UserSchema');
 const Day               = require('../../../models/Day/DaySchema');
-const { userCanAlter }  = require('../../../util/local-functions/schemaMethods');
+const { userCanAlter }  = require('../../../util/local-functions/schemaValidationMethods');
 const { dayBucket }     = require('../../../config/keys').AWS;
 const upload            = require('../../../util/middleware/photo-upload-util');
 
@@ -71,7 +71,7 @@ const viewDay = (req, res, next) => {
                 return Day.findByIdAndUpdate(req.params.id, {'$inc': {'meta.view_count': 1}}, {new: true})
                 .populate('comments')
                 .populate('locations')
-                .populate('user', 'local.email')
+                .populate('user', 'local.username')
                 .then(data => {
                     res.send((data));
                 })

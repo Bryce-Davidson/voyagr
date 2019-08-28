@@ -1,5 +1,5 @@
 const Comment = require('../../models/Comment/CommentSchema');
-const { userCanAlter } = require('../local-functions/schemaMethods');
+const { userCanAlter } = require('../local-functions/schemaValidationMethods');
 // SET ALL CHILDREN PRIVATE OR PUBLIC  ----------------------------
 
 
@@ -8,11 +8,16 @@ const { userCanAlter } = require('../local-functions/schemaMethods');
 getFeaturedPostsUtil = function(Model) {
     return function (req, res, next) {
         const pagenation = parseInt(req.query.pagenation);
-        Model.find({}).sort({'meta.view_count': -1, 'meta.numberOfComments': -1, 'meta.likes': -1})
-            .where({private: false})
-            .limit(pagenation)
-            .then(featured => res.send(featured))
-            .catch(next)
+        Model.aggregate([
+            {$project: { 'locations': 0, 'days': 0, 'meta.tags': 0, 'settings': 0}},
+            {$addFields: {
+                featuredScore: { $add: [{ $multiply: ["$meta.likes", 2]}, { $multiply: ["$meta.numberOfShares", 3]}]}}},
+            {"$sort": {'featuredScore': -1}},
+            {$project: { 'featuredScore': 0}},
+            {"$limit": pagenation}
+          ])
+        .then(featured => res.send(featured))
+        .catch(next)
     }
 }
 

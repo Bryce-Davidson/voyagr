@@ -10,7 +10,7 @@ const tags            = "walking swimming boating boat water beach sunny view su
 
 var victoria = {latitude: 48.4529784, longitude: -123.46109239999998};
 
-const emailsAndPasswords = [["lifebryce@gmail.com", "admin1"], ["bryce678@gmail.com", "froggo678"], ["katie@icloud.com", "superkid"]];
+const emailsAndPasswords = [["lifebryce@gmail.com", "admin1", "brycd"], ["bryce678@gmail.com", "froggo678", "james"], ["katie@icloud.com", "superkid", "sauce"]];
 
 const Day = require('../../models/Day/DaySchema');
 const Trip = require('../../models/Trip/TripSchema');
@@ -24,8 +24,8 @@ async function createTripWithUser(numTrips, DaysInTrip, LocsInDay) {
     // loop all code below numTrips amount of times
     for (var i = 0; i < numTrips; i++) {
         // create user for both days and trip
-        var userEP = getRandom(emailsAndPasswords, 1)[0];
-        let user = await User.create({'local.email': userEP[0], 'local.password': userEP[1]})
+        var userEPU = getRandom(emailsAndPasswords, 1)[0];
+        let user = await User.create({'local.email': userEPU[0], 'local.password': userEPU[1], 'local.username': userEPU[2]})
         // create new trip in memory to get the trip id
         let trip = await loadTrip(user);
         // create days with trip id and return dayids list
