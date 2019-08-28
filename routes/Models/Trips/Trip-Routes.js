@@ -18,7 +18,7 @@ const {
 
 const Trip = require('../../../models/Trip/TripSchema');
 
-// SEARCH AND FEATURED ----------------------------------
+// SEARCH AND FEATURED ---------------------------------------
 
 // text search
 router.route('/search')

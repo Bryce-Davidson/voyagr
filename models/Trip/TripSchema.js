@@ -1,5 +1,6 @@
-const Day = require('../../models/Day/DaySchema');
-var mongoose = require('mongoose');
+const Day                 = require('../../models/Day/DaySchema');
+const mongoose            = require('mongoose');
+const { pointSchema }     = require('../Geoschema-Types/GeoSchemas');
 
 const TripSchema = new mongoose.Schema({
   name: {type: String, required: true, maxlength: [100, 'Name must be less than 100 characters']},

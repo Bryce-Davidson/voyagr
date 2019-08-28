@@ -21,7 +21,7 @@ getFeaturedPostsUtil = function(Model) {
     }
 }
 
-// TEXT SEARCH POST NAMES -----------------------------------------
+// TEXT SEARCH POST NAMES & DESCRIPTIONS -----------------------------------------
 
 textSearchPostUtil = function(Model) {
     return function (req, res, next) {
