@@ -8,8 +8,29 @@ const Trip                    = require('../../models/Trip/TripSchema');
 
 router.route('/query')
   .post((req, res, next) => {
-    res.send(req.query)
-  })
+    let { category, near, tags, text, contains } = req.query
+    let built = { meta: {}};
+
+    if(!category) { return res.send('Please specify category of search') };
+    if (near) { 
+      built.distance    = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
+      built.coordinates = near.substring(near.indexOf('@') + 1).split(',')
+    } if (contains) {
+      built.contains = contains.split(',')
+    } if(tags) {
+      console.log(tags.split(','));
+      built.meta.tags = { $all: tags.split(',') }
+    } if (text) {
+      built.$text = { $search: text }
+    }
+
+    console.log(built)
+
+    Trip.find(built)
+      .then(trips => {
+        res.send(trips)
+      }).catch(next)
+})
 
 
 router.route('/search')
