@@ -30,7 +30,7 @@ textSearchPostUtil = function(Model) {
         filter.$text = { $search: query }
 
         Model.find(filter, { score: { $meta: "textScore" } })
-        .where({private: false})
+        .where({'settings.private': false})
         .sort( { score: { $meta: "textScore" } } )
         .then(docs => {
             res.send(docs)
