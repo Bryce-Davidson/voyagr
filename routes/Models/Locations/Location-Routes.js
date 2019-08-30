@@ -20,6 +20,9 @@ const Location = require('../../../models/Location/LocationSchema')
 
 // SEARCH AND FEATURED ----------------------------------
 
+router.route('/search')
+  .post(globalSearch(Location))
+
 router.route('/featured')
   .get(getFeaturedPostsUtil(Location))
 

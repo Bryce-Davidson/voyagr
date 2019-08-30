@@ -11,17 +11,25 @@
     // most likes
     // most comments
 
-const Trip = require('../../models/Trip/TripSchema');
+const Trip        = require('../../models/Trip/TripSchema');
+const Location    = require('../../models/Location/LocationSchema');
+const Day         = require('../../models/Day/DaySchema');
 
 const globalsearch = function (Model) {
     return function(req, res, next) {
         let { near, tags, text, contains } = req.query
         let built = {};
 
-        if (near) { 
-        built.distance    = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
-        built.coordinates = near.substring(near.indexOf('@') + 1).split(',')
-        } 
+        if (near && Model === Location) {
+            let maxDistance = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
+            let coordinates = near.substring(near.indexOf('@') + 1).split(',').reverse()
+            built.location = { 
+            $near: { 
+                    $geometry: { type: 'Point', coordinates },
+                    $maxDistance: maxDistance
+                }
+            }
+        }
         if (contains && category != 'locations') {built.contains = contains.split(',')} 
         if (tags) { built['meta.tags'] = { $all: tags.split(',') }} 
         if (text) { built.$text = { $search: text } }
@@ -36,3 +44,16 @@ const globalsearch = function (Model) {
 }
 
 module.exports = globalsearch;
+
+let idea = {
+    location: {
+      $near: {
+        $geometry: {
+           type: "Point" ,
+           coordinates: [ -123.46109239999998, 48.4529784]
+        },
+        $maxDistance: 1000,
+      }
+    }
+ }
+
