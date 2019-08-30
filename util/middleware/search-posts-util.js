@@ -19,7 +19,8 @@ const globalsearch = function (Model) {
     return function(req, res, next) {
         let { near, tags, text, contains } = req.query
         let built = {};
-        if (near && Model !== Location) {return res.send('Please use locations to search near, otherwise use contains') }
+        // Location Geo search
+        if (near && Model !== Location) {return res.send('Near is only available for locations') }
         if (near && Model === Location) {
             let maxDistance = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
             let coordinates = near.substring(near.indexOf('@') + 1).split(',').reverse()
@@ -30,7 +31,11 @@ const globalsearch = function (Model) {
                 }
             }
         }
-        if (contains && category != 'locations') {built.contains = contains.split(',')} 
+        if (contains && (Model === Trip || Day)) {built.contains = contains.split(',')}
+        
+        // TODO:
+            // [] add in geowithin logic to implement geowithin from point
+        
         if (tags) { built['meta.tags'] = { $all: tags.split(',') }} 
         if (text) { built.$text = { $search: text } }
     
