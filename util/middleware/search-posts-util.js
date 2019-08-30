@@ -12,10 +12,12 @@
     // most comments
 
 
-module.exports = function globalsearch(Model) {
+const globalsearch = function (Model) {
     return function(req, res, next) {
         let { near, tags, text, contains } = req.query
         let built = {};
+
+        console.log(text)
 
         if (near) { 
         built.distance    = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
@@ -31,3 +33,5 @@ module.exports = function globalsearch(Model) {
         }).catch(next)
     }
 }
+
+module.exports = globalsearch;
