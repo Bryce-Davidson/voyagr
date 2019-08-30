@@ -13,6 +13,10 @@ const TripSchema = new mongoose.Schema({
     upperBound: Number,
     middleBound: Number
   },
+  countries: {
+    type: [String],
+    lowercase: true
+  },
   settings: {
       private: {type: Boolean, required: true, default: true}
   },
@@ -56,10 +60,11 @@ TripSchema.methods.changeChildStatus = async function(status) {
 
 // MIDDLEWARE --------------------------------------------------
 
-TripSchema.pre('save', function save(next) {
+TripSchema.pre('save', function(next) {
   const trip = this;
-  if (!trip.isModified('budget.lowerBound') && !trip.isModified('budget.upperBound') ) { return next(); }
-  trip.budget.middleBound = Math.round(trip.budget.upperBound + trip.budget.lowerBound / 2)
+  if(trip.isModified('countries')) {
+    trip.countries = trip.countries.map(c => c.toLowerCase())
+  }
   return next()
 });
 

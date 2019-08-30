@@ -17,19 +17,19 @@ const Day         = require('../../models/Day/DaySchema');
 
 const globalsearch = function (Model) {
     return function(req, res, next) {
-        let { near, tags, text, min_budget, max_budget } = req.query
+        let { near, tags, text, min_budget, max_budget} = req.query
         let query = {};
         // Location Specific
         if (near && Model !== Location)
             return res.status(405).send('Near is only available for searching locations') 
         if (near && text)
-            return res.status(405).send('Near cannot be combined with text, use tags to specify')
+            return res.status(405).send('Near cannot be combined with text, use tags to specify attributes')
         if (near) {
             let maxDistance = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
             let coordinates = near.substring(near.indexOf('@') + 1).split(',').reverse()
             query.location = { $near: { $geometry: { type: 'Point', coordinates }, $maxDistance: maxDistance}}
         }
-
+        // Global
         if (min_budget || max_budget) {
             const mb = query['budget.middleBound'] = {};
             if (min_budget) mb.$gte = min_budget;
@@ -37,8 +37,6 @@ const globalsearch = function (Model) {
         }
         if (tags) { query['meta.tags'] = { $all: tags.split(',') }} 
         if (text) { query.$text = { $search: text } }
-    
-        console.log(query)
 
         Model.find(query)
         .then(docs => {

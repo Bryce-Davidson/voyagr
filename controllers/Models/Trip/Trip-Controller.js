@@ -4,7 +4,7 @@ const User                  = require('../../../models/User/UserSchema');
 const { userCanAlter }      = require('../../../util/local-functions/schemaValidationMethods');
 const { TRIPBUCKET }        = require('../../../config/keys').AWS;
 const upload                = require('../../../util/middleware/photo-upload-util');
-
+const flatten               = require('flat');
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
@@ -16,7 +16,7 @@ const S3 = new AWS.S3()
 // CREATE -------------------------------------------------------------------------
 
 const newTrip = (req, res, next) => {
-    const {name, description, tags, private, lowerBound, upperBound} = req.body;
+    const {name, description, tags, private, lowerBound, upperBound, countries} = req.body;
     let userid = req.user;
     let newTrip = new Trip({
         user: userid,
@@ -25,8 +25,9 @@ const newTrip = (req, res, next) => {
         budget: { 
             lowerBound, 
             upperBound, 
-            middleBound: Math.round(upperBound + lowerBound / 2)
+            middleBound: Math.round((upperBound + lowerBound) / 2)
         },
+        countries,
         meta: {tags}
     })
     newTrip.save()
@@ -45,7 +46,6 @@ const singleUpload = upload.single('banner');
 
 const tripBannerUpload = (req, res, next) => {
     req.bucketName = TRIPBUCKET;
-    if(!req.file) return res.send('Please provide atleast one photo');
     Trip.findById(req.params.id)
         .then(trip => {
         if(userCanAlter(trip, req.user, res)) {
@@ -72,7 +72,6 @@ const tripBannerUpload = (req, res, next) => {
         })
         .catch(next)
 }
-
 
 // READ --------------------------------------------------------------------------
 
@@ -119,15 +118,8 @@ const addDayToTrip = (req, res, next) => {
 }
 
 const updateTrip = (req, res, next) => {
-    let update = req.body.update;
-    let tripid = req.params.id;
-    Trip.findById(tripid)
-        .then(trip => {
-            if(userCanAlter(trip, req.user)) {
-                return trip.findByIdAndUpdate(trip.id, update)
-                    .then(utrip => res.send(utrip))
-            }
-        }).catch(next)
+    // make sure to add updates so middlweare is triggered
+    res.send('todo')
 }
 
 // CHILDREN FUNCTIONS --------------------------
