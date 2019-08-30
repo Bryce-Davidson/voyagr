@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { isLoggedIn } = require('../../../util/middleware/auth-util')
+const globalSearch = require('../../../util/middleware/search-posts-util');
 const { 
   addCommentUtil,
   LikePostUtil,

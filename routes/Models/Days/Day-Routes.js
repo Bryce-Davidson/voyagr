@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { isLoggedIn } = require('../../../util//middleware/auth-util');
+const globalSearch = require('../../../util/middleware/search-posts-util');
 const { 
     addCommentUtil,
     LikePostUtil,
     deletePostUtil,
-    textSearchPostUtil,
     getFeaturedPostsUtil
  } = require('../../../util/middleware/post-actions-util');
 const {
@@ -21,7 +21,7 @@ const Day = require('../../../models/Day/DaySchema');
 // SEARCH AND FEATURED ----------------------------------
 
 router.route('/search')
-    .post(textSearchPostUtil(Day));
+    .post(globalSearch(Day));
 
 router.route('/featured')
     .get(getFeaturedPostsUtil(Day))
