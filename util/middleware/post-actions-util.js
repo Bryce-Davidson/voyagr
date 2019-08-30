@@ -1,7 +1,8 @@
-const Comment = require('../../models/Comment/CommentSchema');
-const { userCanAlter } = require('../local-functions/schemaValidationMethods');
-// SET ALL CHILDREN PRIVATE OR PUBLIC  ----------------------------
-
+const Comment           = require('../../models/Comment/CommentSchema');
+const { userCanAlter }  = require('../local-functions/schemaValidationMethods');
+const Trip              = require('../../models/Trip/TripSchema');
+const Day               = require('../../models/Day/DaySchema');
+const Location          = require('../../models/Location/LocationSchema');
 
 // GET FEATURED POSTS ---------------------------------------------
 
@@ -11,7 +12,11 @@ getFeaturedPostsUtil = function(Model) {
         Model.aggregate([
             {$project: { 'locations': 0, 'days': 0, 'meta.tags': 0, 'settings': 0}},
             {$addFields: {
-                featuredScore: { $add: [{ $multiply: ["$meta.likes", 2]}, { $multiply: ["$meta.numberOfShares", 3]}]}}},
+                featuredScore: { $add: [
+                    { $multiply: ["$meta.likes", 2]}, 
+                    { $multiply: ["$meta.numberOfShares", 3]},
+                    '$meta.viewCount'
+                ]}}},
             {"$sort": {'featuredScore': -1}},
             {$project: { 'featuredScore': 0}},
             {"$limit": pagenation}
@@ -24,9 +29,13 @@ getFeaturedPostsUtil = function(Model) {
 // COMMENT ON POST -------------------------------------------------
 
 addCommentUtil = function(Model) {
+    let postType;
     return function(req, res, next) {
+        let postid = req.params.id;
         let comment = new Comment ({
-                "postid": req.params.id,
+                'locationid': Model === Location ? postid : null,
+                'dayid': Model === Day ? postid : null,
+                'tripid': Model === Trip ? postid : null,
                 "user": req.session.passport.user,
                 "body": req.body.body
         });

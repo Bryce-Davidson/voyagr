@@ -23,7 +23,8 @@ const newTrip = (req, res, next) => {
         name, description, private,
         settings: {private},
         budget: { 
-            lowerBound, upperBound, 
+            lowerBound, 
+            upperBound, 
             middleBound: Math.round(upperBound + lowerBound / 2)
         },
         meta: {tags}
@@ -76,9 +77,31 @@ const tripBannerUpload = (req, res, next) => {
 // READ --------------------------------------------------------------------------
 
 const viewTrip = (req, res, next) => {
-    // TODO: 
-        // CHECK trello board - trip read
-    res.send('Todo')
+    Trip.findById(req.params.id)
+        .then(trip => {
+            if(trip.user == req.user) {
+                return Trip.findById(trip._id)
+                .populate('user', 'local.username -_id')
+                .populate({
+                    path: 'comments',
+                    select: '-tripid',
+                    populate: { path: 'user', select: 'local.username -_id' }
+                })
+                .populate('days')
+                .then(trip => {return res.send(trip)})
+            }
+            Trip.findByIdAndUpdate(req.params.id, {'$inc': {'meta.viewCount': 1}}, {new: true})
+                .populate('user', 'local.username -_id')
+                .populate({
+                    path: 'comments',
+                    select: '-tripid',
+                    populate: { path: 'user', select: 'local.username -_id' }
+                })
+                .populate('days')
+                .then(utrip => {
+                    res.send(utrip)
+                })
+        }).catch(next)
 }
 
 // UPDATE -----------------------------------------------------------------------------

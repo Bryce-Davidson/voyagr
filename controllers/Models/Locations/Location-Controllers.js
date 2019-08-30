@@ -10,7 +10,7 @@ const S3 = new AWS.S3()
 // CREATE -------------------------------------------------------------------------
 
 const newLocation = (req, res, next) => {
-  const {coordinates, name } = req.body
+  const {coordinates, name,tags } = req.body
   let userid = req.session.passport.user;
   // SWITCH from [lat, long] to [long, lat] for mongo
   coordinates.reverse();
@@ -21,6 +21,7 @@ const newLocation = (req, res, next) => {
       "type": "Point",
       "coordinates": coordinates
     },
+    "meta": {tags}
   })
   newLocation.save()
   .then(location => {

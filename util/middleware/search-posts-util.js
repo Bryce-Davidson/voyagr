@@ -19,11 +19,16 @@ const globalsearch = function (Model) {
     return function(req, res, next) {
         let { near, tags, text, min_budget, max_budget } = req.query
         let query = {};
-        
-        if (near && Model !== Location) { return res.send('Near is only available for searching locations') }
-        let maxDistance = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
-        let coordinates = near.substring(near.indexOf('@') + 1).split(',').reverse()
-        query.location = { $near: { $geometry: { type: 'Point', coordinates }, $maxDistance: maxDistance}}
+        // Location Specific
+        if (near && Model !== Location)
+            return res.status(405).send('Near is only available for searching locations') 
+        if (near && text)
+            return res.status(405).send('Near cannot be combined with text, use tags to specify')
+        if (near) {
+            let maxDistance = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
+            let coordinates = near.substring(near.indexOf('@') + 1).split(',').reverse()
+            query.location = { $near: { $geometry: { type: 'Point', coordinates }, $maxDistance: maxDistance}}
+        }
 
         if (min_budget || max_budget) {
             const mb = query['budget.middleBound'] = {};
@@ -33,7 +38,7 @@ const globalsearch = function (Model) {
         if (tags) { query['meta.tags'] = { $all: tags.split(',') }} 
         if (text) { query.$text = { $search: text } }
     
-        // console.log(query)
+        console.log(query)
 
         Model.find(query)
         .then(docs => {

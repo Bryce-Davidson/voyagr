@@ -29,7 +29,12 @@ const LocationSchema = new mongoose.Schema({
       image_5: String
     },
     comments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
-    typeoflocation: String
+    typeoflocation: String,
+    budget: {
+      lowerBound: Number,
+      upperBound: Number,
+      middleBound: Number
+    }
 });
 
 // QUERIES ---------------------------------------------------
@@ -45,7 +50,7 @@ LocationSchema.options.autoIndex = true;
 
 LocationSchema.index({ location: "2dsphere" });
 
-// LocationSchema.index({name: 'text', description: 'text'}, {weights: { name: 5, description: 3,}});
+LocationSchema.index({name: 'text', description: 'text'}, {weights: { name: 5, description: 3,}});
 
 var Location = mongoose.model("Location", LocationSchema);
 
