@@ -39,21 +39,13 @@ LocationSchema.query.nearPoint = function(coordinates, maxDistance) {
             .near({ center: { coordinates, type: 'Point' }, maxDistance, spherical: true })
 };
 
-// MIDDLEWARE --------------------------------------------------
-
-LocationSchema.pre('find', function() {
-  // this refers to the query object
-  this.where({private: false});
-});
-
-
 // INDEXES ---------------------------------------------------
 
 LocationSchema.options.autoIndex = true;
 
 LocationSchema.index({ location: "2dsphere" });
 
-LocationSchema.index({name: 'text', description: 'text'}, {weights: { name: 5, description: 3,}});
+// LocationSchema.index({name: 'text', description: 'text'}, {weights: { name: 5, description: 3,}});
 
 var Location = mongoose.model("Location", LocationSchema);
 

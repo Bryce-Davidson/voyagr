@@ -19,7 +19,7 @@ const globalsearch = function (Model) {
     return function(req, res, next) {
         let { near, tags, text, contains } = req.query
         let built = {};
-
+        if (near && Model !== Location) {return res.send('Please use locations to search near, otherwise use contains') }
         if (near && Model === Location) {
             let maxDistance = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
             let coordinates = near.substring(near.indexOf('@') + 1).split(',').reverse()
@@ -33,9 +33,7 @@ const globalsearch = function (Model) {
         if (contains && category != 'locations') {built.contains = contains.split(',')} 
         if (tags) { built['meta.tags'] = { $all: tags.split(',') }} 
         if (text) { built.$text = { $search: text } }
-        
-        console.log(built)
-
+    
         Model.find(built)
         .then(docs => {
             res.send(docs)
@@ -56,4 +54,14 @@ let idea = {
       }
     }
  }
+
+ let what = { location: { 
+    $near: {
+        $geometry: {
+           type: "Point" ,
+           coordinates: [ -123.46109239999998, 48.4529784]
+        },
+        $maxDistance: 10000,
+      }
+ }}
 
