@@ -6,7 +6,7 @@ const {
     addCommentUtil,
     LikePostUtil,
     deletePostUtil,
-    getFeaturedPostsUtil 
+    getFeaturedPostsUtil
 } = require('../../../util/middleware/post-actions-util');
 const {
     newTrip,
