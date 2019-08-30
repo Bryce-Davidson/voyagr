@@ -11,13 +11,12 @@
     // most likes
     // most comments
 
+const Trip = require('../../models/Trip/TripSchema');
 
 const globalsearch = function (Model) {
     return function(req, res, next) {
         let { near, tags, text, contains } = req.query
         let built = {};
-
-        console.log(text)
 
         if (near) { 
         built.distance    = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
@@ -27,6 +26,8 @@ const globalsearch = function (Model) {
         if (tags) { built['meta.tags'] = { $all: tags.split(',') }} 
         if (text) { built.$text = { $search: text } }
         
+        console.log(built)
+
         Model.find(built)
         .then(docs => {
             res.send(docs)
