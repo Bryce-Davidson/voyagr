@@ -12,7 +12,7 @@
     // most comments
 
 
-module.exports = function (Model) {
+module.exports = function globalsearch(Model) {
     return function(req, res, next) {
         let { near, tags, text, contains } = req.query
         let built = {};
@@ -25,7 +25,7 @@ module.exports = function (Model) {
         if (tags) { built['meta.tags'] = { $all: tags.split(',') }} 
         if (text) { built.$text = { $search: text } }
         
-        Trip.find(built)
+        Model.find(built)
         .then(docs => {
             res.send(docs)
         }).catch(next)

@@ -53,6 +53,8 @@ LocationSchema.options.autoIndex = true;
 
 LocationSchema.index({ location: "2dsphere" });
 
+LocationSchema.index({name: 'text', description: 'text'}, {weights: { name: 5, description: 3,}});
+
 var Location = mongoose.model("Location", LocationSchema);
 
 module.exports = Location;

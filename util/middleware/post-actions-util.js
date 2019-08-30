@@ -21,24 +21,6 @@ getFeaturedPostsUtil = function(Model) {
     }
 }
 
-// TEXT SEARCH POST NAMES & DESCRIPTIONS -----------------------------------------
-
-textSearchPostUtil = function(Model) {
-    return function (req, res, next) {
-        let query = req.query.q;
-        let filter = req.body.filter || {};
-        filter.$text = { $search: query }
-
-        Model.find(filter, { score: { $meta: "textScore" } })
-        .where({'settings.private': false})
-        .sort( { score: { $meta: "textScore" } } )
-        .then(docs => {
-            res.send(docs)
-        })
-        .catch(next)
-    }
-}
-
 // COMMENT ON POST -------------------------------------------------
 
 addCommentUtil = function(Model) {
@@ -99,6 +81,5 @@ module.exports = {
     addCommentUtil, 
     LikePostUtil, 
     deletePostUtil, 
-    textSearchPostUtil, 
     getFeaturedPostsUtil 
 };

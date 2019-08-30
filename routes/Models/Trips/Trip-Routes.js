@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { isLoggedIn } = require('../../../util/middleware/auth-util');
+const globalSearch = require('../../../util/middleware/search-posts-util');
 const { 
     addCommentUtil,
     LikePostUtil,
     deletePostUtil,
-    textSearchPostUtil,
     getFeaturedPostsUtil 
 } = require('../../../util/middleware/post-actions-util');
 const {
@@ -22,7 +22,7 @@ const Trip = require('../../../models/Trip/TripSchema');
 
 // text search
 router.route('/search')
-    .post(textSearchPostUtil(Trip))
+    .post(globalSearch(Trip))
     
 // global featured
 router.route('/featured')

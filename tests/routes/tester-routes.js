@@ -5,7 +5,7 @@ const User                    = require('../../models/User/UserSchema');
 const Trip                    = require('../../models/Trip/TripSchema');
 
 // TEST ROUTES ----------------------------------------------------------------
-
+// GLOBAL SEARCH QUERY
 router.route('/query')
   .post((req, res, next) => {
     let { near, tags, text, contains } = req.query
