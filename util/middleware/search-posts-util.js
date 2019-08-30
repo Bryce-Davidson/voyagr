@@ -17,56 +17,30 @@ const Day         = require('../../models/Day/DaySchema');
 
 const globalsearch = function (Model) {
     return function(req, res, next) {
-        let { near, tags, text, contains } = req.query
-        let built = {};
-        // Location Geo search
-        if (near && Model !== Location) {return res.send('Near is only available for locations') }
-        if (near && Model === Location) {
-            let maxDistance = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
-            let coordinates = near.substring(near.indexOf('@') + 1).split(',').reverse()
-            built.location = { 
-            $near: { 
-                    $geometry: { type: 'Point', coordinates },
-                    $maxDistance: maxDistance
-                }
-            }
+        let { near, tags, text, min_budget, max_budget } = req.query
+        let query = {};
+        
+        if (near && Model !== Location) { return res.send('Near is only available for searching locations') }
+        let maxDistance = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
+        let coordinates = near.substring(near.indexOf('@') + 1).split(',').reverse()
+        query.location = { $near: { $geometry: { type: 'Point', coordinates }, $maxDistance: maxDistance}}
+
+        if (min_budget || max_budget) {
+            const mb = query['budget.middleBound'] = {};
+            if (min_budget) mb.$gte = min_budget;
+            if (max_budget) mb.$lte = max_budget;
         }
-        if (contains && (Model === Trip || Day)) {built.contains = contains.split(',')}
-        
-        // TODO:
-            // [] add in geowithin logic to implement geowithin from point
-        
-        if (tags) { built['meta.tags'] = { $all: tags.split(',') }} 
-        if (text) { built.$text = { $search: text } }
+        if (tags) { query['meta.tags'] = { $all: tags.split(',') }} 
+        if (text) { query.$text = { $search: text } }
     
-        Model.find(built)
+        // console.log(query)
+
+        Model.find(query)
         .then(docs => {
-            res.send(docs)
+            delete query;
+            return res.send(docs)
         }).catch(next)
     }
 }
 
 module.exports = globalsearch;
-
-let idea = {
-    location: {
-      $near: {
-        $geometry: {
-           type: "Point" ,
-           coordinates: [ -123.46109239999998, 48.4529784]
-        },
-        $maxDistance: 1000,
-      }
-    }
- }
-
- let what = { location: { 
-    $near: {
-        $geometry: {
-           type: "Point" ,
-           coordinates: [ -123.46109239999998, 48.4529784]
-        },
-        $maxDistance: 10000,
-      }
- }}
-

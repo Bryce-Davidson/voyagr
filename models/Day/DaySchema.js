@@ -11,7 +11,7 @@ const DaySchema = new mongoose.Schema({
     },
   meta: {
     created: { type : Date, default: Date.now },
-    view_count: {type: Number, default: 0},
+    viewCount: {type: Number, default: 0},
     tags: [String],
     likes: {type: Number, default: 0},
     numberOfComments: {type: Number, default: 0},

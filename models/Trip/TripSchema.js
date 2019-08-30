@@ -3,19 +3,24 @@ const mongoose            = require('mongoose');
 const { pointSchema }     = require('../Geoschema-Types/GeoSchemas');
 
 const TripSchema = new mongoose.Schema({
-  name: {type: String, required: true, maxlength: [100, 'Name must be less than 100 characters']},
+  name: {type: String, required: true, maxlength: [50, 'Name must be less than 50 characters']},
   user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   days: [{type: mongoose.Schema.Types.ObjectId, ref: 'Day'}],
   locations: [{type: mongoose.Schema.Types.ObjectId, ref: 'Location'}],
   description: {type: String, required: true, maxlength: [500, 'Description must be less than 500 characters']},
+  budget: { 
+    lowerBound: Number,
+    upperBound: Number,
+    middleBound: Number
+  },
   settings: {
-      private: {type: Boolean, required: true, default: false}
+      private: {type: Boolean, required: true, default: true}
   },
   meta: {
       created: { type : Date, default: Date.now },
-      view_count: {type: Number, default: 0},
       tags: [String],
       likes: {type: Number, default: 0},
+      viewCount: {type: Number, default: 0},
       numberOfComments: {type: Number, default: 0},
       numberOfShares: {type: Number, default: 0}
   },
@@ -50,6 +55,13 @@ TripSchema.methods.changeChildStatus = async function(status) {
 // QUERIES  ----------------------------------------------------
 
 // MIDDLEWARE --------------------------------------------------
+
+TripSchema.pre('save', function save(next) {
+  const trip = this;
+  if (!trip.isModified('budget.lowerBound') && !trip.isModified('budget.upperBound') ) { return next(); }
+  trip.budget.middleBound = Math.round(trip.budget.upperBound + trip.budget.lowerBound / 2)
+  return next()
+});
 
 var Trip = mongoose.model("Trip", TripSchema);
 

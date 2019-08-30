@@ -68,7 +68,7 @@ const viewDay = (req, res, next) => {
                 if (req.user == day.user) res.send(day)
                 else res.status(401).send('Unauthorized')
             } else {
-                return Day.findByIdAndUpdate(req.params.id, {'$inc': {'meta.view_count': 1}}, {new: true})
+                return Day.findByIdAndUpdate(req.params.id, {'$inc': {'meta.viewCount': 1}}, {new: true})
                 .populate('comments')
                 .populate('locations')
                 .populate('user', 'local.username')

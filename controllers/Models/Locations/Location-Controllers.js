@@ -113,7 +113,7 @@ const findNear = (req, res, next) => {
 };
 
 const viewLocation = (req, res, next) => {
-  Location.findByIdAndUpdate(req.params.id, {'$inc': {'meta.view_count': 1}}, {new: true})
+  Location.findByIdAndUpdate(req.params.id, {'$inc': {'meta.viewCount': 1}}, {new: true})
     .populate('comments')
     .then(data => {
       res.send((data));

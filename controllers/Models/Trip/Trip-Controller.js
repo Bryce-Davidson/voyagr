@@ -2,7 +2,7 @@ const Trip                  = require('../../../models/Trip/TripSchema');
 const Day                   = require('../../../models/Day/DaySchema');
 const User                  = require('../../../models/User/UserSchema');
 const { userCanAlter }      = require('../../../util/local-functions/schemaValidationMethods');
-const { tripBucket }        = require('../../../config/keys').AWS;
+const { TRIPBUCKET }        = require('../../../config/keys').AWS;
 const upload                = require('../../../util/middleware/photo-upload-util');
 
 
@@ -16,12 +16,16 @@ const S3 = new AWS.S3()
 // CREATE -------------------------------------------------------------------------
 
 const newTrip = (req, res, next) => {
-    const {name, description, tags, private} = req.body;
+    const {name, description, tags, private, lowerBound, upperBound} = req.body;
     let userid = req.user;
     let newTrip = new Trip({
         user: userid,
         name, description, private,
         settings: {private},
+        budget: { 
+            lowerBound, upperBound, 
+            middleBound: Math.round(upperBound + lowerBound / 2)
+        },
         meta: {tags}
     })
     newTrip.save()
@@ -39,7 +43,7 @@ const newTrip = (req, res, next) => {
 const singleUpload = upload.single('banner');
 
 const tripBannerUpload = (req, res, next) => {
-    req.bucketName = tripBucket;
+    req.bucketName = TRIPBUCKET;
     if(!req.file) return res.send('Please provide atleast one photo');
     Trip.findById(req.params.id)
         .then(trip => {
@@ -72,22 +76,9 @@ const tripBannerUpload = (req, res, next) => {
 // READ --------------------------------------------------------------------------
 
 const viewTrip = (req, res, next) => {
-    Trip.findById(req.params.id)
-        .then(trip => {
-            if (trip.settings.private) {
-                if (req.user == trip.user) res.send(trip)
-                else res.status(401).send("Unauthorized");
-            } else {
-                return Trip.findByIdAndUpdate(req.params.id, {'$inc': {'meta.view_count': 1}}, {new: true})
-                .populate('comments')
-                .populate('days')
-                .populate('user', 'local.username')
-                .then(trip => { 
-                    res.send((trip));
-                })
-                .catch(next)
-            }
-        })
+    // TODO: 
+        // CHECK trello board - trip read
+    res.send('Todo')
 }
 
 // UPDATE -----------------------------------------------------------------------------
