@@ -11,7 +11,7 @@ router.route('/signup')
   .get(signup.get)
   .post(passport.authenticate('local-signup', {
       successRedirect : '/',
-      failureRedirect : '/signup',
+      failureRedirect : '/signup?alreadyExists=true',
       failureFlash : true
   }));
 

@@ -39,6 +39,8 @@ const globalsearch = function (Model) {
         if (text) { query.$text = { $search: text } }
 
         Model.find(query)
+        // can add paths hera that aren't in document and they will be ignored
+        .select('name description meta.created meta.likes meta.numberOfShares')
         .then(docs => {
             delete query;
             return res.send(docs)

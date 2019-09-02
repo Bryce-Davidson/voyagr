@@ -22,6 +22,9 @@ var userSchema = mongoose.Schema({
       trips: [{type: mongoose.Schema.Types.ObjectId, ref: 'Trips'}],
       days: [{type: mongoose.Schema.Types.ObjectId, ref: 'Days'}],
       locations: [{type: mongoose.Schema.Types.ObjectId, ref: 'Locations'}]
+    },
+    photos: {
+      profile: String
     }
 });
 

@@ -32,7 +32,7 @@ const TripSchema = new mongoose.Schema({
   photos: {
     banner: String,
     bannerpx500: String,
-    bannerpx150: String
+    bannerpx300: String
   }
 });
 
@@ -60,13 +60,9 @@ TripSchema.methods.changeChildStatus = async function(status) {
 
 // MIDDLEWARE --------------------------------------------------
 
-TripSchema.pre('save', function(next) {
-  const trip = this;
-  if(trip.isModified('countries')) {
-    trip.countries = trip.countries.map(c => c.toLowerCase())
-  }
-  return next()
-});
+TripSchema.pre('find', function() {
+  this.populate('user', 'local.username -_id')
+})
 
 var Trip = mongoose.model("Trip", TripSchema);
 

@@ -63,6 +63,7 @@ const tripBannerUpload = (req, res, next) => {
             }
             // always save newly uploaded banner to mongodb
             trip.photos.banner = req.file.location;
+            // potentially add the resized versions here
             return trip.save()
                 .then(utrip => {
                 res.send(utrip)
@@ -78,6 +79,7 @@ const tripBannerUpload = (req, res, next) => {
 const viewTrip = (req, res, next) => {
     Trip.findById(req.params.id)
         .then(trip => {
+            if(trip.settings.private && trip.user != req.user) { return res.status(401).send('Unauthorized') }
             if(trip.user == req.user) {
                 return Trip.findById(trip._id)
                 .populate('user', 'local.username -_id')
@@ -111,17 +113,33 @@ const addDayToTrip = (req, res, next) => {
     Trip.findById(tripid)
         .then(trip => {
             if(userCanAlter(trip, req.user, res)) {
-                trip.days.push(dayid)
-                return trip.save().then(newTrip => res.send(newTrip))
+                return Day.findByIdAndUpdate(dayid, { $push: { trips: tripid }}, {new: true})
+                    .then(uday => {
+                        return Trip.findByIdAndUpdate(tripid, {
+                            $push: { days: dayid }
+                        }, {new: true})
+                        .populate('user', 'local.username -_id')
+                        .populate('days')
+                        .then(utrip => res.send(utrip))
+                    })
             }
-        }).catch(err)
+        }).catch(next)
 }
+
 
 const updateTrip = (req, res, next) => {
-    // make sure to add updates so middlweare is triggered
-    res.send('todo')
-}
-
+    let tripid = req.params.id;
+    let update = flatten(req.body, {safe: true});
+    Trip.findById(tripid)
+        .then(trip => {
+            if(userCanAlter(trip, req.user, res)) {
+                Trip.findByIdAndUpdate(trip._id, update, {new: true})
+                    .then(utrip => {
+                        res.send(utrip)
+                    })
+            }
+        })
+    }
 // CHILDREN FUNCTIONS --------------------------
 
 const changeChildStatus = (req, res, next) => {
@@ -133,8 +151,8 @@ const changeChildStatus = (req, res, next) => {
         .then(trip => {
             if(userCanAlter(trip, req.user, res)) {
                 return trip.changeChildStatus(status)
-                    .then(trip => {
-                        res.send(trip)
+                    .then(utrip => {
+                        res.send(utrip)
                     })
             }
         }).catch(next)
