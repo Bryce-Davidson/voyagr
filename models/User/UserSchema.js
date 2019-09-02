@@ -24,7 +24,9 @@ var userSchema = mongoose.Schema({
       locations: [{type: mongoose.Schema.Types.ObjectId, ref: 'Locations'}]
     },
     photos: {
-      profile: String
+      profile: String,
+      profile500: String,
+      banner: String
     }
 });
 
