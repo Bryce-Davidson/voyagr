@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const bcrypt   = require('bcrypt-nodejs');
-const Locations = require('../Location/LocationSchema').Schema;
 
 var userSchema = mongoose.Schema({
     local: {
@@ -25,7 +24,7 @@ var userSchema = mongoose.Schema({
     },
     photos: {
       profile: String,
-      profile500: String,
+      profilepx500: String,
       banner: String
     }
 });
