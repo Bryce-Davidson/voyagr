@@ -4,6 +4,8 @@ const Trip              = require('../../models/Trip/TripSchema');
 const Day               = require('../../models/Day/DaySchema');
 const Location          = require('../../models/Location/LocationSchema');
 
+// WRITE AS MANY OF THESE AS POSSIBLE IN QUERIES
+
 // GET FEATURED POSTS ---------------------------------------------
 
 getFeaturedPostsUtil = function(Model) {

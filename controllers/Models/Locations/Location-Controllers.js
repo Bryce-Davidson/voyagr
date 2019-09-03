@@ -1,8 +1,9 @@
-const Location = require('../../../models/Location/LocationSchema');
-const User = require('../../../models/User/UserSchema');
-const { userCanAlter } = require('../../../util/local-functions/schemaValidationMethods');
-const { locationBucket } = require('../../../config/keys').AWS;
-const upload = require('../../../util/middleware/photo-upload-util');
+const Location                          = require('../../../models/Location/LocationSchema');
+const User                              = require('../../../models/User/UserSchema');
+const { userCanAlter }                  = require('../../../util/local-functions/schemaValidationMethods');
+const { locationBucket }                = require('../../../config/keys').AWS;
+const upload                            = require('../../../util/middleware/photo-upload-util');
+const { collisionPaths, newPhotoPaths } = require('./Locations-Photo-Helpers');
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
@@ -35,31 +36,7 @@ const newLocation = (req, res, next) => {
 
 // PHOTOS --------------------------------------------------------------------
 
-function collisionPaths(locationPhotos, reqFiles) {
-  // get keys of req.files aka: field names
-  let newPhotoKeys = Object.keys(reqFiles);
-  let deletePaths = [];
-  // for each field name in upload check if the location.photos 
-  // has that field name present as a key
-  newPhotoKeys.forEach(key => {
-    // if the location has the key
-    if (locationPhotos[key]) {
-      // take the path out of the key and get the S3 path-key to delete
-      let path = locationPhotos[key].split('/')
-      path = path[path.length - 1]
-      deletePaths.push(path)
-    }
-  })
-  return deletePaths;
-}
 
-function newPhotoPaths(target, filesobj) {
-  let update = {};
-  Object.entries(filesobj).forEach(([key, val]) => {
-    update[key] = val[0].location
-  });
-  return Object.assign(target, update)
-}
 
 const fields = [
   {name: 'image_1', maxCount: 1},
