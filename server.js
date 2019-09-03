@@ -11,6 +11,10 @@ app.use(function mongoErrors(err, req, res, next) {
   if (err.name === 'MongoError') {
     return res.send({name: err.name, message: err.errmsg})
   }
+  if(err.name == 'ValidationError') {
+    console.log(err)
+    return res.send({name: err.name, message: err.message})
+  }
   else next();
 });
 

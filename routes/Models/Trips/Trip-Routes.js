@@ -2,7 +2,14 @@ const express = require('express');
 const router = express.Router();
 const { isLoggedIn } = require('../../../util/middleware/auth-util');
 
-const { getTrips } = require('../../../controllers/Models/Trip/Trip-Controller').tripsRoot;
+const { 
+    getTrips, 
+    postTrip 
+} = require('../../../controllers/Models/Trip/Trip-Controller').tripsRoot;
+
+const {
+    getTrip
+} = require('../../../controllers/Models/Trip/Trip-Controller').tripResource;
 
 const Trip = require('../../../models/Trip/TripSchema');
 
@@ -11,11 +18,11 @@ const Trip = require('../../../models/Trip/TripSchema');
 
 router.route('/')
     .get(getTrips)
-    // .post('create new trip')
+    .post(isLoggedIn, postTrip)
 
 // /trips/:id -> id = trip id
-// router.route('/:id')
-    // .get('get the trip in question, query string population options')
+router.route('/:id')
+    .get(getTrip)
     // .put('OWNER - update the trip in question')
     // .delete('OWNER - delete the trip in question')
 

@@ -47,7 +47,7 @@ TripSchema.methods.changeChildStatus = async function(status) {
   return new Promise((resolve, reject) => {
     this.days.forEach((dayid, index) => {
       Day.findByIdAndUpdate(dayid, {'settings.private': status})
-      .catch(reject)
+      .catch(reject);
       if(index == this.days.length - 1)
         resolve(this);
     })
@@ -62,7 +62,16 @@ TripSchema.pre('save', async function(next) {
   if(!this.isModified('budget.lowerBound') || !this.isModified('budget.lowerBound')) return next();
   this.budget.middleBound = Math.round((this.budget.upperBound + this.budget.lowerBound) / 2)
   next()
-})
+});
+
+// FIND
+function autoPopUser(next) {
+  this.populate('user', 'local.username photos.profile'); 
+  next();
+};
+
+TripSchema.pre('find', autoPopUser);
+TripSchema.pre('findOne', autoPopUser);
 
 var Trip = mongoose.model("Trip", TripSchema);
 
