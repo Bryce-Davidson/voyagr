@@ -24,7 +24,6 @@ var userSchema = mongoose.Schema({
     },
     photos: {
       profile: String,
-      profilepx500: String,
       banner: String
     }
 });

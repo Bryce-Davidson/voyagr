@@ -30,9 +30,7 @@ const TripSchema = new mongoose.Schema({
   },
   comments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
   photos: {
-    banner: String,
-    bannerpx500: String,
-    bannerpx300: String
+    banner: String
   }
 });
 

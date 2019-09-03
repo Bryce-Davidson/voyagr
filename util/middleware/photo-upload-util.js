@@ -12,7 +12,7 @@ const photoFilter = (req, file, cb) => {
     if (file.mimetype !== 'image/jpg' || file.mimetype !== 'image/png')
         cb(null, true);
     else
-        cb(new Error('Invalid mime type, only JPEG or PNG', false));
+        cb(new Error('Invalid file type, only JPEG or PNG', false));
 }
 
 const upload = multer({
