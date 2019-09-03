@@ -18,51 +18,23 @@ const {
 
 const Trip = require('../../../models/Trip/TripSchema');
 
-// SEARCH AND FEATURED ---------------------------------------
 
-// global search
-router.route('/search')
-    .post(globalSearch(Trip))
-    
-// global featured
-router.route('/featured')
-    .get(getFeaturedPostsUtil(Trip));
+// CURRENTLY ON - /trips
 
-// CREATE -----------------------------------------------
+router.route('/')
+    .get('get all trips, get trips with query string "search"')
+    .post('create new trip')
 
-router.route('/newtrip')
-    .get(isLoggedIn)
-    .post(isLoggedIn, newTrip);
-
-// PHOTOS -----------------------------------------------
-
-router.route('/:id/upload/banner')
-    .post(isLoggedIn, tripBannerUpload)
-
-// UPDATE -----------------------------------------------
-
-router.route('/:id/addday/:dayid')
-    .post(isLoggedIn, addDayToTrip);
-
-router.route('/:id/addcomment')
-    .post(isLoggedIn, addCommentUtil(Trip));
-
-router.route('/:id/like')
-    .post(isLoggedIn, LikePostUtil(Trip));
-
-router.route('/:id/update')
-    .put(isLoggedIn, updateTrip)
-
-   
-// READ -----------------------------------------------
-    
+// /trips/:id
 router.route('/:id')
-    .get(viewTrip);
+    .get('get the trip in question')
+    .put('update the trip in question')
+    .delete('delete the trip in question')
+
+router.route('/:id/days')
+    .get('get the days of the trip in question')
+    .post('push in the day id within the query string')
 
 
-// DELETE -----------------------------------------------
-
-router.route('/:id/delete')
-    .delete(isLoggedIn, deletePostUtil(Trip))
 
 module.exports = router;
