@@ -10,6 +10,7 @@ const LocationSchema = new mongoose.Schema({
     type: pointSchema,
     required: true
   },
+  address: String,
   settings: {
     private: {type: Boolean, required: true, default: false}
   },
