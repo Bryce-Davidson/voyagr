@@ -1,20 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { isLoggedIn } = require('../../../util/middleware/auth-util');
-const globalSearch = require('../../../util/middleware/search-posts-util');
-const { 
-    addCommentUtil,
-    LikePostUtil,
-    deletePostUtil,
-    getFeaturedPostsUtil
-} = require('../../../util/middleware/post-actions-util');
-const {
-    newTrip,
-    addDayToTrip,
-    viewTrip,
-    updateTrip,
-    tripBannerUpload
-} = require('../../../controllers/Models/Trip/Trip-Controller');
+
+const { getTrips } = require('../../../controllers/Models/Trip/Trip-Controller').tripsRoot;
 
 const Trip = require('../../../models/Trip/TripSchema');
 
@@ -22,18 +10,31 @@ const Trip = require('../../../models/Trip/TripSchema');
 // CURRENTLY ON - /trips
 
 router.route('/')
-    .get('get all trips, get trips with query string "search"')
-    .post('create new trip')
+    .get(getTrips)
+    // .post('create new trip')
 
-// /trips/:id
-router.route('/:id')
-    .get('get the trip in question')
-    .put('update the trip in question')
-    .delete('delete the trip in question')
+// /trips/:id -> id = trip id
+// router.route('/:id')
+    // .get('get the trip in question, query string population options')
+    // .put('OWNER - update the trip in question')
+    // .delete('OWNER - delete the trip in question')
 
-router.route('/:id/days')
-    .get('get the days of the trip in question')
-    .post('push in the day id within the query string')
-    .put('change the status of the days in the trip')
+// router.route('/:id/days')
+    // .get('get the days of the trip in question')
+    // .post('OWNER - push in the day id within the query string')
+    // .put('OWNER - change the status of the days in the trip')
+
+// router.route('/:id/photos')
+    // .get('get the photo strings of the trip in question')
+    // .post('OWNER - add photo to trip')
+
+// router.route('/:id/comments')
+    // .get('get all posts comments')
+    // .post('add new comment')
+
+// router.route('/:id/likes')
+    // .get('get of users who like post')
+    // .post('like trip with user - {cant like own post}')
+    // .delete('unlike post')
 
 module.exports = router;

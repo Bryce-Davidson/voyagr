@@ -39,15 +39,6 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ERROR HANDLING ------------------------------------------------------------
-app.use((err, req, res, next) => {
-    if (err) {
-      console.error(err);
-      res.status(500).send({msg: "There was an internal error"})
-    }
-    else
-      next();
-});
 
 // TEST ROUTES ----------------------------------------------------------------
 

@@ -18,7 +18,7 @@ const TripSchema = new mongoose.Schema({
     lowercase: true
   },
   settings: {
-      private: {type: Boolean, required: true, default: true}
+      public: {type: Boolean, required: true, default: false}
   },
   meta: {
       created: { type : Date, default: Date.now },
@@ -58,8 +58,10 @@ TripSchema.methods.changeChildStatus = async function(status) {
 
 // MIDDLEWARE --------------------------------------------------
 
-TripSchema.pre('find', function() {
-  this.populate('user', 'local.username -_id')
+TripSchema.pre('save', async function(next) {
+  if(!this.isModified('budget.lowerBound') || !this.isModified('budget.lowerBound')) return next();
+  this.budget.middleBound = Math.round((this.budget.upperBound + this.budget.lowerBound) / 2)
+  next()
 })
 
 var Trip = mongoose.model("Trip", TripSchema);

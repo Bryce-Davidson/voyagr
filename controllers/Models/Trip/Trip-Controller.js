@@ -9,160 +9,58 @@ const flatten               = require('flat');
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
 
-// TODO:
-    // [] add trips to days when adding day
+// = /root - /trips
+
+const getTrips = async function(req, res, next) {
+    let { text, tags, min_budget, max_budget, paths, omit} = req.query;
+        let query = {};
+
+        if(paths) {paths = paths.replace(/,/g, ' ')};
+        if(omit) { omit = omit.split(',').map(item => `-${item}`).join(' ')};
 
 
-// CREATE -------------------------------------------------------------------------
-
-const newTrip = (req, res, next) => {
-    const {name, description, tags, private, lowerBound, upperBound, countries} = req.body;
-    let userid = req.user;
-    let newTrip = new Trip({
-        user: userid,
-        name, description, private,
-        settings: {private},
-        budget: { 
-            lowerBound, 
-            upperBound, 
-            middleBound: Math.round((upperBound + lowerBound) / 2)
-        },
-        countries,
-        meta: {tags}
-    })
-    newTrip.save()
-    .then(trip => {
-        return User.findByIdAndUpdate(userid, {
-            $push: {'posts.trips': trip._id}
-        })
-        .then(user => res.send(trip))
-    })
-    .catch(next)
-};
-
-// PHOTOS ---------------------------------------------------------------------------
-
-const singleUpload = upload.single('banner');
-
-const tripBannerUpload = (req, res, next) => {
-    req.bucketName = TRIPBUCKET;
-    Trip.findById(req.params.id)
-        .then(trip => {
-        if(userCanAlter(trip, req.user, res)) {
-            // Upload file to S3
-            singleUpload(req, res, function(err) {
-            if(err) return next(err);
-            if(!req.file) return res.send("Please include at least one photo")
-            // if banner already exists delete from S3
-            if(trip.photos.banner) {
-                let s3BannerKey = trip.photos.banner.split('/'); 
-                    s3BannerKey = s3BannerKey[s3BannerKey.length -1];
-                let params = { Bucket: req.bucketName, Key: s3BannerKey};
-                S3.deleteObject(params).promise()
-                .catch(next)
-            }
-            // always save newly uploaded banner to mongodb
-            trip.photos.banner = req.file.location;
-            // potentially add the resized versions here
-            return trip.save()
-                .then(utrip => {
-                res.send(utrip)
-                })
-            })
+        if (min_budget || max_budget) {
+            const mb = query['budget.middleBound'] = {};
+            if (min_budget) mb.$gte = min_budget;
+            if (max_budget) mb.$lte = max_budget;
         }
-        })
-        .catch(next)
-}
+        if (tags)   { query['meta.tags'] = { $all: tags.split(',') }} 
+        if (text)   { query.$text = { $search: text } }
 
-// READ --------------------------------------------------------------------------
+        console.log(query)
+        console.log(paths)
+        console.log(omit)
 
-const viewTrip = (req, res, next) => {
-    Trip.findById(req.params.id)
-        .then(trip => {
-            if(trip.settings.private && trip.user != req.user) { return res.status(401).send('Unauthorized') }
-            if(trip.user == req.user) {
-                return Trip.findById(trip._id)
-                .populate('user', 'local.username -_id')
-                .populate({
-                    path: 'comments',
-                    select: '-tripid',
-                    populate: { path: 'user', select: 'local.username -_id' }
-                })
-                .populate('days')
-                .then(trip => {return res.send(trip)})
-            }
-            Trip.findByIdAndUpdate(req.params.id, {'$inc': {'meta.viewCount': 1}}, {new: true})
-                .populate('user', 'local.username -_id')
-                .populate({
-                    path: 'comments',
-                    select: '-tripid',
-                    populate: { path: 'user', select: 'local.username -_id' }
-                })
-                .populate('days')
-                .then(utrip => {
-                    res.send(utrip)
-                })
+        Trip.find(query)
+        // can add paths hera that aren't in document and they will be ignored
+        .select(paths)
+        .select(omit)
+        .then(docs => {
+            delete query;
+            return res.send(docs)
         }).catch(next)
 }
 
-// UPDATE -----------------------------------------------------------------------------
-
-const addDayToTrip = (req, res, next) => {
-    let tripid = req.params.id;
-    let dayid  = req.params.dayid;
-    Trip.findById(tripid)
-        .then(trip => {
-            if(userCanAlter(trip, req.user, res)) {
-                return Day.findByIdAndUpdate(dayid, { $push: { trips: tripid }}, {new: true})
-                    .then(uday => {
-                        return Trip.findByIdAndUpdate(tripid, {
-                            $push: { days: dayid }
-                        }, {new: true})
-                        .populate('user', 'local.username -_id')
-                        .populate('days')
-                        .then(utrip => res.send(utrip))
-                    })
-            }
-        }).catch(next)
+const postTrip = async function(req, res, next) {
+    let {name, description, tags, upperBound, lowerBound} = req.body;
+    let newTrip = new Trip({
+        name,
+        description,
+        meta: {tags},
+        budget: {upperBound, lowerBound}
+    })
+    .save()
+    .then(ntrip => res.status(201).send(ntrip))
+    .catch(next)
 }
 
-
-const updateTrip = (req, res, next) => {
-    let tripid = req.params.id;
-    let update = flatten(req.body, {safe: true});
-    Trip.findById(tripid)
-        .then(trip => {
-            if(userCanAlter(trip, req.user, res)) {
-                Trip.findByIdAndUpdate(trip._id, update, {new: true})
-                    .then(utrip => {
-                        res.send(utrip)
-                    })
-            }
-        })
-    }
-// CHILDREN FUNCTIONS --------------------------
-
-const changeChildStatus = (req, res, next) => {
-    let status = req.query.status;
-    if (status != 'true' || 'false') {
-        return res.send("Invaid status")
-    }
-    Trip.findById(req.params.id)
-        .then(trip => {
-            if(userCanAlter(trip, req.user, res)) {
-                return trip.changeChildStatus(status)
-                    .then(utrip => {
-                        res.send(utrip)
-                    })
-            }
-        }).catch(next)
-}
 
 module.exports = {
-    newTrip,
-    addDayToTrip,
-    viewTrip,
-    changeChildStatus,
-    updateTrip,
-    tripBannerUpload
+    tripsRoot: {postTrip, getTrips},
+    // tripResource: {
+    //     updateTrip,
+    //     likeTrip,
+    //     commentTrip,
+    //     changeDaysPublicStatus
+    // }
 };
