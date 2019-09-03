@@ -34,7 +34,6 @@ router.route('/:id')
 router.route('/:id/days')
     .get('get the days of the trip in question')
     .post('push in the day id within the query string')
-
-
+    .put('change the status of the days in the trip')
 
 module.exports = router;
