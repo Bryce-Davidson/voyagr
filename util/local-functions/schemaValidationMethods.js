@@ -1,11 +1,10 @@
 module.exports = {
-    isOwner: function (instance, user) {
-        if(!instance.user) throw new Error('Please pass in valid instance')
-        return instance.user == user;
-    }, 
-    userCanAlter: function(instance, user, res) {
-        if (!instance) { res.status(404).send("Document does not exist."); return false}
-        if (instance.user != user) { res.status(401).send("User unauthorized"); return false}
-        else return true;
+    isOwner: function (instance, incomingUser) {
+        if(instance.user) return instance.user == incomingUser 
+        else              return instance == incomingUser;
+    },
+    keysContainString(keyPart, obj) {
+        for (var k in obj)
+            return ~k.indexOf(keyPart);
     }
 }

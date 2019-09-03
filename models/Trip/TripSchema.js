@@ -20,9 +20,9 @@ const TripSchema = new mongoose.Schema({
   settings: {
       public: {type: Boolean, required: true, default: false}
   },
+  tags: [String],
   meta: {
       created: { type : Date, default: Date.now },
-      tags: [String],
       likes: {type: Number, default: 0},
       viewCount: {type: Number, default: 0},
       numberOfComments: {type: Number, default: 0},
@@ -45,6 +45,9 @@ TripSchema.index({name: 'text', description: 'text'}, {weights: { name: 5, descr
 
 TripSchema.methods.changeChildStatus = async function(status) {
   return new Promise((resolve, reject) => {
+    if(this.days.length === 0) {
+      reject(new Error('No days in trip'))
+    }
     this.days.forEach((dayid, index) => {
       Day.findByIdAndUpdate(dayid, {'settings.private': status})
       .catch(reject);

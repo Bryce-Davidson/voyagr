@@ -8,7 +8,10 @@ const {
 } = require('../../../controllers/Models/Trip/Trip-Controller').tripsRoot;
 
 const {
-    getTrip
+    getTrip,
+    getTripDays,
+    updateTrip,
+    deleteTrip
 } = require('../../../controllers/Models/Trip/Trip-Controller').tripResource;
 
 const Trip = require('../../../models/Trip/TripSchema');
@@ -23,8 +26,8 @@ router.route('/')
 // /trips/:id -> id = trip id
 router.route('/:id')
     .get(getTrip)
-    // .put('OWNER - update the trip in question')
-    // .delete('OWNER - delete the trip in question')
+    .put(isLoggedIn, updateTrip)
+    .delete(isLoggedIn, deleteTrip)
 
 // router.route('/:id/days')
     // .get('get the days of the trip in question')
