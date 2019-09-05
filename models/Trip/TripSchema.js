@@ -1,9 +1,11 @@
 const Day                 = require('../../models/Day/DaySchema');
 const mongoose            = require('mongoose');
 const { pointSchema }     = require('../Geoschema-Types/GeoSchemas');
+const slugify             = require('../../util/local-functions/slugifyString');
 
 const TripSchema = new mongoose.Schema({
   name: {type: String, required: true, maxlength: [50, 'Name must be less than 50 characters']},
+  slug: String,
   user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   days: [{type: mongoose.Schema.Types.ObjectId, ref: 'Day'}],
   locations: [{type: mongoose.Schema.Types.ObjectId, ref: 'Location'}],
@@ -22,6 +24,7 @@ const TripSchema = new mongoose.Schema({
   },
   tags: [String],
   meta: {
+      urlid: {type: String, required: true},
       created: { type : Date, default: Date.now },
       likes: {type: Number, default: 0},
       viewCount: {type: Number, default: 0},
@@ -57,24 +60,34 @@ TripSchema.methods.changeChildStatus = async function(status) {
   })
 }
 
+TripSchema.methods.nuke = async function() {
+  // go through all days and locations and remove them
+}
+
 // QUERIES  ----------------------------------------------------
 
 // MIDDLEWARE --------------------------------------------------
+TripSchema.pre('save', async function updateSlug(next) {
+  if(this.isModified('name')) {
+    this.slug = slugify(this.name)
+  }
+});
 
-TripSchema.pre('save', async function(next) {
+TripSchema.pre('save', async function computeMiddleBound(next) {
   if(!this.isModified('budget.lowerBound') || !this.isModified('budget.lowerBound')) return next();
   this.budget.middleBound = Math.round((this.budget.upperBound + this.budget.lowerBound) / 2)
   next()
 });
 
-// FIND
-function autoPopUser(next) {
+TripSchema.pre('findOne', function autoPopUser(next) {
   this.populate('user', 'local.username photos.profile'); 
   next();
-};
+});
 
-TripSchema.pre('find', autoPopUser);
-TripSchema.pre('findOne', autoPopUser);
+// TripSchema.pre('remove', async function(next) {
+//   // delete all photos from S3
+//   next()
+// });
 
 var Trip = mongoose.model("Trip", TripSchema);
 

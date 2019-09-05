@@ -1,13 +1,16 @@
-const Trip                  = require('../../../models/Trip/TripSchema');
-const Day                   = require('../../../models/Day/DaySchema');
-const User                  = require('../../../models/User/UserSchema');
+const Trip                          = require('../../../models/Trip/TripSchema');
+const Day                           = require('../../../models/Day/DaySchema');
+const User                          = require('../../../models/User/UserSchema');
 const { 
     isOwner,
     keysContainString
-}                           = require('../../../util/local-functions/schemaValidationMethods');
-const { TRIPBUCKET }        = require('../../../config/keys').AWS;
-const upload                = require('../../../util/middleware/photo-upload-util');
-const flatten               = require('flat');
+}                                   = require('../../../util/local-functions/schemaValidationMethods');
+const { TRIPBUCKET }                = require('../../../config/keys').AWS;
+const upload                        = require('../../../util/middleware/photo-upload-util');
+const flatten                       = require('flat');
+const slugify                       = require('../../../util/local-functions/slugifyString');
+const recursiveGenerateUniqueUrlid  = require('../../../util/local-functions/recursiveGenerateUniqueUrlid');
+
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
@@ -40,12 +43,14 @@ const getTrips = async function(req, res, next) {
 
 const postTrip = async function(req, res, next) {
     let {name, description, tags, upperBound, lowerBound, public} = req.body;
+    let slug = slugify(name)
+
+    let uniqueid = recursiveGenerateUniqueUrlid(slug);
     new Trip({
-        user: req.user,
         name,
         description,
         tags,
-        budget: {upperBound, lowerBound},
+        meta: {upperBound, lowerBound},
         settings: {public}
     })
     .save()
@@ -106,13 +111,17 @@ const deleteTrip = async function(req, res, next) {
         .then(trip => {
             if(!trip) return res.status(404).json({message: "Document does not exist."})
             if(isOwner(trip.user._id, req.user)) {
-                return Trip.findByIdAndRemove(tripid)
-                    .then(trip => {
+                return trip.remove()
+                    .then(dtrip => {
                         return res.status(202).json({message: 'Document deleted succesfully.'})
                     })
             } else 
                 return res.status(401).json({message: 'User Not Authorized.'});
         }).catch(next)
+}
+
+const addCommentTrip = async function () {
+
 }
 
 module.exports = {
