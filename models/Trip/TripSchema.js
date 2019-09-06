@@ -20,7 +20,7 @@ const TripSchema = new mongoose.Schema({
     lowercase: true
   },
   settings: {
-      public: {type: Boolean, required: true, default: false}
+      public: {type: Boolean, required: true, default: true}
   },
   tags: [String],
   meta: {

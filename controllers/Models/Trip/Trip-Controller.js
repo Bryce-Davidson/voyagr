@@ -10,7 +10,7 @@ const upload                        = require('../../../util/middleware/photo-up
 const flatten                       = require('flat');
 const slugify                       = require('../../../util/local-functions/slugifyString');
 const recursiveGenerateUniqueUrlid  = require('../../../util/local-functions/recursiveGenerateUniqueUrlid');
-
+const shortid                       = require('shortid')
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
@@ -22,13 +22,15 @@ const getTrips = async function(req, res, next) {
         let query = {};
         if (paths) { paths = paths.replace(/,/g, ' ') };
         if (omit)  { omit = omit.split(',').map(item => `-${item}`).join(' ') };
-        if (tags)  { query['meta.tags'] = { $all: tags.split(',') } }; 
+        if (tags)  { query['tags'] = { $all: tags.split(',') } }; 
         if (text)  { query.$text = { $search: text } };
         if (min_budget || max_budget) {
             const mb = query['budget.middleBound'] = {};
             if (min_budget) mb.$gte = min_budget;
             if (max_budget) mb.$lte = max_budget;
         };
+
+        console.log(query)
 
         Trip.find(query)
         .where({'settings.public': true})
@@ -45,12 +47,16 @@ const postTrip = async function(req, res, next) {
     let {name, description, tags, upperBound, lowerBound, public} = req.body;
     let slug = slugify(name)
 
-    let uniqueid = recursiveGenerateUniqueUrlid(slug);
+    
+    // TODO:
+        // test the funcionality of recursive function
+
+    // let uniqueid = recursiveGenerateUniqueUrlid(slug);
     new Trip({
         name,
         description,
         tags,
-        meta: {upperBound, lowerBound},
+        meta: {upperBound, lowerBound, urlid: shortid.generate()},
         settings: {public}
     })
     .save()

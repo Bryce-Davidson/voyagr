@@ -8,6 +8,8 @@ const dayNames        = "Harbour Walking Swimming Kyaking History Surfing".split
 const cityNames       = "Paris Florence Victoria Vancouver Venice Nice Rome London".split(' ');
 const tags            = "walking swimming boating boat water beach sunny view sunset sunrise breakfast dinner".split(' ');
 
+const shortid         = require('shortid');
+
 var victoria = {latitude: 48.4529784, longitude: -123.46109239999998};
 
 const emailsAndPasswords = [["lifebryce@gmail.com", "admin1", "brycd"], ["bryce678@gmail.com", "froggo678", "james"], ["katie@icloud.com", "superkid", "sauce"]];
@@ -49,10 +51,11 @@ function loadTrip(user) {
         name: `${locationNames[getRandomInt(0, 6)]} ${getRandomInt(2019, 2050)} - ${peopleNames[getRandomInt(0, 6)]}`,
         description: getRandom(descriptions, 8).join(' '),
         settings: {
-            private: Math.random() > 0.8
+            public: Math.random() < 0.6
         },
+        tags: getRandom(tags, 5),
         meta: {
-            tags: getRandom(tags, 5),
+            urlid: shortid.generate(),
             numberOfComments: getRandomInt(0, 300),
             likes: getRandomInt(0, 100),
             numberOfShares: getRandomInt(0, 30)

@@ -1,6 +1,6 @@
 const User              = require('../../../models/User/UserSchema');
 const Day               = require('../../../models/Day/DaySchema');
-const { userCanAlter }  = require('../../../util/local-functions/schemaValidationMethods');
+const { isOwner }  = require('../../../util/local-functions/schemaValidationMethods');
 const { DAYBUCKET }     = require('../../../config/keys').AWS;
 const upload            = require('../../../util/middleware/photo-upload-util');
 const flatten           = require('flat');
@@ -89,7 +89,8 @@ const addLocationToDay = (req, res, next) => {
     let locid = req.params.locationid;
     Day.findById(dayid)
         .then(day => {
-            if (userCanAlter(day, req.user, res)) {
+            if (isOwner(day.user, req.user)) {
+                console.log('Here')
                 day.locations.push(locid)
                 return day.save().then(uday => res.send(uday))
             }
@@ -102,7 +103,7 @@ const updateDay = (req, res, next) => {
 
     Day.findById(dayid)
         .then(day => {
-            if (userCanAlter(day, req.user, res)) {
+            if (isOwner(day, req.user, res)) {
                 return Day.findByIdAndUpdate(dayid, update)
                     .then(uday => res.send(uday))
             }
