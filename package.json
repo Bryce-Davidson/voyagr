@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "seed": "node util\\database\\Seeder.js"
+    "seed": "node util\\database\\Seeder.js",
+    "start": "./node_modules/.bin/nodemon server.js"
   },
   "author": "",
   "license": "ISC",
@@ -25,6 +26,7 @@
     "morgan": "^1.9.1",
     "multer": "^1.4.2",
     "multer-s3": "^2.9.0",
+    "nodemon": "^1.19.2",
     "passport": "^0.4.0",
     "passport-local": "^1.0.0",
     "sharp": "^0.23.0",

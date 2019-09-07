@@ -17,10 +17,6 @@ var app = express()
 
 // MIDDLE WEAR ----------------------------------------------------------------
 app.use(helmet());
-// app.use(rateLimit({
-//   windowMs: 20 * 60 * 1000, // 20 minutes
-//   max: 100 // 100 requests per 20 minutes
-// }));
 app.use(morgan('dev'));
 app.use(cookieParser());
 app.use(bodyParser.json());
