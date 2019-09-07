@@ -78,6 +78,7 @@ const viewDay = (req, res, next) => {
                     res.send((data));
                 })
             }
+            
         })
         .catch(next)
 }
