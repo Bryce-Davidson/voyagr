@@ -1,6 +1,6 @@
 module.exports = {
     isOwner: function (instance, incomingUser) {
-        if (instance.user._id)      return instance.user._id
+        if (instance.user._id)      return instance.user._id == incomingUser;
         else                        return instance == incomingUser;
     },
     keysContainString(keyPart, obj) {
