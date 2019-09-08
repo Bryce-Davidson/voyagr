@@ -14,6 +14,7 @@ const recursiveGenerateUniqueUrlid  = require('../../../util/local-functions/rec
 const slugify                       = require('../../../util/local-functions/slugifyString');
 
 const notExistMsg                   = require('../../../util/errors/notExistMsg');
+const unauthorizedMsg               = require('../../../util/errors/unauthorizedMsg');
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
@@ -71,8 +72,8 @@ const getTrip = async function(req, res, next) {
             if (!trip) return notExistMsg('Trip', res)
             if (isOwner(trip, req.user))
                 return res.send(trip)
-            if (!trip.settings.public) 
-                return res.status(401).json({msg: 'User Not Authorized.'})
+            if (!trip.settings.public)
+                return unauthorizedMsg(res);
             else return Trip.findByIdAndUpdate(tripid, { $inc: { 'meta.viewCount': 1 }})
                                 .then(utrip => {return res.send(utrip)})
         })
@@ -97,7 +98,7 @@ const updateTrip = async function(req, res, next) {
         let updatedTrip = await Trip.findByIdAndUpdate(tripid, update, {new: true})
         return res.send(updatedTrip);
     } else {
-        return res.status(401).json({msg: 'User Not Authorized.'});
+        return unauthorizedMsg(res);
     }
     } catch (err) { next(err) }
 }
@@ -113,7 +114,7 @@ const deleteTrip = async function(req, res, next) {
         await trip.remove();
         return res.status(200);
     } else 
-        return res.status(401).json({msg: 'User Not Authorized.'});
+        return unauthorizedMsg(res)
     } catch (err) {next(err)}
 }
 
@@ -131,7 +132,7 @@ const addDayToTrip = async function(req, res, next) {
     let tripid = req.params.id;
     let dayid  = req.query.dayid;
     if(!ObjectId.isValid(dayid))
-        return res.status(422).json({msg: "Invalid day id."})
+        return res.status(422).json({msg: `Invalid day id: ${dayid}`})
     try {    
     let dayToBeAdded = await Day.findById(dayid);
     if (!dayToBeAdded) return notExistMsg('Day', res);
@@ -141,7 +142,7 @@ const addDayToTrip = async function(req, res, next) {
         let utrip = await Trip.findByIdAndUpdate(tripid, { $push: { days: dayid }}, {new: true})
         return res.send(utrip);
     } else 
-        return res.status(401).json({msg: 'User Not Authorized.'})
+        return unauthorizedMsg(res);
     } catch (err) {next(err)}
 }
 
@@ -155,13 +156,13 @@ const deleteDaysFromTrip = async function(req, res, next) {
     });
 
     try {
-    let tripToModify = await Trip.findById(tripid);
-    if (!tripToModify) return notExistMsg('Trip', res);
-    if (isOwner(tripToModify, req.user)) {
+    let tripTobeModified = await Trip.findById(tripid);
+    if (!tripTobeModified) return notExistMsg('Trip', res);
+    if (isOwner(tripTobeModified, req.user)) {
         let tripWithDayRemoved = await Trip.findByIdAndUpdate(tripid, { $pullAll: { days: dayids } }, {new: true});
         return res.send(tripWithDayRemoved)
     } else 
-        return res.status(401).json({msg: 'User Not Authorized.'})
+        return unauthorizedMsg(res);
     } catch (err) {next(err)}
 }
 
