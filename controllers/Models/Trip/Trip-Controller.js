@@ -51,7 +51,7 @@ const postTrip = async function(req, res, next) {
     // TODO:
         // test the funcionality of recursive function
 
-    // let uniqueid = recursiveGenerateUniqueUrlid(slug);
+    let uniqueid = recursiveGenerateUniqueUrlid(slug);
     new Trip({
         name,
         description,
