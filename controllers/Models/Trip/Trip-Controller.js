@@ -93,10 +93,12 @@ const updateTrip = async function(req, res, next) {
     let tripTobeModified = await Trip.findById(tripid)
     if (!tripTobeModified) return notExistMsg('Trip', res);
     if (isOwner(tripTobeModified, req.user)) {
+        console.log(req.user, tripTobeModified.user._id)
         let updatedTrip = await Trip.findByIdAndUpdate(tripid, update, {new: true})
         return res.send(updatedTrip);
-    } 
-    return res.status(401).json({msg: 'User Not Authorized.'});
+    } else {
+        return res.status(401).json({msg: 'User Not Authorized.'});
+    }
     } catch (err) { next(err) }
 }
 
