@@ -1,7 +1,7 @@
 const Day                 = require('../../models/Day/DaySchema');
 const mongoose            = require('mongoose');
 const { pointSchema }     = require('../Geoschema-Types/GeoSchemas');
-const slugify             = require('../../util/local-functions/slugifyString').default;
+const slugify             = require('../../util/local-functions/slugifyString');
 
 const TripSchema = new mongoose.Schema({
   name: {type: String, required: true, maxlength: [50, 'Name must be less than 50 characters']},
@@ -67,15 +67,6 @@ TripSchema.methods.nuke = async function() {
 // QUERIES  ----------------------------------------------------
 
 // MIDDLEWARE --------------------------------------------------
-TripSchema.pre('save', async function updateSlug(next) {
-  if(this.isModified('name')) {
-    this.slug = slugify(this.name)
-    
-    // TODO:
-      // acivate check if has unique url id or not
-
-  }
-});
 
 TripSchema.pre('save', async function computeMiddleBound(next) {
   if(!this.isModified('budget.lowerBound') || !this.isModified('budget.lowerBound')) return next();

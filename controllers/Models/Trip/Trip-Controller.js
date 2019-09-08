@@ -52,10 +52,11 @@ const postTrip = async function(req, res, next) {
     let uniqueid = await recursiveGenerateUniqueUrlid(slug)
     return new Trip({
         user: req.user,
+        slug,
         name,
         description,
         tags,
-        meta: {upperBound, lowerBound, urlid: shortid.generate()},
+        meta: {upperBound, lowerBound, urlid: uniqueid},
         settings: {public}
     })
     .save()
@@ -85,15 +86,19 @@ const updateTrip = async function(req, res, next) {
     let update = flatten(req.body);
     if (keysContainString('meta', update))
         return res.status(403).json({msg: 'Unable to update on immutable path "meta".'})
-    else Trip.findById(tripid)   
+    if (keysContainString('slug', update))
+        return res.status(403).json({msg: 'Unable to update on immutable path "slug".'})
+    Trip.findById(tripid)
             .then(trip => {
                 if (!trip) return notExistMsg('Trip', res);
-                if (isOwner(trip.user._id, req.user)) {
-                return Trip.findByIdAndUpdate(tripid, update, {new: true})
-                } 
-                return res.status(401).json({msg: 'User Not Authorized.'});
+                if (isOwner(trip, req.user)) {
+                    if (update.name)
+                        update.slug = slugify(update.name)
+                    return Trip.findByIdAndUpdate(tripid, update, {new: true})
+                                .then(utrip => {return res.send(utrip)})
+                } else
+                    return res.status(401).json({msg: 'User Not Authorized.'});
             })
-            .then(utrip => {return res.send(utrip)})
             .catch(next)
 }
 
