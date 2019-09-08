@@ -4,9 +4,10 @@ const User = require('../../models/User/UserSchema');
 const signup = {
   get: async (req, res, next) => {
     if(req.query.alreadyExists) {
-     return res.status(403).send("User Already Exists")  
+      console.log('EXISTS')
+     return res.status(403).json({msg: "User Already Exists"})  
     }
-    return res.send("Signup")
+    return res.json({route: "Signup"})
     next()
   }
 }

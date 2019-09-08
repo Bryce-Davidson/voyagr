@@ -36,10 +36,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
-// TEST ROUTES ----------------------------------------------------------------
-
-app.use('/test', require('./tests/routes/tester-routes'))
-
 // ROUTES ---------------------------------------------------------------------
 app.use('/', require('./routes/Auth/auth-route'));
 app.use('/users', require('./routes/Models/User/User-Routes'));

@@ -10,7 +10,6 @@ const upload                        = require('../../../util/middleware/photo-up
 const flatten                       = require('flat');
 
 const ObjectId                      = require('mongoose').Types.ObjectId;
-const shortid                       = require('shortid')
 const recursiveGenerateUniqueUrlid  = require('../../../util/local-functions/recursiveGenerateUniqueUrlid');
 const slugify                       = require('../../../util/local-functions/slugifyString');
 
@@ -48,10 +47,10 @@ const getTrips = async function(req, res, next) {
 const postTrip = async function(req, res, next) {
     let {name, description, tags, upperBound, lowerBound, public} = req.body;
     let slug = slugify(name)
-
     let uniqueid = await recursiveGenerateUniqueUrlid(slug)
     return new Trip({
         user: req.user,
+        slug,
         name,
         description,
         tags,
@@ -83,18 +82,24 @@ const getTrip = async function(req, res, next) {
 const updateTrip = async function(req, res, next) {
     let tripid = req.params.id;
     let update = flatten(req.body);
+    if (update.name)
+        update.slug = slugify(update.name)
+
     if (keysContainString('meta', update))
         return res.status(403).json({msg: 'Unable to update on immutable path "meta".'})
-    else Trip.findById(tripid)   
-            .then(trip => {
-                if (!trip) return notExistMsg('Trip', res);
-                if (isOwner(trip.user._id, req.user)) {
-                return Trip.findByIdAndUpdate(tripid, update, {new: true})
-                } 
-                return res.status(401).json({msg: 'User Not Authorized.'});
-            })
-            .then(utrip => {return res.send(utrip)})
-            .catch(next)
+    if (keysContainString('slug', update))
+        return res.status(403).json({msg: 'Unable to update on immutable path "slug".'})
+    try {
+    let tripTobeModified = await Trip.findById(tripid)
+    if (!tripTobeModified) return notExistMsg('Trip', res);
+    if (isOwner(tripTobeModified, req.user)) {
+        console.log(req.user, tripTobeModified.user._id)
+        let updatedTrip = await Trip.findByIdAndUpdate(tripid, update, {new: true})
+        return res.send(updatedTrip);
+    } else {
+        return res.status(401).json({msg: 'User Not Authorized.'});
+    }
+    } catch (err) { next(err) }
 }
 
 // add error message util

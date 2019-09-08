@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "./node_modules/.bin/mocha --exit",
     "seed": "node util\\database\\Seeder.js",
     "start": "./node_modules/.bin/nodemon server.js",
     "debug": "nodemon --inspect server.js"
@@ -34,8 +34,5 @@
     "shortid": "^2.2.14",
     "uuid": "^3.3.2"
   },
-  "devDependencies": {
-    "chai": "^4.2.0",
-    "mocha": "^6.2.0"
-  }
+  "devDependencies": {}
 }
