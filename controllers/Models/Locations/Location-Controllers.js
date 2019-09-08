@@ -1,6 +1,6 @@
 const Location                          = require('../../../models/Location/LocationSchema');
 const User                              = require('../../../models/User/UserSchema');
-const { userCanAlter }                  = require('../../../util/local-functions/schemaValidationMethods');
+const { userCanAlter }                  = require('../../../util/local-functions/instanceValidation');
 const { locationBucket }                = require('../../../config/keys').AWS;
 const upload                            = require('../../../util/middleware/photo-upload-util');
 const { collisionPaths, newPhotoPaths } = require('./Locations-Photo-Helpers');

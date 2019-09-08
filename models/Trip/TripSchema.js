@@ -1,11 +1,11 @@
 const Day                 = require('../../models/Day/DaySchema');
 const mongoose            = require('mongoose');
 const { pointSchema }     = require('../Geoschema-Types/GeoSchemas');
-const slugify             = require('../../util/local-functions/slugifyString');
+const slugify             = require('../../util/local-functions/slugifyString').default;
 
 const TripSchema = new mongoose.Schema({
   name: {type: String, required: true, maxlength: [50, 'Name must be less than 50 characters']},
-  slug: String,
+  slug: {type: String, index: true, required: true},
   user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   days: [{type: mongoose.Schema.Types.ObjectId, ref: 'Day'}],
   locations: [{type: mongoose.Schema.Types.ObjectId, ref: 'Location'}],
@@ -24,7 +24,7 @@ const TripSchema = new mongoose.Schema({
   },
   tags: [String],
   meta: {
-      urlid: {type: String, required: true},
+      urlid: {type: String, required: true, index: true},
       created: { type : Date, default: Date.now },
       likes: {type: Number, default: 0},
       viewCount: {type: Number, default: 0},
@@ -61,7 +61,7 @@ TripSchema.methods.changeChildStatus = async function(status) {
 }
 
 TripSchema.methods.nuke = async function() {
-  // go through all days and locations and remove them
+  // go through all days and locations in trip and remove them
 }
 
 // QUERIES  ----------------------------------------------------
@@ -70,6 +70,10 @@ TripSchema.methods.nuke = async function() {
 TripSchema.pre('save', async function updateSlug(next) {
   if(this.isModified('name')) {
     this.slug = slugify(this.name)
+    
+    // TODO:
+      // acivate check if has unique url id or not
+
   }
 });
 

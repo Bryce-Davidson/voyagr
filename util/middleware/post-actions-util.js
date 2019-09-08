@@ -1,5 +1,5 @@
 const Comment           = require('../../models/Comment/CommentSchema');
-const { userCanAlter }  = require('../local-functions/schemaValidationMethods');
+const { userCanAlter }  = require('../local-functions/instanceValidation');
 const Trip              = require('../../models/Trip/TripSchema');
 const Day               = require('../../models/Day/DaySchema');
 const Location          = require('../../models/Location/LocationSchema');
