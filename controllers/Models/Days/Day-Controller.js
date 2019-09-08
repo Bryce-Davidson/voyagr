@@ -1,6 +1,6 @@
 const User              = require('../../../models/User/UserSchema');
 const Day               = require('../../../models/Day/DaySchema');
-const { isOwner }  = require('../../../util/local-functions/schemaValidationMethods');
+const { isOwner }       = require('../../../util/local-functions/schemaValidationMethods');
 const { DAYBUCKET }     = require('../../../config/keys').AWS;
 const upload            = require('../../../util/middleware/photo-upload-util');
 const flatten           = require('flat');
