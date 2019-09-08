@@ -11,27 +11,34 @@ const {
     getTrip,
     getTripDays,
     updateTrip,
-    deleteTrip
+    deleteTrip,
+    addDayToTrip,
+    deleteDaysFromTrip
 } = require('../../../controllers/Models/Trip/Trip-Controller').tripResource;
 
 const Trip = require('../../../models/Trip/TripSchema');
+
+router.post('*', isLoggedIn);
+router.put('*', isLoggedIn);
+router.delete('*', isLoggedIn);
 
 
 // CURRENTLY ON - /trips
 
 router.route('/')
     .get(getTrips)
-    .post(isLoggedIn, postTrip)
+    .post(postTrip)
 
 // /trips/:id -> id = trip id
 router.route('/:id')
     .get(getTrip)
-    .put(isLoggedIn, updateTrip)
-    .delete(isLoggedIn, deleteTrip)
+    .put(updateTrip)
+    .delete(deleteTrip)
 
 router.route('/:id/days')
     .get(getTripDays)
-    // .post('OWNER - push in the day id within the query string')
+    .post(addDayToTrip)
+    .delete(deleteDaysFromTrip)
     // .put('OWNER - change the status of the days in the trip')
 
 // router.route('/:id/photos')

@@ -11,6 +11,8 @@ const flatten                       = require('flat');
 const slugify                       = require('../../../util/local-functions/slugifyString');
 const recursiveGenerateUniqueUrlid  = require('../../../util/local-functions/recursiveGenerateUniqueUrlid');
 const shortid                       = require('shortid')
+const ObjectId                      = require('mongoose').Types.ObjectId;
+
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
@@ -65,64 +67,95 @@ const getTrip = async function(req, res, next) {
     let tripid = req.params.id;
     Trip.findById(tripid)
         .then(trip => {
-            if(!trip) return res.status(404).json({message: "Document does not exist."})
-            if(isOwner(trip, req.user))
+            if (!trip) return res.status(404).json({msg: "Document does not exist."})
+            if (isOwner(trip, req.user))
                 return res.send(trip)
-            else if (!trip.settings.public) 
-                return res.status(401).json({message: 'User Not Authorized.'})
-            trip.meta.viewCount = trip.meta.viewCount + 1;
-            return trip
-                .save()
-                .then(utrip => {return res.send(utrip)})
-
-        }).catch(next)
-}
-
-const getTripDays = async function(req, res, next) {
-    let tripid = req.params.id;
-    Trip.findById(tripid)
-        .select('days name')
-        .populate('days')
-        .then(tripDays => {
-            res.send(tripDays)
+            if (!trip.settings.public) 
+                return res.status(401).json({msg: 'User Not Authorized.'})
+            else return Trip.findByIdAndUpdate(tripid, { $inc: { 'meta.viewCount': 1 }})
+                                .then(utrip => {return res.send(utrip)})
         })
+        .catch(next)
 }
 
 const updateTrip = async function(req, res, next) {
     let tripid = req.params.id;
     let update = flatten(req.body);
-    if(keysContainString('meta', update))
-        return res.status(403).json({message: 'Unable to update on immutable path "meta".'})
-    Trip.findById(tripid)   
-        .then(trip => {
-            if(!trip) return res.status(404).json({message: "Document does not exist."})
-            if(isOwner(trip.user._id, req.user)) {
+    if (keysContainString('meta', update))
+        return res.status(403).json({msg: 'Unable to update on immutable path "meta".'})
+    else Trip.findById(tripid)   
+            .then(trip => {
+                if (!trip) return res.status(404).json({msg: "Document does not exist."})
+                if (isOwner(trip.user._id, req.user)) {
                 return Trip.findByIdAndUpdate(tripid, update, {new: true})
-                    .then(utrip => {
-                        res.send(utrip)
-                    })
-            } else 
-                return res.status(401).json({message: 'User Not Authorized.'});
-        }).catch(next)
+                } 
+                return res.status(401).json({msg: 'User Not Authorized.'});
+            })
+            .then(utrip => {return res.send(utrip)})
+            .catch(next)
 }
 
 const deleteTrip = async function(req, res, next) {
     let tripid = req.params.id;
     Trip.findById(tripid)
         .then(trip => {
-            if(!trip) return res.status(404).json({message: "Document does not exist."})
-            if(isOwner(trip.user._id, req.user)) {
-                return trip.remove()
-                    .then(dtrip => {
-                        return res.status(202).json({message: 'Document deleted succesfully.'})
-                    })
-            } else 
-                return res.status(401).json({message: 'User Not Authorized.'});
-        }).catch(next)
+            if (!trip) return res.status(404).json({msg: "Document does not exist."})
+            if (isOwner(trip.user._id, req.user)) 
+                return trip.remove();
+            else return res.status(401).json({msg: 'User Not Authorized.'});
+        })
+        .then(dtrip => {
+            return res.status(202).json({msg: 'Document deleted succesfully.'})
+        })
+        .catch(next)
 }
 
-const addCommentTrip = async function () {
+const getTripDays = async function(req, res, next) {
+    let tripid = req.params.id;
+    Trip.findById(tripid)
+        .select('days')
+        .populate('days -user -_id')
+        .then(tripDays => {
+            res.send(tripDays)
+        })
+}
 
+const addDayToTrip = async function(req, res, next) {
+    let tripid = req.params.id;
+    let dayid  = req.query.dayid;
+    if(!ObjectId.isValid(dayid))
+        return res.status(422).json({msg: "Invalid day id."})
+    try {    
+        let dayToBeAdded = await Day.findById(dayid);
+        if (!dayToBeAdded) return res.status(404).json({msg: "Day does not exist."});
+        let tripToAddDayTo = await Trip.findById(tripid);
+        if (!tripToAddDayTo) return res.status(404).json({msg: "Document does not exist."})
+        if (isOwner(tripToAddDayTo, req.user)) {
+            let utrip = await Trip.findByIdAndUpdate(tripid, { $push: { days: dayid }}, {new: true})
+            return res.send(utrip) 
+        } else 
+            return res.status(401).json({msg: 'User Not Authorized.'})
+    } catch (err) {
+        next(err)
+    }
+}
+
+const deleteDaysFromTrip = async function(req, res, next) {
+    let tripid = req.params.id;
+    let dayids = req.query.dayids.split(',');
+    if (!dayids) return res.status(400).json({msg: 'Please Provide at least one days.'})
+    dayids.forEach(id => {
+        if (!ObjectId.isValid(id))
+            return res.status(422).json({msg: "Invalid day id.", id})
+    });
+
+    let tripToModify = await Trip.findById(tripid);
+    if (!tripToModify) return res.status(404).json({msg: 'Trip does not exist.'});
+    if (isOwner(tripToModify, req.user)) {
+        let tripWithDayRemoved = await Trip.findByIdAndUpdate(tripid, { $pullAll: { days: dayids } }, {new: true});
+        return res.send(tripWithDayRemoved)
+    } else 
+        return res.status(401).json({msg: 'User Not Authorized.'})
 }
 
 module.exports = {
@@ -131,7 +164,9 @@ module.exports = {
         getTrip,
         getTripDays,
         updateTrip,
-        deleteTrip
+        deleteTrip,
+        addDayToTrip,
+        deleteDaysFromTrip
         // likeTrip,
         // commentTrip,
         // changeDaysPublicStatus

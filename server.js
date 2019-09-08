@@ -8,12 +8,15 @@ PORT = process.env.PORT || 4000;
 
 app.use(function mongoErrors(err, req, res, next) {
   if (res.headersSent) return next(err);
+  if (err.name === 'CastError') {
+    return res.status(500).send({name: err.name, message: err.message})
+  }
   if (err.name === 'MongoError') {
-    return res.send({name: err.name, message: err.errmsg})
+    return res.status(500).send({name: err.name, message: err.errmsg})
   }
   if(err.name == 'ValidationError') {
     console.log(err)
-    return res.send({name: err.name, message: err.message})
+    return res.status(500).send({name: err.name, message: err.message})
   }
   else next();
 });
