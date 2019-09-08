@@ -47,16 +47,12 @@ const postTrip = async function(req, res, next) {
     let {name, description, tags, upperBound, lowerBound, public} = req.body;
     let slug = slugify(name)
 
-    
-    // TODO:
-        // test the funcionality of recursive function
-
-    // let uniqueid = recursiveGenerateUniqueUrlid(slug);
-    new Trip({
+    let uniqueid = await recursiveGenerateUniqueUrlid(slug)
+    return new Trip({
         name,
         description,
         tags,
-        meta: {upperBound, lowerBound, urlid: shortid.generate()},
+        meta: {upperBound, lowerBound, urlid: uniqueid},
         settings: {public}
     })
     .save()
