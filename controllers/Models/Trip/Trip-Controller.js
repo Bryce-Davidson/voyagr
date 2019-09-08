@@ -4,7 +4,7 @@ const User                          = require('../../../models/User/UserSchema')
 const { 
     isOwner,
     keysContainString
-}                                   = require('../../../util/local-functions/schemaValidationMethods');
+}                                   = require('../../../util/local-functions/instanceValidation');
 // const { TRIPBUCKET }                = require('../../../config/keys').AWS;
 const upload                        = require('../../../util/middleware/photo-upload-util');
 const flatten                       = require('flat');
