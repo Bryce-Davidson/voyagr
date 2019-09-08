@@ -10,7 +10,6 @@ const upload                        = require('../../../util/middleware/photo-up
 const flatten                       = require('flat');
 
 const ObjectId                      = require('mongoose').Types.ObjectId;
-const shortid                       = require('shortid')
 const recursiveGenerateUniqueUrlid  = require('../../../util/local-functions/recursiveGenerateUniqueUrlid');
 const slugify                       = require('../../../util/local-functions/slugifyString');
 
@@ -48,7 +47,6 @@ const getTrips = async function(req, res, next) {
 const postTrip = async function(req, res, next) {
     let {name, description, tags, upperBound, lowerBound, public} = req.body;
     let slug = slugify(name)
-
     let uniqueid = await recursiveGenerateUniqueUrlid(slug)
     return new Trip({
         user: req.user,
@@ -84,6 +82,15 @@ const getTrip = async function(req, res, next) {
 const updateTrip = async function(req, res, next) {
     let tripid = req.params.id;
     let update = flatten(req.body);
+
+    // create function for form update
+    // include the forming logic for can't contain
+
+    TODO:
+        // [] dry code if tree for keyContains
+        // [] create middlware for updating slug
+        // [] create outer function for updating name
+
     if (keysContainString('meta', update))
         return res.status(403).json({msg: 'Unable to update on immutable path "meta".'})
     if (keysContainString('slug', update))
