@@ -47,6 +47,24 @@ app.use('/trips', require('./routes/Models/Trips/Trip-Routes'));
 app.use('/days', require('./routes/Models/Days/Day-Routes'));
 app.use('/locations', require('./routes/Models/Locations/Location-Routes'));
 
+// ERROR HANDELING ------------------------------------------
+
+app.use(function mongoErrors(err, req, res, next) {
+  if (res.headersSent) return next(err);
+
+  if (err.name === 'CastError') {
+    return res.status(500).send({name: err.name, message: err.message})
+  }
+  if (err.name === 'MongoError') {
+    return res.status(500).send({name: err.name, message: err.errmsg})
+  }
+  if(err.name == 'ValidationError') {
+    return res.status(500).send({name: err.name, message: err.message})
+  }
+  else next();
+});
+
+
 // INDEX ----------------------------------------------------------------------
 app.get('/', (req, res, next) => {
     res.send("Home");

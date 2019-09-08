@@ -5,14 +5,16 @@ const {
     isOwner,
     keysContainString
 }                                   = require('../../../util/local-functions/schemaValidationMethods');
-const { TRIPBUCKET }                = require('../../../config/keys').AWS;
+// const { TRIPBUCKET }                = require('../../../config/keys').AWS;
 const upload                        = require('../../../util/middleware/photo-upload-util');
 const flatten                       = require('flat');
-const slugify                       = require('../../../util/local-functions/slugifyString');
-const recursiveGenerateUniqueUrlid  = require('../../../util/local-functions/recursiveGenerateUniqueUrlid');
-const shortid                       = require('shortid')
-const ObjectId                      = require('mongoose').Types.ObjectId;
 
+const ObjectId                      = require('mongoose').Types.ObjectId;
+const shortid                       = require('shortid')
+const recursiveGenerateUniqueUrlid  = require('../../../util/local-functions/recursiveGenerateUniqueUrlid');
+const slugify                       = require('../../../util/local-functions/slugifyString');
+
+const notExistMsg                   = require('../../../util/errors/notExistMsg');
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
@@ -67,7 +69,7 @@ const getTrip = async function(req, res, next) {
     let tripid = req.params.id;
     Trip.findById(tripid)
         .then(trip => {
-            if (!trip) return res.status(404).json({msg: "Document does not exist."})
+            if (!trip) return notExistMsg('Trip', res)
             if (isOwner(trip, req.user))
                 return res.send(trip)
             if (!trip.settings.public) 
@@ -85,7 +87,7 @@ const updateTrip = async function(req, res, next) {
         return res.status(403).json({msg: 'Unable to update on immutable path "meta".'})
     else Trip.findById(tripid)   
             .then(trip => {
-                if (!trip) return res.status(404).json({msg: "Document does not exist."})
+                if (!trip) return notExistMsg('Trip', res);
                 if (isOwner(trip.user._id, req.user)) {
                 return Trip.findByIdAndUpdate(tripid, update, {new: true})
                 } 
@@ -95,29 +97,33 @@ const updateTrip = async function(req, res, next) {
             .catch(next)
 }
 
+// add error message util
+
 const deleteTrip = async function(req, res, next) {
     let tripid = req.params.id;
-    Trip.findById(tripid)
-        .then(trip => {
-            if (!trip) return res.status(404).json({msg: "Document does not exist."})
-            if (isOwner(trip.user._id, req.user)) 
-                return trip.remove();
-            else return res.status(401).json({msg: 'User Not Authorized.'});
-        })
-        .then(dtrip => {
-            return res.status(202).json({msg: 'Document deleted succesfully.'})
-        })
-        .catch(next)
+    try {
+    let trip = await Trip.findById(tripid)
+    if (!trip) return notExistMsg('Trip', res);
+    if (isOwner(trip, req.user)) {
+        await trip.remove();
+        return res.status(200);
+    } else 
+        return res.status(401).json({msg: 'User Not Authorized.'});
+    } catch (err) {
+        next(err)
+    }
 }
 
 const getTripDays = async function(req, res, next) {
     let tripid = req.params.id;
-    Trip.findById(tripid)
-        .select('days')
-        .populate('days -user -_id')
-        .then(tripDays => {
-            res.send(tripDays)
-        })
+    try {
+    let trip = await Trip.findById(tripid).populate('days')
+    if (!trip) return notExistMsg('Trip', res);
+    if (!trip.days) return res.status(404).json({msg: "Trip currently has 0 days"})
+    else return res.send(trip.days)
+    } catch (err) {
+        next(err)
+    }
 }
 
 const addDayToTrip = async function(req, res, next) {
@@ -126,15 +132,15 @@ const addDayToTrip = async function(req, res, next) {
     if(!ObjectId.isValid(dayid))
         return res.status(422).json({msg: "Invalid day id."})
     try {    
-        let dayToBeAdded = await Day.findById(dayid);
-        if (!dayToBeAdded) return res.status(404).json({msg: "Day does not exist."});
-        let tripToAddDayTo = await Trip.findById(tripid);
-        if (!tripToAddDayTo) return res.status(404).json({msg: "Document does not exist."})
-        if (isOwner(tripToAddDayTo, req.user)) {
-            let utrip = await Trip.findByIdAndUpdate(tripid, { $push: { days: dayid }}, {new: true})
-            return res.send(utrip) 
-        } else 
-            return res.status(401).json({msg: 'User Not Authorized.'})
+    let dayToBeAdded = await Day.findById(dayid);
+    if (!dayToBeAdded) return notExistMsg('Day', res);
+    let tripToAddDayTo = await Trip.findById(tripid);
+    if (!tripToAddDayTo) return notExistMsg('Trip', res);
+    if (isOwner(tripToAddDayTo, req.user)) {
+        let utrip = await Trip.findByIdAndUpdate(tripid, { $push: { days: dayid }}, {new: true})
+        return res.send(utrip);
+    } else 
+        return res.status(401).json({msg: 'User Not Authorized.'})
     } catch (err) {
         next(err)
     }
@@ -149,13 +155,17 @@ const deleteDaysFromTrip = async function(req, res, next) {
             return res.status(422).json({msg: "Invalid day id.", id})
     });
 
+    try {
     let tripToModify = await Trip.findById(tripid);
-    if (!tripToModify) return res.status(404).json({msg: 'Trip does not exist.'});
+    if (!tripToModify) return notExistMsg('Trip', res);
     if (isOwner(tripToModify, req.user)) {
         let tripWithDayRemoved = await Trip.findByIdAndUpdate(tripid, { $pullAll: { days: dayids } }, {new: true});
         return res.send(tripWithDayRemoved)
     } else 
         return res.status(401).json({msg: 'User Not Authorized.'})
+    } catch (err) {
+        next(err)
+    }
 }
 
 module.exports = {
