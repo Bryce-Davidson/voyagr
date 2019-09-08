@@ -29,8 +29,8 @@ router.route('/:id')
     .put(isLoggedIn, updateTrip)
     .delete(isLoggedIn, deleteTrip)
 
-// router.route('/:id/days')
-    // .get('get the days of the trip in question')
+router.route('/:id/days')
+    .get(getTripDays)
     // .post('OWNER - push in the day id within the query string')
     // .put('OWNER - change the status of the days in the trip')
 

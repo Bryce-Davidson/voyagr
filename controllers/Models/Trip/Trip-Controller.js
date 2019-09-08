@@ -45,11 +45,9 @@ const postTrip = async function(req, res, next) {
     let {name, description, tags, upperBound, lowerBound, public} = req.body;
     let slug = slugify(name)
 
-    
-    // TODO:
-
-    let uniqueid = recursiveGenerateUniqueUrlid(slug);
-    new Trip({
+    let uniqueid = await recursiveGenerateUniqueUrlid(slug)
+    return new Trip({
+        user: req.user,
         name,
         description,
         tags,
@@ -68,7 +66,7 @@ const getTrip = async function(req, res, next) {
     Trip.findById(tripid)
         .then(trip => {
             if(!trip) return res.status(404).json({message: "Document does not exist."})
-            if(isOwner(trip.user._id, req.user))
+            if(isOwner(trip, req.user))
                 return res.send(trip)
             else if (!trip.settings.public) 
                 return res.status(401).json({message: 'User Not Authorized.'})
