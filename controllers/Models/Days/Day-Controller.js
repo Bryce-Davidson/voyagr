@@ -8,6 +8,11 @@ const flatten           = require('flat');
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
 
+// TODO:
+    // [] everything async/await
+    // [] globa; day search route
+    // [] restrucure to verbalize
+    // [] update photo microservice
 
 // CREATE -------------------------------------------------------------------------
 

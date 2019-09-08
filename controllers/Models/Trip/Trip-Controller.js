@@ -109,9 +109,7 @@ const deleteTrip = async function(req, res, next) {
         return res.status(200);
     } else 
         return res.status(401).json({msg: 'User Not Authorized.'});
-    } catch (err) {
-        next(err)
-    }
+    } catch (err) {next(err)}
 }
 
 const getTripDays = async function(req, res, next) {
@@ -121,9 +119,7 @@ const getTripDays = async function(req, res, next) {
     if (!trip) return notExistMsg('Trip', res);
     if (!trip.days) return res.status(404).json({msg: "Trip currently has 0 days"})
     else return res.send(trip.days)
-    } catch (err) {
-        next(err)
-    }
+    } catch (err) {next(err)}
 }
 
 const addDayToTrip = async function(req, res, next) {
@@ -141,9 +137,7 @@ const addDayToTrip = async function(req, res, next) {
         return res.send(utrip);
     } else 
         return res.status(401).json({msg: 'User Not Authorized.'})
-    } catch (err) {
-        next(err)
-    }
+    } catch (err) {next(err)}
 }
 
 const deleteDaysFromTrip = async function(req, res, next) {
@@ -163,9 +157,19 @@ const deleteDaysFromTrip = async function(req, res, next) {
         return res.send(tripWithDayRemoved)
     } else 
         return res.status(401).json({msg: 'User Not Authorized.'})
-    } catch (err) {
-        next(err)
-    }
+    } catch (err) {next(err)}
+}
+
+const changeDaysPublicStatus = async function(req, res, next) {
+
+}
+
+const likeTrip = async function(req, res, next) {
+
+}
+
+const commentTrip = async function(req, res, next) {
+
 }
 
 module.exports = {
@@ -176,9 +180,11 @@ module.exports = {
         updateTrip,
         deleteTrip,
         addDayToTrip,
-        deleteDaysFromTrip
-        // likeTrip,
-        // commentTrip,
-        // changeDaysPublicStatus
+        deleteDaysFromTrip,
+    },
+    tripMeta: {
+            likeTrip,
+            commentTrip,
+            changeDaysPublicStatus
     }
 };
