@@ -1,7 +1,7 @@
 const Trip                  = require('../../../models/Trip/TripSchema');
 const Day                   = require('../../../models/Day/DaySchema');
 const User                  = require('../../../models/User/UserSchema');
-const { userCanAlter }      = require('../../../util/local-functions/instanceValidation');
+const { userCanAlter }      = require('../../../util/local-functions/instance-validation');
 const { USERBUCKET }        = require('../../../config/keys').AWS;
 const upload                = require('../../../util/middleware/photo-upload-util');
 

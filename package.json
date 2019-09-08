@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --exit",
-    "seed": "node util\\database\\Seeder.js",
+    "seed": "node util\\database\\seeder.js",
     "start": "./node_modules/.bin/nodemon server.js",
     "debug": "nodemon --inspect server.js"
   },

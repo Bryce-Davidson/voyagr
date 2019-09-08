@@ -1,7 +1,7 @@
 const Day                 = require('../../models/Day/DaySchema');
 const mongoose            = require('mongoose');
 const { pointSchema }     = require('../Geoschema-Types/GeoSchemas');
-const slugify             = require('../../util/local-functions/slugifyString');
+const slugify             = require('../../util/local-functions/slugify-string');
 
 const TripSchema = new mongoose.Schema({
   name: {type: String, required: true, maxlength: [50, 'Name must be less than 50 characters']},

@@ -1,5 +1,5 @@
 const Comment           = require('../../models/Comment/CommentSchema');
-const { userCanAlter }  = require('../local-functions/instanceValidation');
+const { userCanAlter }  = require('../local-functions/instance-validation');
 const Trip              = require('../../models/Trip/TripSchema');
 const Day               = require('../../models/Day/DaySchema');
 const Location          = require('../../models/Location/LocationSchema');
@@ -10,7 +10,7 @@ const Location          = require('../../models/Location/LocationSchema');
 
 getFeaturedPostsUtil = function(Model) {
     return function (req, res, next) {
-        const pagenation = parseInt(req.query.pagenation);
+    const pagenation = parseInt(req.query.pagenation);
         Model.aggregate([
             {$project: { 'locations': 0, 'days': 0, 'meta.tags': 0, 'settings': 0}},
             {$addFields: {
