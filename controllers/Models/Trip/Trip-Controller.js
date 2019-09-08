@@ -82,31 +82,22 @@ const getTrip = async function(req, res, next) {
 const updateTrip = async function(req, res, next) {
     let tripid = req.params.id;
     let update = flatten(req.body);
-
-    // create function for form update
-    // include the forming logic for can't contain
-
-    TODO:
-        // [] dry code if tree for keyContains
-        // [] create middlware for updating slug
-        // [] create outer function for updating name
+    if (update.name)
+        update.slug = slugify(update.name)
 
     if (keysContainString('meta', update))
         return res.status(403).json({msg: 'Unable to update on immutable path "meta".'})
     if (keysContainString('slug', update))
         return res.status(403).json({msg: 'Unable to update on immutable path "slug".'})
-    Trip.findById(tripid)
-            .then(trip => {
-                if (!trip) return notExistMsg('Trip', res);
-                if (isOwner(trip, req.user)) {
-                    if (update.name)
-                        update.slug = slugify(update.name)
-                    return Trip.findByIdAndUpdate(tripid, update, {new: true})
-                                .then(utrip => {return res.send(utrip)})
-                } else
-                    return res.status(401).json({msg: 'User Not Authorized.'});
-            })
-            .catch(next)
+    try {
+    let tripTobeModified = await Trip.findById(tripid)
+    if (!tripTobeModified) return notExistMsg('Trip', res);
+    if (isOwner(tripTobeModified, req.user)) {
+        let updatedTrip = await Trip.findByIdAndUpdate(tripid, update, {new: true})
+        return res.send(updatedTrip);
+    } 
+    return res.status(401).json({msg: 'User Not Authorized.'});
+    } catch (err) { next(err) }
 }
 
 // add error message util
