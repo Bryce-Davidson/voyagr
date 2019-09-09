@@ -130,6 +130,8 @@ const getTripDays = async function (req, res, next) {
 const addDayToTrip = async function (req, res, next) {
     let tripid = req.params.id;
     let dayid = req.query.dayid;
+    TODO:
+        // [] Replace dayid in query with urlid
     if (!ObjectId.isValid(dayid))
         return res.status(422).json({ msg: `Invalid day id: ${dayid}` });
     try {
@@ -148,6 +150,8 @@ const addDayToTrip = async function (req, res, next) {
 const deleteDaysFromTrip = async function (req, res, next) {
     let tripid = req.params.id;
     let dayids = req.query.dayids.split(',');
+    TODO:
+    // [] Replace dayid in query with urlid
     if (!dayids) return res.status(400).json({ msg: 'Please Provide at least one days.' });
     dayids.forEach(id => {
         if (!ObjectId.isValid(id))
