@@ -1,67 +1,29 @@
-const express = require('express');
-const router = express.Router();
+const express        = require('express');
+const router         = express.Router();
 const { isLoggedIn } = require('../../../util/middleware/auth-util');
-const globalSearch = require('../../../util/middleware/search-posts-util');
-const { 
-    addCommentUtil,
-    LikePostUtil,
-    deletePostUtil,
-    getFeaturedPostsUtil
- } = require('../../../util/middleware/post-actions-util');
+const Day            = require('../../../models/Day/DaySchema');
+
 const {
-    newDay,
-    viewDay,
-    addLocationToDay,
-    updateDay,
-    dayBannerUpload
-} = require('../../../controllers/Models/Days/Day-Controller');
+    getDays,
+    postDay
+}   = require('../../../controllers/Models/Days/Day-Controller').daysRoot;
 
-const Day = require('../../../models/Day/DaySchema');
+router.post('*', isLoggedIn)
+router.put('*', isLoggedIn)
+router.delete('*', isLoggedIn)
 
-// SEARCH AND FEATURED ----------------------------------
-
-router.route('/search')
-    .post(globalSearch(Day));
-
-router.route('/featured')
-    .get(getFeaturedPostsUtil(Day))
-
-// CREATE -----------------------------------------------
-
-router.route('/newday')
-    .get(isLoggedIn)
-    .post(isLoggedIn, newDay)
-
-// PHOTOS -----------------------------------------------
-
-router.route('/:id/upload/banner')
-    .post(isLoggedIn, dayBannerUpload)
-
-// UPDATE -----------------------------------------------
-
-router.route('/:id/addlocation/:locationid')
-    .post(isLoggedIn, addLocationToDay)
-
-router.route('/:id/addcomment')
-    .post(isLoggedIn, addCommentUtil(Day))
-
-router.route('/:id/like')
-    .post(isLoggedIn, LikePostUtil(Day))
-
-router.route('/:id/edit')
-    .post(isLoggedIn, updateDay)
-
-
-// READ -----------------------------------------------
-
+router.route('/')
+    .get(getDays)
+    .post(postDay)
 
 router.route('/:id')
-    .get(viewDay)
+    .get()
+    .post()
+    .delete()
 
-// DELETE -----------------------------------------------
-
-router.route('/:id/delete')
-    .delete(isLoggedIn, deletePostUtil(Day))
-
+router.route('/:id/locations')
+    .get()
+    .post()
+    .delete()
 
 module.exports = router;
