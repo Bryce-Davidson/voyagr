@@ -58,9 +58,9 @@ const postTrip = async function (req, res, next) {
         meta: { upperBound, lowerBound, urlid: uniqueid },
         settings: { public }
     })
-        .save()
-        .then(ntrip => res.status(201).send(ntrip))
-        .catch(next);
+    .save()
+    .then(ntrip => res.status(201).send(ntrip))
+    .catch(next);
 }
 
 // //trips/:id ?populate
