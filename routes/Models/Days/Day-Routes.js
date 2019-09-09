@@ -8,6 +8,15 @@ const {
     postDay
 }   = require('../../../controllers/Models/Days/Day-Controller').daysRoot;
 
+const { 
+    getDay,
+    updateDay,
+    deleteDay,
+    getDayLocations,
+    addLocationToDay,
+    deleteLocationsFromDay
+ } = require('../../../controllers/Models/Days/Day-Controller').dayResource;
+
 router.post('*', isLoggedIn)
 router.put('*', isLoggedIn)
 router.delete('*', isLoggedIn)
@@ -17,9 +26,9 @@ router.route('/')
     .post(postDay)
 
 router.route('/:id')
-    .get()
-    .post()
-    .delete()
+    .get(getDay)
+    .put(updateDay)
+    .delete(deleteDay)
 
 router.route('/:id/locations')
     .get()

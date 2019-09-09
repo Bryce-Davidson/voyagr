@@ -13,7 +13,7 @@ const DaySchema = new mongoose.Schema({
     middleBound: Number
   },
   settings: {
-      private: {type: Boolean, required: true, default: false}
+      public: {type: Boolean, required: true, default: true}
     },
   meta: {
     urlid: {type: String, required: true, index: true},

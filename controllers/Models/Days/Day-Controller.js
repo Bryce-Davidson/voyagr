@@ -4,7 +4,10 @@ const { isOwner } = require('../../../util/local-functions/instance-validation')
 // const { DAYBUCKET }     = require('../../../config/keys').AWS;
 const upload = require('../../../util/middleware/photo-upload-util');
 const flatten = require('flat');
-const quarantineUpdate = require('../../../util/local-functions/quarantine-update');
+
+const slugify                       = require('../../../util/local-functions/slugify-string')
+const quarantineUpdate              = require('../../../util/local-functions/quarantine-update');
+const recursiveGenerateUniqueUrlid  = require('../../../util/local-functions/generate-unique-urlid');
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
