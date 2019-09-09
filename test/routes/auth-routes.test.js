@@ -16,7 +16,6 @@ const test_trip = {
 	"public": true
 }
 
-
 const test_user = {
     local: {
         email: 'testuser@mail.com',
@@ -69,10 +68,22 @@ describe('/trips', () => {
             .expect(200, done)
     })
 
-    // it('Should get trip by id', (done) => {
-    //     agent
-    //         .get(`/trips/${tripid}`)
-    // })
+    it('Should get trip by id', (done) => {
+        agent
+            .get(`/trips/${tripid}`)
+            .expect(200)
+            .end((err, res) => {
+                should.equal(tripid, res.body._id)
+                done()
+            })
+    })
+
+    after((done) => {
+        Trip.findByIdAndDelete(tripid)
+            .then(dtrip => {
+                done()
+            })
+    })
 })
 
 after((done) => {
