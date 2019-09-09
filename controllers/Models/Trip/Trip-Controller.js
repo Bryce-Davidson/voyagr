@@ -48,7 +48,7 @@ const getTrips = async function(req, res, next) {
 const postTrip = async function(req, res, next) {
     let {name, description, tags, upperBound, lowerBound, public} = req.body;
     let slug = slugify(name);
-    let uniqueid = await recursiveGenerateUniqueUrlid(slug);
+    let uniqueid = await recursiveGenerateUniqueUrlid(slug, Trip);
     return new Trip({
         user: req.user,
         slug,
@@ -178,12 +178,15 @@ const commentTrip = async function(req, res, next) {
 }
 
 module.exports = {
-    tripsRoot: {postTrip, getTrips},
+    tripsRoot: {
+        getTrips,
+        postTrip 
+    },
     tripResource: {
         getTrip,
-        getTripDays,
         updateTrip,
         deleteTrip,
+        getTripDays,
         addDayToTrip,
         deleteDaysFromTrip,
     },
