@@ -1,38 +1,16 @@
 const request = require('supertest');
 const app = require('../../app');
-const agent1 = request.agent();
 const User = require('../../models/User/UserSchema');
 const Trip = require('../../models/Trip/TripSchema');
 const should = require('should');
 
-const base = "http://localhost:4000";
+const slugify = require('../../util/local-functions/slugify-string');
+const test = require('../../test/test-data');
 
-const test_trip = {
-	"name": "Test Trip #1",
-	"description": "This is a test trip and should be deleted",
-	"tags": ["test", "one", "two", "three"],
-	"upperBound": 1000,
-	"lowerBound": 500,
-	"public": true
-}
-
-const test_user = {
-    local: {
-        email: 'testuser@mail.com',
-        password: 'testPassword',
-        username: 'tester'
-    }
-}
-
-var agent = request.agent(app);
-
-// post trip
-// update trip
-// delete trip
-// 
+var agent = request.agent(app); 
 
 before((done) => {
-    let new_user = new User(test_user);
+    let new_user = new User(test.user);
     new_user.save()
     .then(user => {
         done()
@@ -44,8 +22,8 @@ describe('Agent Login', () => {
         agent
             .post('/login')
             .send({
-                email: test_user.local.email,
-                password: test_user.local.password
+                email: test.user.local.email,
+                password: test.user.local.password
             })
             .expect(302)
             .end((err, res) => {
@@ -56,10 +34,11 @@ describe('Agent Login', () => {
 
 describe('/trips - Routes', () => {
     let tripid;
-    before("Create Trip",(done) => {
+
+    it("Should create trip",(done) => {
         agent
             .post('/trips')
-            .send(test_trip)
+            .send(test.trip_1)
             .expect(201)
             .end((err, res) => {
                 tripid = res.body._id;
@@ -84,12 +63,12 @@ describe('/trips - Routes', () => {
             .expect(200)
             .end((err, res) => {
                 res.body.budget.middleBound.should.equal(750);
-                should.equal(tripid, res.body._id);
+                res.body._id.should.equal(tripid)
                 done()
             })
     })
 
-    it('Should update a trip', (done) => {
+    it('Should update trip', (done) => {
         agent
             .put(`/trips/${tripid}`)
             .send({name: 'Update test trip name'})
@@ -97,23 +76,28 @@ describe('/trips - Routes', () => {
             .end((err, res) => {
                 trip = res.body;
                 trip.name.should.equal("Update test trip name")
+                trip.slug.should.equal(slugify("Update test trip name"))
                 done()
             })
     })
 
-    after("Delete Trip", (done) => {
-        Trip.findByIdAndDelete(tripid)
-            .then(dtrip => {
-                console.log("Deleted Trip")
+    it('Should delete trip', (done) => {
+        agent
+            .delete(`/trips/${tripid}`)
+            .expect(200)
+            .end((err, res) => {
+                res.body.msg.should.equal("Trip deleted succesfully")
                 done()
             })
     })
 })
 
-after((done) => {
-    User.findOneAndDelete(test_user)
-        .then(duser => {
-            console.log("Deleted User")
-            done()
-        })
+after("Log user out and delete", (done) => {
+    User.findOneAndDelete({
+        email: test.user.email,
+    })
+    .then(duser => {
+        console.log("Deleted User")
+        done()
+    })
 })

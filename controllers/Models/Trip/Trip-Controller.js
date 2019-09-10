@@ -111,7 +111,7 @@ const deleteTrip = async function (req, res, next) {
         if (!trip) return notExistMsg('Trip', res);
         if (isOwner(trip, req.user)) {
             await trip.remove();
-            return res.status(200);
+            return res.status(200).json({msg: "Trip deleted succesfully"});
         } else
             return unauthorizedMsg(res);
     } catch (err) { next(err) };
