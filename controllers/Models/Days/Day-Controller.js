@@ -59,17 +59,16 @@ const postDay = async function (req, res, next) {
 
 const getDay = async function (req, res, next) {
     let dayid = req.params.id;
-    Day.findById(dayid)
-        .then(day => {
-            if (!day) return notExistMsg('Day', res);
-            if (isOwner(day, req.user))
-                return res.send(day);
-            if (!day.settings.public)
-                return unauthorizedMsg(res);
-            else return Day.findByIdAndUpdate(dayid, { $inc: { 'meta.viewCount': 1 } })
-                .then(uday => { return res.send(uday) });
-        })
-        .catch(next);
+    try {
+    let dayToSend = await Day.findById(dayid);
+    if (!dayToSend) return notExistMsg('Day', res);
+    if (isOwner(dayToSend, req.user))
+        return res.send(dayToSend);
+    if (!dayToSend.settings.public)
+        return unauthorizedMsg(res);
+    else return Day.findByIdAndUpdate(dayid, { $inc: { 'meta.viewCount': 1 } })
+        .then(uday => { return res.send(uday) });
+    } catch (err) { next(err) }
 }
 
 const updateDay = async function (req, res, next) {

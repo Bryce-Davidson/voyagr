@@ -31,8 +31,17 @@ router.route('/:id')
     .delete(deleteDay)
 
 router.route('/:id/locations')
-    .get()
-    .post()
-    .delete()
+    .get(getDayLocations)
+    .post(addLocationToDay)
+    .delete(deleteLocationsFromDay)
+
+// router.route('/:id/comments')
+    // .get('get all posts comments')
+    // .post('add new comment')
+
+// router.route('/:id/likes')
+    // .get('get of users who like post')
+    // .post('like trip with user - {cant like own post}')
+    // .delete('unlike post')
 
 module.exports = router;

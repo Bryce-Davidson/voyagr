@@ -1,25 +1,20 @@
-const Location = require('../../../models/Location/LocationSchema');
-const User = require('../../../models/User/UserSchema');
-const { isOwner } = require('../../../util/local-functions/instance-validation');
+const Location          = require('../../../models/Location/LocationSchema');
+const User              = require('../../../models/User/UserSchema');
+const { isOwner }       = require('../../../util/local-functions/instance-validation');
 
-const recursiveGenerateUniqueUrlid = require('../../../util/local-functions/generate-unique-urlid');
-const slugify = require('../../../util/local-functions/slugify-string');
+const recursiveGenerateUniqueUrlid    = require('../../../util/local-functions/generate-unique-urlid');
+const slugify                         = require('../../../util/local-functions/slugify-string');
+const quarantineUpdate                = require('../../../util/local-functions/quarantine-update');
+
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
-
-// CREATE -------------------------------------------------------------------------
-
-// TODO:
-// everything async await
-// add geo search ion global search results
-// add find near to find location results
 
 const getLocations = async function (req, res, next) {
   // &near=distance:1000@lat,long -> near=distance:1000@127.4421,41.2345
 
   // TODO: 
-  // learn to combine text and geo indexes
+  // combine text and geo indexes
 
   let { near, tags, text, min_budget, max_budget, paths, omit, pagenation } = req.query;
   let query = {};
@@ -57,7 +52,6 @@ const postLocation = async function (req, res, next) {
   let slug = slugify(name);
   // G: [lat, long], N: [long, lat]
   coordinates.reverse();
-
   let uniqueid = await recursiveGenerateUniqueUrlid(slug, Location);
 
   new Location({
@@ -79,20 +73,59 @@ const postLocation = async function (req, res, next) {
 }
 
 const getLocation = async function(req, res, next) {
-
+  let locationid = req.params.id;
+  try {
+  let locationToSend = await Location.findById(locationid);
+  if (!locationToSend) return notExistMsg('Location', res);
+  if (isOwner(locationToSend, req.user))
+      return res.send(locationToSend);
+  if (!locationToSend.settings.public)
+      return unauthorizedMsg(res);
+  else return Location.findByIdAndUpdate(locationid, { $inc: { 'meta.viewCount': 1 } })
+      .then(ulocation => { return res.send(ulocation) });
+  
+  } catch(err) { next(err) } 
 } 
 const updateLocation = async function(req, res, next) {
+  let locationid = req.params.id;
+    let update = flatten(req.body);
+    if (update.name)
+        update.slug = slugify(update.name);
 
+    try {
+        update = await quarantineUpdate(update);
+        let locationTobeModified = await Location.findById(locationid);
+        if (!locationTobeModified) return notExistMsg('Location', res);
+        if (isOwner(locationTobeModified, req.user)) {
+            let updatedlocation = await Location.findByIdAndUpdate(locationid, update, { new: true });
+            return res.send(updatedlocation);
+        } else
+            return unauthorizedMsg(res);
+    } catch (err) {
+        if (err.code === 'Immutable')
+            return res.status(err.code).json(err.msg)
+        else
+            next(err)
+    };
 }
 const deleteLocation = async function(req, res, next) {
-
+  let locationid = req.params.id;
+    try {
+        let location = await Location.findById(locationid);
+        if (!location) return notExistMsg('Location', res);
+        if (isOwner(location, req.user)) {
+            await location.remove();
+            return res.status(200);
+        } else
+            return unauthorizedMsg(res);
+    } catch (err) { next(err) };
 }
 
 const likeLocation = async function(req, res, next) {
-  
+
 }
 const commentLocation = async function(req, res, next) {
-  
+
 }
 
 module.exports = {
