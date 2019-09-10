@@ -4,9 +4,12 @@ const arrayLengthVal      = require('../validators/array-length-validator');
 
 const LocationSchema = new mongoose.Schema({
   name: {type: String, required: true},
+  slug: {type: String, index: true, required: true},
   user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
   trips: [{type: mongoose.Schema.Types.ObjectId, ref: 'Trip'}],
+  days: [{type: mongoose.Schema.Types.ObjectId, ref: 'Day'}],
   description: String,
+  typeOfLocation: {type: String, required: true},
   location: {
     type: pointSchema,
     required: true
@@ -26,21 +29,20 @@ const LocationSchema = new mongoose.Schema({
     likes: {type: Number, default: 0},
     numberOfComments: {type: Number, default: 0},
     numberOfShares: {type: Number, default: 0}
-    },
-    photos: {
-      image_1: String,
-      image_2: String,
-      image_3: String,
-      image_4: String,
-      image_5: String
-    },
-    comments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
-    typeoflocation: String,
-    budget: {
-      lowerBound: Number,
-      upperBound: Number,
-      middleBound: Number
-    }
+  },
+  // photos: {
+  //   image_1: String,
+  //   image_2: String,
+  //   image_3: String,
+  //   image_4: String,
+  //   image_5: String
+  // },
+  comments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
+  budget: {
+    lowerBound: Number,
+    upperBound: Number,
+    middleBound: Number
+  }
 });
 
 // QUERIES ---------------------------------------------------

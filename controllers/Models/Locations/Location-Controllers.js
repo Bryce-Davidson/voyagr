@@ -11,11 +11,10 @@ const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
 
 const getLocations = async function (req, res, next) {
-  // &near=distance:1000@lat,long -> near=distance:1000@127.4421,41.2345
-
+  
   // TODO: 
-  // combine text and geo indexes
-
+    // add location types to schema and add to query search
+  
   let { near, tags, text, min_budget, max_budget, paths, omit, pagenation } = req.query;
   let query = {};
   if (paths) { paths = paths.replace(/,/g, ' ') };
@@ -28,7 +27,8 @@ const getLocations = async function (req, res, next) {
     if (max_budget) mb.$lte = max_budget;
   }
   if (near && text)
-    return res.status(405).send('Near cannot be combined with text, use tags to specify attributes')
+  return res.status(405).send('Near cannot be combined with text, use tags to specify attributes')
+  // &near=distance:1000@lat,long -> near=distance:1000@127.4421,41.2345
   if (near) {
     let maxDistance = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
     // G: [lat, long], N: [long, lat]
@@ -48,7 +48,7 @@ const getLocations = async function (req, res, next) {
 }
 
 const postLocation = async function (req, res, next) {
-  const { coordinates, name, tags, upperBound, lowerBound } = req.body
+  const { coordinates, name, tags, upperBound, lowerBound, type } = req.body
   let slug = slugify(name);
   // G: [lat, long], N: [long, lat]
   coordinates.reverse();
@@ -58,6 +58,7 @@ const postLocation = async function (req, res, next) {
     "name": name,
     "slug": slug,
     "user": req.user,
+    "typeOfLocation": type,
     "location": {
       "type": "Point",
       "coordinates": coordinates
