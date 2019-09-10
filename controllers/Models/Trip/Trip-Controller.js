@@ -55,7 +55,8 @@ const postTrip = async function (req, res, next) {
         name,
         description,
         tags,
-        meta: { upperBound, lowerBound, urlid: uniqueid },
+        budget: { upperBound, lowerBound },
+        meta: { urlid: uniqueid },
         settings: { public }
     })
     .save()

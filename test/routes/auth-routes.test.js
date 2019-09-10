@@ -8,11 +8,11 @@ const should = require('should');
 const base = "http://localhost:4000";
 
 const test_trip = {
-	"name": "User created Trip #1",
+	"name": "Test Trip #1",
 	"description": "This is a test trip and should be deleted",
 	"tags": ["test", "one", "two", "three"],
 	"upperBound": 1000,
-	"lowerBound": 400,
+	"lowerBound": 500,
 	"public": true
 }
 
@@ -26,6 +26,11 @@ const test_user = {
 
 var agent = request.agent(app);
 
+// post trip
+// update trip
+// delete trip
+// 
+
 before((done) => {
     let new_user = new User(test_user);
     new_user.save()
@@ -34,7 +39,7 @@ before((done) => {
     })
 })
 
-describe('User Login', () => {
+describe('Agent Login', () => {
     it('Should log a user in', (done) => {
         agent
             .post('/login')
@@ -42,19 +47,20 @@ describe('User Login', () => {
                 email: test_user.local.email,
                 password: test_user.local.password
             })
-            .expect(200)
+            .expect(302)
             .end((err, res) => {
                 done()
             })
     })
 })
 
-describe('/trips', () => {
+describe('/trips - Routes', () => {
     let tripid;
-    before((done) => {
+    before("Create Trip",(done) => {
         agent
             .post('/trips')
             .send(test_trip)
+            .expect(201)
             .end((err, res) => {
                 tripid = res.body._id;
                 should.not.exist(err);
@@ -62,10 +68,14 @@ describe('/trips', () => {
             })
     })
 
-    it('Should get trips', (done) => {
+    it('Should get trips array', (done) => {
         agent
             .get('/trips')
-            .expect(200, done)
+            .expect(200)
+            .end((err, res) => {
+                should(res.body).is.Array;
+                done()
+            })
     })
 
     it('Should get trip by id', (done) => {
@@ -73,14 +83,28 @@ describe('/trips', () => {
             .get(`/trips/${tripid}`)
             .expect(200)
             .end((err, res) => {
-                should.equal(tripid, res.body._id)
+                res.body.budget.middleBound.should.equal(750);
+                should.equal(tripid, res.body._id);
                 done()
             })
     })
 
-    after((done) => {
+    it('Should update a trip', (done) => {
+        agent
+            .put(`/trips/${tripid}`)
+            .send({name: 'Update test trip name'})
+            .expect(200)
+            .end((err, res) => {
+                trip = res.body;
+                trip.name.should.equal("Update test trip name")
+                done()
+            })
+    })
+
+    after("Delete Trip", (done) => {
         Trip.findByIdAndDelete(tripid)
             .then(dtrip => {
+                console.log("Deleted Trip")
                 done()
             })
     })
@@ -89,7 +113,7 @@ describe('/trips', () => {
 after((done) => {
     User.findOneAndDelete(test_user)
         .then(duser => {
-            console.log(duser)
+            console.log("Deleted User")
             done()
         })
 })
