@@ -2,6 +2,7 @@ const Day                 = require('../../models/Day/DaySchema');
 const mongoose            = require('mongoose');
 const { pointSchema }     = require('../Geoschema-Types/GeoSchemas');
 const slugify             = require('../../util/local-functions/slugify-string');
+const arrayLengthVal      = require('../validators/array-length-validator');
 
 const TripSchema = new mongoose.Schema({
   name: {type: String, required: true, maxlength: [50, 'Name must be less than 50 characters']},
@@ -22,7 +23,10 @@ const TripSchema = new mongoose.Schema({
   settings: {
       public: {type: Boolean, required: true, default: true}
   },
-  tags: [String],
+  tags: {
+    type: [String],
+    validate: [arrayLengthVal, '{PATH} exceeds the limit of 15']
+  },
   meta: {
       urlid: {type: String, required: true, index: true},
       created: { type : Date, default: Date.now },
@@ -36,7 +40,6 @@ const TripSchema = new mongoose.Schema({
     banner: String
   }
 });
-
 
 // INDEXES -----------------------------------------------------
 

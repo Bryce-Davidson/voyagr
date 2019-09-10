@@ -1,4 +1,5 @@
-var mongoose = require('mongoose');
+const mongoose = require('mongoose');
+const arrayLengthVal = require('../validators/array-length-validator');
 
 const DaySchema = new mongoose.Schema({
   name: {type: String, required: true, maxlength: [100, 'Name must be less than 100 characters']},
@@ -15,11 +16,14 @@ const DaySchema = new mongoose.Schema({
   settings: {
       public: {type: Boolean, required: true, default: true}
     },
+  tags: {
+    type: [String],
+    validate: [arrayLengthVal, '{PATH} exceeds the limit of 15']
+  },
   meta: {
     urlid: {type: String, required: true, index: true},
     created: { type : Date, default: Date.now() },
     viewCount: {type: Number, default: 0},
-    tags: [String],
     likes: {type: Number, default: 0},
     numberOfComments: {type: Number, default: 0},
     numberOfShares: {type: Number, default: 0}
