@@ -1,108 +1,112 @@
-const Location                          = require('../../../models/Location/LocationSchema');
-const User                              = require('../../../models/User/UserSchema');
-const { userCanAlter }                  = require('../../../util/local-functions/instance-validation');
-const { locationBucket }                = require('../../../config/keys').AWS;
-const upload                            = require('../../../util/middleware/photo-upload-util');
-const { collisionPaths, newPhotoPaths } = require('./locations-photo-helpers');
+const Location = require('../../../models/Location/LocationSchema');
+const User = require('../../../models/User/UserSchema');
+const { isOwner } = require('../../../util/local-functions/instance-validation');
+
+const recursiveGenerateUniqueUrlid = require('../../../util/local-functions/generate-unique-urlid');
+const slugify = require('../../../util/local-functions/slugify-string');
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
 
 // CREATE -------------------------------------------------------------------------
 
-const newLocation = (req, res, next) => {
-  const {coordinates, name,tags } = req.body
-  let userid = req.session.passport.user;
-  // SWITCH from [lat, long] to [long, lat] for mongo
+// TODO:
+// everything async await
+// add geo search ion global search results
+// add find near to find location results
+
+const getLocations = async function (req, res, next) {
+  // &near=distance:1000@lat,long -> near=distance:1000@127.4421,41.2345
+
+  // TODO: 
+  // learn to combine text and geo indexes
+
+  let { near, tags, text, min_budget, max_budget, paths, omit, pagenation } = req.query;
+  let query = {};
+  if (paths) { paths = paths.replace(/,/g, ' ') };
+  if (omit) { omit = omit.split(',').map(item => `-${item}`).join(' ') };
+  if (tags) { query['meta.tags'] = { $all: tags.split(',') } }
+  if (text) { query.$text = { $search: text } }
+  if (min_budget || max_budget) {
+    const mb = query['budget.middleBound'] = {};
+    if (min_budget) mb.$gte = min_budget;
+    if (max_budget) mb.$lte = max_budget;
+  }
+  if (near && text)
+    return res.status(405).send('Near cannot be combined with text, use tags to specify attributes')
+  if (near) {
+    let maxDistance = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
+    // G: [lat, long], N: [long, lat]
+    let coordinates = near.substring(near.indexOf('@') + 1).split(',').reverse()
+    query.location = { $near: { $geometry: { type: 'Point', coordinates }, $maxDistance: maxDistance } }
+  }
+
+  Location.find(query)
+    .where({ 'settings.public': true })
+    .select(paths)
+    .select(omit)
+    .limit(Number(pagenation))
+    .then(docs => {
+      delete query;
+      return res.send(docs);
+    }).catch(next);
+}
+
+const postLocation = async function (req, res, next) {
+  const { coordinates, name, tags, upperBound, lowerBound } = req.body
+  let slug = slugify(name);
+  // G: [lat, long], N: [long, lat]
   coordinates.reverse();
-  let newLocation = new Location({
+
+  let uniqueid = await recursiveGenerateUniqueUrlid(slug, Location);
+
+  new Location({
     "name": name,
+    "slug": slug,
     "user": req.user,
     "location": {
       "type": "Point",
       "coordinates": coordinates
     },
-    "meta": {tags}
+    "meta": { tags, urlid: uniqueid },
+    "budget": { upperBound, lowerBound }
   })
-  newLocation.save()
-  .then(location => {
-    return User.findByIdAndUpdate(userid, {
-      $push: {'posts.locations': location._id}
-    })
-    .then(user => res.send(location))
-  })
-  .catch(next)
-}
-
-// PHOTOS --------------------------------------------------------------------
-
-
-
-const fields = [
-  {name: 'image_1', maxCount: 1},
-  {name: 'image_2', maxCount: 1},
-  {name: 'image_3', maxCount: 1},
-  {name: 'image_4', maxCount: 1},
-  {name: 'image_5', maxCount: 1}
-]
-
-const mulitplePhotoUpload = upload.fields(fields);
-
-const photoUploadToLocation = async function(req, res, next) {
-  req.bucketName = locationBucket;
-  Location.findById(req.params.id)
-  .then(location => {
-    // check if user owns document
-    if(userCanAlter(location, req.user, res)) {
-      mulitplePhotoUpload(req, res, function(err) {
-        // check errors
-        if(err) return next(err);
-            // check if photos were uploaded
-            else if (!req.files) return res.send('Please provide atleast one photo');
-            // check if photos in uplaoded spots already exist
-            let deletePaths = collisionPaths(location.photos, req.files)
-            if (deletePaths.length !== 0)  {
-              // if exist delete from S3
-              deletePaths.forEach(deletekey => {
-                let params = { Bucket: req.bucketName, Key: deletekey};
-                S3.deleteObject(params).promise()
-                  .catch(next)
-              })
-            }
-            // get the S3 saved locations from the req.files object
-            // merge the new upload paths into the location removing the old photos
-            location.photos = newPhotoPaths(location.photos, req.files)
-            return location.save()
-              .then(uloc => res.send(uloc))
-          })
-        }
-    }).catch(next)
-}
-
-// READ -----------------------------------------------------------------------
-
-const findNear = (req, res, next) => {
-  var { coordinates, maxDistance } = req.body;
-
-  Location.find().nearPoint(coordinates, maxDistance)
-      .populate('user', 'local.username')
-      .then(data => res.send(data))
-      .catch(next)
-};
-
-const viewLocation = (req, res, next) => {
-  Location.findByIdAndUpdate(req.params.id, {'$inc': {'meta.viewCount': 1}}, {new: true})
-    .populate('comments')
-    .then(data => {
-      res.send((data));
+    .save()
+    .then(loc => {
+      return res.send(loc)
     })
     .catch(next)
-};
-
-
-module.exports = { 
-  findNear, 
-  newLocation, 
-  viewLocation,
-  photoUploadToLocation
 }
+
+const getLocation = async function(req, res, next) {
+
+} 
+const updateLocation = async function(req, res, next) {
+
+}
+const deleteLocation = async function(req, res, next) {
+
+}
+
+const likeLocation = async function(req, res, next) {
+  
+}
+const commentLocation = async function(req, res, next) {
+  
+}
+
+module.exports = {
+  LocationsRoot: {
+    getLocations,
+    postLocation
+  },
+  LocationResource: {
+    getLocation,
+    updateLocation,
+    deleteLocation
+  },
+  LocationMeta: {
+    likeLocation,
+    commentLocation
+  }
+};

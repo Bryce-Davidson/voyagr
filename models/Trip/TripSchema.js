@@ -1,7 +1,6 @@
 const Day                 = require('../../models/Day/DaySchema');
 const mongoose            = require('mongoose');
 const { pointSchema }     = require('../Geoschema-Types/GeoSchemas');
-const slugify             = require('../../util/local-functions/slugify-string');
 const arrayLengthVal      = require('../validators/array-length-validator');
 
 const TripSchema = new mongoose.Schema({

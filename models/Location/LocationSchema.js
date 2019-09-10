@@ -1,5 +1,6 @@
-var mongoose              = require('mongoose');
-var { pointSchema }       = require('../Geoschema-Types/GeoSchemas');
+const mongoose              = require('mongoose');
+const { pointSchema }       = require('../Geoschema-Types/GeoSchemas');
+const arrayLengthVal      = require('../validators/array-length-validator');
 
 const LocationSchema = new mongoose.Schema({
   name: {type: String, required: true},
@@ -12,12 +13,16 @@ const LocationSchema = new mongoose.Schema({
   },
   address: String,
   settings: {
-    private: {type: Boolean, required: true, default: false}
+    public: {type: Boolean, required: true, default: true}
+  },
+  tags: {
+    type: [String],
+    validate: [arrayLengthVal, '{PATH} exceeds the limit of 15']
   },
   meta: {
+    urlid: {type: String, required: true, index: true},
     created: { type : Date, default: Date.now },
     viewCount: {type: Number, default: 0},
-    tags: [String],
     likes: {type: Number, default: 0},
     numberOfComments: {type: Number, default: 0},
     numberOfShares: {type: Number, default: 0}
@@ -52,6 +57,19 @@ LocationSchema.options.autoIndex = true;
 LocationSchema.index({ location: "2dsphere" });
 
 LocationSchema.index({name: 'text', description: 'text'}, {weights: { name: 5, description: 3,}});
+
+// MIDDLEWARE ------------------------------------------------
+
+LocationSchema.pre('save', async function computeMiddleBound(next) {
+  if(!this.isModified('budget.lowerBound') || !this.isModified('budget.lowerBound')) return next();
+  this.budget.middleBound = Math.round((this.budget.upperBound + this.budget.lowerBound) / 2)
+  next()
+});
+
+LocationSchema.pre('findOne', function autoPopUser(next) {
+  this.populate('user', 'local.username photos.profile'); 
+  next();
+});
 
 var Location = mongoose.model("Location", LocationSchema);
 
