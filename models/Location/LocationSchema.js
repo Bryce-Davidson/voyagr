@@ -45,12 +45,22 @@ const LocationSchema = new mongoose.Schema({
   }
 });
 
+// VIRTUALS -------------------------------------------------
+
+// use the virtual setter method here in order to call the instance set. this will
+// not triger any mniddleware
+
+
 // QUERIES ---------------------------------------------------
 
 LocationSchema.query.nearPoint = function(coordinates, maxDistance) {
  return this.where('location')
             .near({ center: { coordinates, type: 'Point' }, maxDistance, spherical: true })
 };
+
+LocationSchema.method.updateMiddleBound = async function(instance) {
+  return (this.budget.lowerBound + this.budget.upperBound) / 2
+}
 
 // INDEXES ---------------------------------------------------
 
@@ -67,6 +77,11 @@ LocationSchema.pre('save', async function computeMiddleBound(next) {
   this.budget.middleBound = Math.round((this.budget.upperBound + this.budget.lowerBound) / 2)
   next()
 });
+
+LocationSchema.pre('update', async function updateMiddleBound(next) {
+  this.update({},{ $set: { 'budget.middleBound': this } });
+
+})
 
 LocationSchema.pre('findOne', function autoPopUser(next) {
   this.populate('user', 'local.username photos.profile'); 

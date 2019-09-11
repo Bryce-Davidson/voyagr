@@ -93,11 +93,13 @@ const getLocation = async function(req, res, next) {
 const updateLocation = async function(req, res, next) {
   let locationid = req.params.id;
     let update = flatten(req.body);
-
     try {
         update = await quarantineUpdate(update);
         if (update.name)
             update.slug = slugify(update.name);
+        
+        // front end should compute middlebound
+
         let locationTobeModified = await Location.findById(locationid);
         if (!locationTobeModified) return notExistMsg('Location', res);
         if (isOwner(locationTobeModified, req.user)) {
@@ -112,7 +114,6 @@ const updateLocation = async function(req, res, next) {
             next(err)
     };
 }
-
 
 const deleteLocation = async function(req, res, next) {
   let locationid = req.params.id;
