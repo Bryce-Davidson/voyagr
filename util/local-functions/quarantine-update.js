@@ -1,3 +1,5 @@
+const { keysContainString } = require('../../util/local-functions/instance-validation');
+
 module.exports = async function(update) {
     return new Promise((resolve, reject) => {
     if (keysContainString('meta', update))

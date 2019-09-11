@@ -6,6 +6,7 @@ const recursiveGenerateUniqueUrlid    = require('../../../util/local-functions/g
 const slugify                         = require('../../../util/local-functions/slugify-string');
 const quarantineUpdate                = require('../../../util/local-functions/quarantine-update');
 
+const flatten                 = require('flat');
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
@@ -19,7 +20,7 @@ const getLocations = async function (req, res, next) {
   let query = {};
   if (paths) { paths = paths.replace(/,/g, ' ') };
   if (omit) { omit = omit.split(',').map(item => `-${item}`).join(' ') };
-  if (tags) { query['meta.tags'] = { $all: tags.split(',') } }
+  if (tags) { query['tags'] = { $all: tags.split(',') } }
   if (text) { query.$text = { $search: text } }
   if (min_budget || max_budget) {
     const mb = query['budget.middleBound'] = {};
@@ -63,7 +64,8 @@ const postLocation = async function (req, res, next) {
       "type": "Point",
       "coordinates": coordinates
     },
-    "meta": { tags, urlid: uniqueid },
+    "tags": tags,
+    "meta": { urlid: uniqueid },
     "budget": { upperBound, lowerBound }
   })
     .save()
@@ -87,14 +89,15 @@ const getLocation = async function(req, res, next) {
   
   } catch(err) { next(err) } 
 } 
+
 const updateLocation = async function(req, res, next) {
   let locationid = req.params.id;
     let update = flatten(req.body);
-    if (update.name)
-        update.slug = slugify(update.name);
 
     try {
         update = await quarantineUpdate(update);
+        if (update.name)
+            update.slug = slugify(update.name);
         let locationTobeModified = await Location.findById(locationid);
         if (!locationTobeModified) return notExistMsg('Location', res);
         if (isOwner(locationTobeModified, req.user)) {
@@ -109,6 +112,8 @@ const updateLocation = async function(req, res, next) {
             next(err)
     };
 }
+
+
 const deleteLocation = async function(req, res, next) {
   let locationid = req.params.id;
     try {

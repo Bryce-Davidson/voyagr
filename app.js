@@ -48,6 +48,10 @@ app.use('/locations', require('./routes/Models/Locations/Location-Routes'));
 app.use(function mongoErrors(err, req, res, next) {
   if (res.headersSent) return next(err);
 
+  if (err) {
+    console.log(err)
+  }
+
   if (err.name === 'CastError') {
     return res.status(500).send({name: err.name, message: err.message})
   }
