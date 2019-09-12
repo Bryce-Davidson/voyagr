@@ -156,6 +156,60 @@ const deleteLocationsFromDay = async function (req, res, next) {
     } catch (err) { next(err) };
 }
 
+// TODO:
+    // [] Add get likes
+
+const getDayLikes = async function(req, res, next) {
+    let dayid = req.params.id;
+    try {
+        let day = await Day.findById(dayid).populate('likes')
+                             .select('likes')
+                             .select('-_id -user');
+        if (!day) return notExistMsg('Day', res);
+        if (!day.likes) return res.status(404).json({ msg: "Day currently has 0 likes" });
+        else
+            return res.send(day.likes);
+    } catch (err) { next(err) };
+}
+ 
+const likeDay = async function(req, res, next) {
+    Day.findByIdAndUpdate(req.params.id, {
+        $inc: {'meta.likes': 1}
+    }, {new: true})
+    .then(likedPost => res.send(likedPost))
+    .catch(next)
+}
+
+const getDayComments = async function(req, res, next) {
+    let dayid = req.params.id;
+    try {
+        let day = await Day.findById(dayid).populate('comments')
+                             .select('comments')
+                             .select('-_id -user');
+        if (!day) return notExistMsg('Day', res);
+        if (!day.comments) return res.status(404).json({ msg: "Day currently has 0 comments" });
+        else
+            return res.send(day.comments);
+    } catch (err) { next(err) };
+}
+
+const commentDay = async function(req, res, next) {
+    let postid = req.params.id;
+    let comment = new Comment ({
+            'dayid': postid,
+            "user": req.user,
+            "body": req.body.body
+    });
+    comment.save()
+    .then(comment => {
+        return Day.findByIdAndUpdate(req.params.id, {
+            $inc: {'meta.numberOfComments': 1},
+            $push: {comments: comment._id}
+            }, {new: true})
+            .then(dayWithComment => res.send(dayWithComment))
+    }).catch(next)    
+}
+
 module.exports = {
     daysRoot: {
         getDays,
@@ -170,6 +224,8 @@ module.exports = {
         deleteLocationsFromDay
     },
     dayMeta: {
-
+        likeDay,
+        commentDay,
+        getDayComments
     }
 };

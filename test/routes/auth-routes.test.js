@@ -9,6 +9,12 @@ const test = require('../../test/test-data');
 
 var agent = request.agent(app); 
 
+PORT = process.env.PORT || 4000;
+
+app.listen(PORT, () => {
+    console.log(`Server started on port: ${PORT}`);
+});
+
 before((done) => {
     let new_user = new User(test.user);
     new_user.save()
@@ -47,7 +53,7 @@ describe('/trips - Routes', () => {
             })
     })
 
-    it('Should get trips array', (done) => {
+    it('Should get all trips array', (done) => {
         agent
             .get('/trips')
             .expect(200)
@@ -68,7 +74,7 @@ describe('/trips - Routes', () => {
             })
     })
 
-    it('Should update trip', (done) => {
+    it('Should update trip name', (done) => {
         agent
             .put(`/trips/${tripid}`)
             .send({name: 'Update test trip name'})
@@ -81,7 +87,7 @@ describe('/trips - Routes', () => {
             })
     })
 
-    it('Should delete trip', (done) => {
+    it('Should delete trip by id', (done) => {
         agent
             .delete(`/trips/${tripid}`)
             .expect(200)
@@ -93,6 +99,7 @@ describe('/trips - Routes', () => {
 })
 
 after("Log user out and delete", (done) => {
+    
     User.findOneAndDelete({
         email: test.user.email,
     })

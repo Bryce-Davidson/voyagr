@@ -173,15 +173,58 @@ const deleteDaysFromTrip = async function (req, res, next) {
 }
 
 const changeDaysPublicStatus = async function (req, res, next) {
+    // Invoke child status change instance method
+}
 
+const getTripLikes = async function(req, res, next) {
+    let tripid = req.params.id;
+    try {
+        let trip = await Trip.findById(tripid).populate('likes')
+                             .select('likes')
+                             .select('-_id -user');
+        if (!trip) return notExistMsg('trip', res);
+        if (!trip.likes) return res.status(404).json({ msg: "Trip currently has 0 likes" });
+        else
+            return res.send(trip.likes);
+    } catch (err) { next(err) };
 }
 
 const likeTrip = async function (req, res, next) {
+    Trip.findByIdAndUpdate(req.params.id, {
+        $inc: {'meta.likes': 1}
+    }, {new: true})
+    .then(likedDay => res.send(likedDay))
+    .catch(next)
+}
 
+const getTripComments = async function(req, res, next) {
+    let tripid = req.params.id;
+    try {
+        let trip = await Trip.findById(tripid).populate('comments')
+                             .select('comments')
+                             .select('-_id -user');
+        if (!trip) return notExistMsg('trip', res);
+        if (!trip.comments) return res.status(404).json({ msg: "Trip currently has 0 comments" });
+        else
+            return res.send(trip.comments);
+    } catch (err) { next(err) };
 }
 
 const commentTrip = async function (req, res, next) {
-
+    let postid = req.params.id;
+    let comment = new Comment ({
+            'tripid': postid,
+            "user": req.user,
+            "body": req.body.body
+    });
+    comment.save()
+    .then(comment => {
+        return Trip.findByIdAndUpdate(req.params.id, {
+            $inc: {'meta.numberOfComments': 1},
+            $push: {comments: comment._id}
+            }, {new: true})
+            .then(tripWithComment => res.send(tripWithComment))
+    }).catch(next)   
 }
 
 module.exports = {
@@ -200,6 +243,8 @@ module.exports = {
     tripMeta: {
         likeTrip,
         commentTrip,
-        changeDaysPublicStatus
+        changeDaysPublicStatus,
+        getTripLikes,
+        getTripComments
     }
 };

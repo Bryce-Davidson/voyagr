@@ -66,28 +66,6 @@ LikePostUtil = function(Post) {
 
 // DELETE POST ----------------------------------------------------
 
-//TODO: 
-    // change the redirect to the user profile page
-
-// redirect back to user profile
-deletePostUtil = function(Post) {
-    return function(req, res, next) {
-        let postid = req.params.id;
-        Post.findById(postid)
-            .then(post => {
-                if (userCanAlter(post, req.user, res)) {
-                    Post.findByIdAndDelete(postid)
-                        .then(docDeleted => {
-                             res.redirect('/');
-                        })
-                        .catch(next)
-                }
-            })
-    }
-}
-
-// SAVE POST TO STORY ----------------------------------------------
-
 module.exports = { 
     addCommentUtil, 
     LikePostUtil, 

@@ -15,7 +15,12 @@ const {
     getDayLocations,
     addLocationToDay,
     deleteLocationsFromDay
- } = require('../../../controllers/Models/Days/Day-Controller').dayResource;
+} = require('../../../controllers/Models/Days/Day-Controller').dayResource;
+
+const {
+    likeDay,
+    commentDay
+} = require('../../../controllers/Models/Days/Day-Controller').dayMeta;
 
 router.post('*', isLoggedIn)
 router.put('*', isLoggedIn)
@@ -35,9 +40,9 @@ router.route('/:id/locations')
     .post(addLocationToDay)
     .delete(deleteLocationsFromDay)
 
-// router.route('/:id/comments')
-    // .get('get all posts comments')
-    // .post('add new comment')
+router.route('/:id/comments')
+    .get()
+    .post(commentDay)
 
 // router.route('/:id/likes')
     // .get('get of users who like post')

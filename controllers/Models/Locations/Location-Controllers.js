@@ -130,11 +130,29 @@ const deleteLocation = async function(req, res, next) {
     } catch (err) { next(err) };
 }
 
-const likeLocation = async function(req, res, next) {
-
+const likeLocation = async function (req, res, next) {
+  Location.findByIdAndUpdate(req.params.id, {
+      $inc: {'meta.likes': 1}
+  }, {new: true})
+  .then(likedDay => res.send(likedDay))
+  .catch(next)
 }
-const commentLocation = async function(req, res, next) {
 
+const commentLocation = async function (req, res, next) {
+  let postid = req.params.id;
+  let comment = new Comment ({
+          'locationid': postid,
+          "user": req.user,
+          "body": req.body.body
+  });
+  comment.save()
+  .then(comment => {
+      return Location.findByIdAndUpdate(req.params.id, {
+          $inc: {'meta.numberOfComments': 1},
+          $push: {comments: comment._id}
+          }, {new: true})
+          .then(locationWithComment => res.send(locationWithComment))
+  }).catch(next)   
 }
 
 module.exports = {
