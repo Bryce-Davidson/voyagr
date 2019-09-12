@@ -34,6 +34,7 @@ const getTrips = async function (req, res, next) {
         if (max_budget) mb.$lte = max_budget;
     };
 
+    
     Trip.find(query)
         .where({ 'settings.public': true })
         .select(paths)
