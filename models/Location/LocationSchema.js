@@ -58,10 +58,6 @@ LocationSchema.query.nearPoint = function(coordinates, maxDistance) {
             .near({ center: { coordinates, type: 'Point' }, maxDistance, spherical: true })
 };
 
-LocationSchema.method.updateMiddleBound = async function(instance) {
-  return (this.budget.lowerBound + this.budget.upperBound) / 2
-}
-
 // INDEXES ---------------------------------------------------
 
 LocationSchema.options.autoIndex = true;
@@ -79,7 +75,9 @@ LocationSchema.pre('save', async function computeMiddleBound(next) {
 });
 
 LocationSchema.pre('update', async function updateMiddleBound(next) {
-  this.update({},{ $set: { 'budget.middleBound': this } });
+  if (this._conditions['budget.upperBound'] || this._conditions['budget.lowerBound']) {
+    this.update({},{ $set: { 'budget.middleBound': this._conditions } });
+  }
 
 })
 

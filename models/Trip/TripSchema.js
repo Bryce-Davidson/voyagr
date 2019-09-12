@@ -71,7 +71,7 @@ TripSchema.methods.nuke = async function() {
 // MIDDLEWARE --------------------------------------------------
 
 TripSchema.pre('save', async function computeMiddleBound(next) {
-  if(!this.isModified('budget.lowerBound') || !this.isModified('budget.lowerBound')) return next();
+  if(!this.isModified('budget.lowerBound') || !this.isModified('budget.upperBound')) return next();
   this.budget.middleBound = Math.round((this.budget.upperBound + this.budget.lowerBound) / 2)
   next()
 });

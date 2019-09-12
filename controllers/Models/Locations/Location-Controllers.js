@@ -97,8 +97,10 @@ const updateLocation = async function(req, res, next) {
         update = await quarantineUpdate(update);
         if (update.name)
             update.slug = slugify(update.name);
+
+        // we can get access to the budget update within the update middleware by passing
+        // it to update
         
-        // front end should compute middlebound
 
         let locationTobeModified = await Location.findById(locationid);
         if (!locationTobeModified) return notExistMsg('Location', res);

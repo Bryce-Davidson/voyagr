@@ -120,7 +120,9 @@ const deleteTrip = async function (req, res, next) {
 const getTripDays = async function (req, res, next) {
     let tripid = req.params.id;
     try {
-        let trip = await Trip.findById(tripid).populate('days');
+        let trip = await Trip.findById(tripid).populate('days')
+                             .select('days')
+                             .select('-_id -user');
         if (!trip) return notExistMsg('Trip', res);
         if (!trip.days) return res.status(404).json({ msg: "Trip currently has 0 days" });
         else
