@@ -210,7 +210,7 @@ const getTripComments = async function(req, res, next) {
     } catch (err) { next(err) };
 }
 
-const commentTrip = async function (req, res, next) {
+const postCommentTrip = async function (req, res, next) {
     let postid = req.params.id;
     let comment = new Comment ({
             'tripid': postid,
@@ -242,9 +242,9 @@ module.exports = {
     },
     tripMeta: {
         likeTrip,
-        commentTrip,
-        changeDaysPublicStatus,
+        postCommentTrip,
         getTripLikes,
-        getTripComments
+        getTripComments,
+        changeDaysPublicStatus
     }
 };

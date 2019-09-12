@@ -193,7 +193,7 @@ const getDayComments = async function(req, res, next) {
     } catch (err) { next(err) };
 }
 
-const commentDay = async function(req, res, next) {
+const postCommentDay  = async function(req, res, next) {
     let postid = req.params.id;
     let comment = new Comment ({
             'dayid': postid,
@@ -225,7 +225,8 @@ module.exports = {
     },
     dayMeta: {
         likeDay,
-        commentDay,
-        getDayComments
+        postCommentDay,
+        getDayComments,
+        getDayLikes
     }
 };

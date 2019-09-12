@@ -14,6 +14,13 @@ const {
     deleteDaysFromTrip
 } = require('../../../controllers/Models/Trip/Trip-Controller').tripResource;
 
+const {
+    likeTrip,
+    postCommentTrip,
+    getTripComments,
+    getTripLikes
+} = require('../../../controllers/Models/Trip/trip-controller').tripMeta;
+
 router.post('*', isLoggedIn);
 router.put('*', isLoggedIn);
 router.delete('*', isLoggedIn);
@@ -35,13 +42,13 @@ router.route('/:id/days')
     .delete(deleteDaysFromTrip)
     // .put('OWNER - change the status of the days in the trip')
 
-// router.route('/:id/comments')
-    // .get('get all posts comments')
-    // .post('add new comment')
+router.route('/:id/comments')
+    .get(getTripComments)
+    .post(postCommentTrip)
 
-// router.route('/:id/likes')
-    // .get('get of users who like post')
-    // .post('like trip with user - {cant like own post}')
+router.route('/:id/likes')
+    .get(getTripLikes)
+    .post(likeTrip)
     // .delete('unlike post')
 
 module.exports = router;

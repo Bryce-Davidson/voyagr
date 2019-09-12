@@ -19,7 +19,9 @@ const {
 
 const {
     likeDay,
-    commentDay
+    postCommentDay,
+    getDayComments,
+    getDayLikes
 } = require('../../../controllers/Models/Days/Day-Controller').dayMeta;
 
 router.post('*', isLoggedIn)
@@ -41,12 +43,12 @@ router.route('/:id/locations')
     .delete(deleteLocationsFromDay)
 
 router.route('/:id/comments')
-    .get()
-    .post(commentDay)
+    .get(getDayComments)
+    .post(postCommentDay)
 
-// router.route('/:id/likes')
-    // .get('get of users who like post')
-    // .post('like trip with user - {cant like own post}')
+router.route('/:id/likes')
+    .get(getDayLikes)
+    .post(likeDay)
     // .delete('unlike post')
 
 module.exports = router;
