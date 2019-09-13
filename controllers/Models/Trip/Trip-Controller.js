@@ -19,6 +19,7 @@ const unauthorizedMsg = require('../../../util/errors/unauthorized-msg');
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
 
+
 // /trips ----------------------------------------------------------------
 
 const getTrips = async function (req, res, next) {
