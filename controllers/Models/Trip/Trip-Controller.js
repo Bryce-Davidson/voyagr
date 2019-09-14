@@ -24,12 +24,11 @@ const S3 = new AWS.S3()
 const getTrips = async function (req, res, next) {
     let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured } = req.query;
     let pipeline = [];
-    // loading first stage
     if (text) {
         let stage = { $match: { $text: { $search: text } } };
         pipeline.push(stage);
     } else {
-        pipeline.push({$match:{}})
+        pipeline.push({$match: {}})
     };
     if (featured) {
         let stage = [{
@@ -78,7 +77,7 @@ const getTrips = async function (req, res, next) {
         let stage = {$limit: Number(pagenation)}
         pipeline.push(stage)
     }
-
+    pipeline.push({$match: { 'settings.public': true }})
     Trip.aggregate(pipeline)
         .then(docs => {
             return res.send({
