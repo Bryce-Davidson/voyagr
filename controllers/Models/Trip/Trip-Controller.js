@@ -24,6 +24,13 @@ const S3 = new AWS.S3()
 const getTrips = async function (req, res, next) {
     let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured } = req.query;
     let pipeline = [];
+    // loading first stage
+    if (text) {
+        let stage = { $match: { $text: { $search: text } } };
+        pipeline.push(stage);
+    } else {
+        pipeline.push({$match:{}})
+    };
     if (featured) {
         let stage = [{
                 $addFields: {
@@ -41,12 +48,8 @@ const getTrips = async function (req, res, next) {
         ];
         pipeline = pipeline.concat(stage)
     };
-    if (text) {
-        let stage = { $match: { $text: { $search: text } } };
-        pipeline.push(stage);
-    };
     if (tags) {
-        let stage = { $match: { tags: { $all: tags.split(',') } } };
+        let stage = { $match: { tags: { $all: tags.replace(/\s+/g, '').split(',') } } };
         pipeline.push(stage);
     };
     if (min_budget || max_budget) {
@@ -55,22 +58,35 @@ const getTrips = async function (req, res, next) {
         if (min_budget) budget.$gte = min_budget;
         if (max_budget) budget.$lte = max_budget;
     };
-
     if (paths) {
+        let stage = {$project: {}}
         paths = paths.replace(/\s+/g, '').split(',')
-        
+        paths.forEach(p => {
+            stage.$project[p] = 1;
+        })
+        pipeline.push(stage)
     };
-    if (omit) { omit = omit.split(',').map(item => `-${item}`).join(' ') };
+    if (omit) { 
+        let stage = {$project: {}}
+        omit = omit.replace(/\s+/g, '').split(',')
+        omit.forEach(p => {
+            stage.$project[p] = 0;
+        })
+        pipeline.push(stage)
+    };
+    if (pagenation) {
+        let stage = {$limit: Number(pagenation)}
+        pipeline.push(stage)
+    }
 
-    Trip.find(query)
-        .where({ 'settings.public': true })
-        .select(paths)
-        .select(omit)
-        .limit(Number(pagenation))
+    Trip.aggregate(pipeline)
         .then(docs => {
-            delete query;
-            return res.send(docs);
-        }).catch(next);
+            return res.send({
+                pipeline,
+                docs
+            })
+        })
+        .catch(next)
 }
 
 const postTrip = async function (req, res, next) {
