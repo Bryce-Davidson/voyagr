@@ -22,23 +22,46 @@ const S3 = new AWS.S3()
 // /trips ----------------------------------------------------------------
 
 const getTrips = async function (req, res, next) {
-
-
-
-    
-    let { text, tags, min_budget, max_budget, paths, omit, pagenation } = req.query;
-    let query = {};
-    if (paths) { paths = paths.replace(/,/g, ' ') };
-    if (omit) { omit = omit.split(',').map(item => `-${item}`).join(' ') };
-    if (tags) { query['tags'] = { $all: tags.split(',') } };
-    if (text) { query.$text = { $search: text } };
+    let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured } = req.query;
+    let pipeline = [];
+    if (featured) {
+        let stage = [{
+                $addFields: {
+                    featuredScore: {
+                        $add: [
+                            { $multiply: ["$meta.likes", 2] },
+                            { $multiply: ["$meta.numberOfShares", 3] },
+                            '$meta.viewCount'
+                        ]
+                    }
+                }
+            },
+            { "$sort": { 'featuredScore': -1 } },
+            { $project: { 'featuredScore': 0 } },
+        ];
+        pipeline = pipeline.concat(stage)
+    };
+    if (text) {
+        let stage = { $match: { $text: { $search: text } } };
+        pipeline.push(stage);
+    };
+    if (tags) {
+        let stage = { $match: { tags: { $all: tags.split(',') } } };
+        pipeline.push(stage);
+    };
     if (min_budget || max_budget) {
-        const mb = query['budget.middleBound'] = {};
-        if (min_budget) mb.$gte = min_budget;
-        if (max_budget) mb.$lte = max_budget;
+        let stage = { $match: { 'budget.middleBound': {} } };
+        const budget = stage.$match['budget.middleBound'];
+        if (min_budget) budget.$gte = min_budget;
+        if (max_budget) budget.$lte = max_budget;
     };
 
-    
+    if (paths) {
+        paths = paths.replace(/\s+/g, '').split(',')
+        
+    };
+    if (omit) { omit = omit.split(',').map(item => `-${item}`).join(' ') };
+
     Trip.find(query)
         .where({ 'settings.public': true })
         .select(paths)
@@ -64,9 +87,9 @@ const postTrip = async function (req, res, next) {
         meta: { urlid: uniqueid },
         settings: { public }
     })
-    .save()
-    .then(ntrip => res.status(201).send(ntrip))
-    .catch(next);
+        .save()
+        .then(ntrip => res.status(201).send(ntrip))
+        .catch(next);
 }
 
 // //trips/:id ?populate
@@ -116,7 +139,7 @@ const deleteTrip = async function (req, res, next) {
         if (!trip) return notExistMsg('Trip', res);
         if (isOwner(trip, req.user)) {
             await trip.remove();
-            return res.status(200).json({msg: "Trip deleted succesfully"});
+            return res.status(200).json({ msg: "Trip deleted succesfully" });
         } else
             return unauthorizedMsg(res);
     } catch (err) { next(err) };
@@ -126,8 +149,8 @@ const getTripDays = async function (req, res, next) {
     let tripid = req.params.id;
     try {
         let trip = await Trip.findById(tripid).populate('days')
-                             .select('days')
-                             .select('-_id -user');
+            .select('days')
+            .select('-_id -user');
         if (!trip) return notExistMsg('Trip', res);
         if (!trip.days) return res.status(404).json({ msg: "Trip currently has 0 days" });
         else
@@ -139,7 +162,7 @@ const addDayToTrip = async function (req, res, next) {
     let tripid = req.params.id;
     let dayid = req.query.dayid;
     TODO:
-        // [] Replace dayid in query with urlid
+    // [] Replace dayid in query with urlid
     if (!ObjectId.isValid(dayid))
         return res.status(422).json({ msg: `Invalid day id: ${dayid}` });
     try {
@@ -181,12 +204,12 @@ const changeDaysPublicStatus = async function (req, res, next) {
     // Invoke child status change instance method
 }
 
-const getTripLikes = async function(req, res, next) {
+const getTripLikes = async function (req, res, next) {
     let tripid = req.params.id;
     try {
         let trip = await Trip.findById(tripid).populate('likes')
-                             .select('likes')
-                             .select('-_id -user');
+            .select('likes')
+            .select('-_id -user');
         if (!trip) return notExistMsg('trip', res);
         if (!trip.likes) return res.status(404).json({ msg: "Trip currently has 0 likes" });
         else
@@ -196,18 +219,18 @@ const getTripLikes = async function(req, res, next) {
 
 const likeTrip = async function (req, res, next) {
     Trip.findByIdAndUpdate(req.params.id, {
-        $inc: {'meta.likes': 1}
-    }, {new: true})
-    .then(likedDay => res.send(likedDay))
-    .catch(next)
+        $inc: { 'meta.likes': 1 }
+    }, { new: true })
+        .then(likedDay => res.send(likedDay))
+        .catch(next)
 }
 
-const getTripComments = async function(req, res, next) {
+const getTripComments = async function (req, res, next) {
     let tripid = req.params.id;
     try {
         let trip = await Trip.findById(tripid).populate('comments')
-                             .select('comments')
-                             .select('-_id -user');
+            .select('comments')
+            .select('-_id -user');
         if (!trip) return notExistMsg('trip', res);
         if (!trip.comments) return res.status(404).json({ msg: "Trip currently has 0 comments" });
         else
@@ -217,19 +240,19 @@ const getTripComments = async function(req, res, next) {
 
 const postCommentTrip = async function (req, res, next) {
     let postid = req.params.id;
-    let comment = new Comment ({
-            'tripid': postid,
-            "user": req.user,
-            "body": req.body.body
+    let comment = new Comment({
+        'tripid': postid,
+        "user": req.user,
+        "body": req.body.body
     });
     comment.save()
-    .then(comment => {
-        return Trip.findByIdAndUpdate(req.params.id, {
-            $inc: {'meta.numberOfComments': 1},
-            $push: {comments: comment._id}
-            }, {new: true})
-            .then(tripWithComment => res.send(tripWithComment))
-    }).catch(next)   
+        .then(comment => {
+            return Trip.findByIdAndUpdate(req.params.id, {
+                $inc: { 'meta.numberOfComments': 1 },
+                $push: { comments: comment._id }
+            }, { new: true })
+                .then(tripWithComment => res.send(tripWithComment))
+        }).catch(next)
 }
 
 module.exports = {
