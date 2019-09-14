@@ -221,7 +221,8 @@ module.exports = {
         deleteDay,
         getDayLocations,
         addLocationToDay,
-        deleteLocationsFromDay
+        deleteLocationsFromDay,
+        deleteDay
     },
     dayMeta: {
         likeDay,

@@ -5,7 +5,6 @@ const {
     isOwner,
     keysContainString
 } = require('../../../util/local-functions/instance-validation');
-// const { TRIPBUCKET }                = require('../../../config/keys').AWS;
 const upload = require('../../../util/middleware/photo-upload-util');
 const flatten = require('flat');
 
@@ -23,6 +22,10 @@ const S3 = new AWS.S3()
 // /trips ----------------------------------------------------------------
 
 const getTrips = async function (req, res, next) {
+
+
+
+    
     let { text, tags, min_budget, max_budget, paths, omit, pagenation } = req.query;
     let query = {};
     if (paths) { paths = paths.replace(/,/g, ' ') };
@@ -241,6 +244,7 @@ module.exports = {
         getTripDays,
         addDayToTrip,
         deleteDaysFromTrip,
+        deleteTrip
     },
     tripMeta: {
         likeTrip,
