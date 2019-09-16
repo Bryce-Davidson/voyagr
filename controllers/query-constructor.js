@@ -7,6 +7,7 @@ function generate_pipeline() {
         let stage = { $match: { $text: { $search: text } } };
         pipeline.push(stage);
     } else {
+        // if there is already a first stage we don't need another blank top stage
         pipeline.push({$match: {}})
     };
     if (featured) {
@@ -52,8 +53,8 @@ function generate_pipeline() {
         let omit = omit;
         let stage = {$project: {}}
         omit = omit.replace(/\s+/g, '').split(',')
-        omit.forEach(p => {
-            stage.$project[p] = 0;
+        omit.forEach(o => {
+            stage.$project[o] = 0;
         })
         pipeline.push(stage)
     };
