@@ -5,15 +5,16 @@ const {
     isOwner,
     keysContainString
 } = require('../../../util/local-functions/instance-validation');
-const upload = require('../../../util/middleware/photo-upload-util');
-const flatten = require('flat');
 
 const ObjectId = require('mongoose').Types.ObjectId;
+const flatten = require('flat');
 const recursiveGenerateUniqueUrlid = require('../../../util/local-functions/generate-unique-urlid');
 const slugify = require('../../../util/local-functions/slugify-string');
 
 const notExistMsg = require('../../../util/errors/resource-does-not-exist-msg');
 const unauthorizedMsg = require('../../../util/errors/unauthorized-msg');
+
+const TripsPipeline = require('./trip-pipeline-constructor');
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
@@ -22,62 +23,14 @@ const S3 = new AWS.S3()
 // /trips ----------------------------------------------------------------
 
 const getTrips = async function (req, res, next) {
-    let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured } = req.query;
-    let pipeline = [];
-    if (text) {
-        let stage = { $match: { $text: { $search: text } } };
-        pipeline.push(stage);
-    } else {
-        pipeline.push({$match: {}})
-    };
-    if (featured) {
-        let stage = [{
-                $addFields: {
-                    featuredScore: {
-                        $add: [
-                            { $multiply: ["$meta.likes", 2] },
-                            { $multiply: ["$meta.numberOfShares", 3] },
-                            '$meta.viewCount'
-                        ]
-                    }
-                }
-            },
-            { "$sort": { 'featuredScore': -1 } },
-            { $project: { 'featuredScore': 0 } },
-        ];
-        pipeline = pipeline.concat(stage)
-    };
-    if (tags) {
-        let stage = { $match: { tags: { $all: tags.replace(/\s+/g, '').split(',') } } };
-        pipeline.push(stage);
-    };
-    if (min_budget || max_budget) {
-        let stage = { $match: { 'budget.middleBound': {} } };
-        const budget = stage.$match['budget.middleBound'];
-        if (min_budget) budget.$gte = min_budget;
-        if (max_budget) budget.$lte = max_budget;
-    };
-    if (paths) {
-        let stage = {$project: {}}
-        paths = paths.replace(/\s+/g, '').split(',')
-        paths.forEach(p => {
-            stage.$project[p] = 1;
-        })
-        pipeline.push(stage)
-    };
-    if (omit) { 
-        let stage = {$project: {}}
-        omit = omit.replace(/\s+/g, '').split(',')
-        omit.forEach(p => {
-            stage.$project[p] = 0;
-        })
-        pipeline.push(stage)
-    };
-    if (pagenation) {
-        let stage = {$limit: Number(pagenation)}
-        pipeline.push(stage)
-    }
-    pipeline.push({$match: { 'settings.public': true }})
+    let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by } = req.query;
+    let pipeline = new TripsPipeline(featured_by)
+                    .text(text)
+                    .tags(tags)
+                    .select({paths, omit})
+                    .budget(min_budget, max_budget)
+                    .limit(pagenation)
+                    .build()
     Trip.aggregate(pipeline)
         .then(docs => {
             return res.send({
