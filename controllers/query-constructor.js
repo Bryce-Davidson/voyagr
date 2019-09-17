@@ -1,10 +1,11 @@
 
 class TripsQuery {
-    constructor(featured) {
+    constructor({ featured = false }) {
+        // this is the order of the pipeline
         this.pipeline = [];
         this.$match = {};
-        this.$project = {};
         this.$addFields = {};
+        this.$project = {};
         this.$limit = {};
         this.featured = featured;
     }
@@ -47,18 +48,23 @@ class TripsQuery {
         }
     }
 
-    select(paths, omit) {
-        paths.replace(/\s+/g, '').split(',').forEach(p => {
-            this.$project[p] = 1;
-        });
-        omit.replace(/\s+/g, '').split(',').forEach(p => {
-            this.$project[p] = 0;
-        });
+    select({paths, omit}) {
+        if (paths) {
+            paths.replace(/\s+/g, '').split(',').forEach(p => {
+                this.$project[p] = 1;
+            });
+        }
+        if (omit) {
+            omit.replace(/\s+/g, '').split(',').forEach(p => {
+                this.$project[p] = 0;
+            });
+        }
         return this;
     }
 
     limit(pagenation) {
-
+        this.$limit = pagenation;
+        return this;
     }
 
     build() {
@@ -75,12 +81,11 @@ class TripsQuery {
     then() { return this }
 }
 
-
-let new_pipe = new TripsQuery(true)
+let new_pipe = new TripsQuery({ featured: true })
     .text("Hello There")
     .budget(100, 50)
     .tags('some,tags')
-    .select('name,description', 'crazy')
+    .select({paths: 'name,description', omit: '_id'})
     .build()
 console.log(new_pipe)
 
