@@ -1,108 +1,147 @@
 
-class genpipe {
-    constructor({text, tags, paths, omit, featured, min_budget, max_budget, pagenation}) {
-        this.pipeline = [];
+class TripsQuery {
+    constructor() {
+        this.$match = {};
+        this.$project = {};
+        this.$limit = {};
+        this.$addFields = {};
     }
 
-    add_text_stage(text) {
-        return { $match: { $text: { $search: text } } }
+    text(text) {
+        this.$match.$text = { $search: text }
+        return this;
     }
+
+    budget(min, max) {
+        this.$match['budget.middleBound'] = {};
+        let mb = this.$match['budget.middleBound'];
+        if (min) mb.$gte = min;
+        if (max) mb.$lte = max;
+        return this;
+    }
+
+    tags(tags) {
+        this.$match.tags = { $all: tags.replace(/\s+/g, '').split(',') }
+        return this;
+    }
+
+    feature(type) {
+        
+    }
+
+    build() {
+        let pipeline = [];
+        for (let stage in this) {
+            if ((Object.entries(this[stage]).length !== 0)) {
+                pipeline.push({ [stage]: this[stage] })
+            } else
+                continue
+        }
+        return pipeline;
+    }
+
+    then() { return this }
 }
 
 
-class Mongo_Pipeline {
-    constructor({text, tags, paths, omit, featured, min_budget, max_budget, pagenation}) {
-        this.pipeline = [];
-        this.text = text && this.gen_text_stage(text);
-        this.tags = tags && this.gen_tags_stage(tags);
-        this.paths = paths && this.gen_paths_stage(paths);
-        this.omit = omit && this.gen_omit_stage(omit);
-        this.budget = (min_budget || max_budget) && this.gen_budget_stage(min_budget, max_budget);
-        this.pagenation = pagenation && this.gen_pagenation_stage(pagenation);
-        this.featured = featured;
-        if (!this.text) {
-            this.set_blank_head_stage()
-        }
-    }
+let new_pipe = new TripsQuery().text("Hello There").budget(100, 50).tags('some,tags')
+console.log(new_pipe.$match)
+// class Mongo_Pipeline {
+//     constructor({text, tags, paths, omit, featured, min_budget, max_budget, pagenation}) {
+//         this.pipeline = [];
+//         this.text = text && this.gen_text_stage(text);
+//         this.tags = tags && this.gen_tags_stage(tags);
+//         this.paths = paths && this.gen_paths_stage(paths);
+//         this.omit = omit && this.gen_omit_stage(omit);
+//         this.budget = (min_budget || max_budget) && this.gen_budget_stage(min_budget, max_budget);
+//         this.pagenation = pagenation && this.gen_pagenation_stage(pagenation);
+//         this.featured = featured;
+//         if (!this.text) {
+//             this.set_blank_head_stage()
+//         }
+//     }
 
-    gen_text_stage(text) {
-        return { $match: { $text: { $search: text } } };
-    }
+//     gen_text_stage(text) {
+//         return { $match: { $text: { $search: text } } };
+//     }
 
-    gen_tags_stage(tags) {
-        return { $match: { tags: { $all: tags.replace(/\s+/g, '').split(',') } } };
-    }
+//     gen_tags_stage(tags) {
+//         return { $match: { tags: { $all: tags.replace(/\s+/g, '').split(',') } } };
+//     }
 
-    gen_paths_projection(paths, omit) {
-        let stage = { $project: {} };
-        if (paths) {
-            paths = paths.replace(/\s+/g, '').split(',')
-            paths.forEach(p => {
-                stage.$project[p] = 1;
-            })
-        }
-        if (omit) {
-            omit = omit.replace(/\s+/g, '').split(',')
-            omit.forEach(o => {
-                stage.$project[o] = 0;
-            })
-        }
-    }
+//     gen_paths_projection(paths, omit) {
+//         let stage = { $project: {} };
+//         if (paths) {
+//             paths = paths.replace(/\s+/g, '').split(',')
+//             paths.forEach(p => {
+//                 stage.$project[p] = 1;
+//             })
+//         }
+//         if (omit) {
+//             omit = omit.replace(/\s+/g, '').split(',')
+//             omit.forEach(o => {
+//                 stage.$project[o] = 0;
+//             })
+//         }
+//     }
 
-    gen_pagenation_stage(pagenation) {
-        return { $limit: Number(pagenation) }
-    }
+//     gen_pagenation_stage(pagenation) {
+//         return { $limit: Number(pagenation) }
+//     }
 
-    gen_budget_stage(min, max) {
-        let stage = { $match: { 'budget.middleBound': {} } };
-        const budget = stage.$match['budget.middleBound'];
-        if (min) budget.$gte = min;
-        if (max) budget.$lte = max;
-        return stage;
-    }
+//     gen_budget_stage(min, max) {
+//         let stage = { $match: { 'budget.middleBound': {} } };
+//         const budget = stage.$match['budget.middleBound'];
+//         if (min) budget.$gte = min;
+//         if (max) budget.$lte = max;
+//         return stage;
+//     }
 
-    set_featured_stages() {
-        let stage = [{
-            $addFields: {
-                featuredScore: {
-                    $add: [
-                        { $multiply: ["$meta.likes", 2] },
-                        { $multiply: ["$meta.numberOfShares", 3] },
-                        '$meta.viewCount'
-                    ]
-                }
-            }
-        },
-        { "$sort": { 'featuredScore': -1 } },
-        { $project: { 'featuredScore': 0 } }];
-        this.pipeline = this.pipeline.concat(stage)
-    }
+//     set_featured_stages() {
+//         let stage = [{
+//             $addFields: {
+//                 featuredScore: {
+//                     $add: [
+//                         { $multiply: ["$meta.likes", 2] },
+//                         { $multiply: ["$meta.numberOfShares", 3] },
+//                         '$meta.viewCount'
+//                     ]
+//                 }
+//             }
+//         },
+//         { "$sort": { 'featuredScore': -1 } },
+//         { $project: { 'featuredScore': 0 } }];
+//         this.pipeline = this.pipeline.concat(stage)
+//     }
 
-    set_blank_head_stage() {
-        this.pipeline.push({ $match: {} })
-    }
+//     set_blank_head_stage() {
+//         this.pipeline.push({ $match: {} })
+//     }
 
-    set_private_tail_stage() {
-        this.pipeline.push({ $match: { 'settings.public': true } })
-    }
+//     set_private_tail_stage() {
+//         this.pipeline.push({ $match: { 'settings.public': true } })
+//     }
 
-    compile() {
-        for (var key in this) {
-            if (this[key] !== undefined && this[key] !== this.pipeline && (key !== 'featured'))
-                this.pipeline.push(this[key])
-            else continue;
-        }
-        this.featured && this.set_featured_stages()
-        this.set_private_tail_stage()
-        return this.pipeline
-    }
+//     compile() {
+//         for (var key in this) {
+//             if (this[key] !== undefined && this[key] !== this.pipeline && (key !== 'featured'))
+//                 this.pipeline.push(this[key])
+//             else continue;
+//         }
+//         this.featured && this.set_featured_stages()
+//         this.set_private_tail_stage()
+//         return this.pipeline
+//     }
 
-}
-let query = { text: 'some text', featured: true }
-let query2 = { tags: 'some,tags,for, you' }
+// }
+// let query = { text: 'some text', featured: true }
+// let query2 = { tags: 'some,tags,for, you' }
 
-let pipeline = new Mongo_Pipeline(query).compile()
-console.log(pipeline)
+// let pipeline = new Mongo_Pipeline(query).compile()
+// console.log(pipeline)
+
+
+
 // function generate_pipeline() {
 //     let { text, tags, paths, omit, featured, min_budget, max_budget, pagenation} = arguments[0];
 //     let pipeline = [];
