@@ -15,42 +15,64 @@ const Trip = require('../../../models/Trip/TripSchema');
  * @api public
  */
 
-class MatchStage {
+class trip_MatchStage {
     constructor(index) {
         this.index = index;
         this.stage = { $match: {} };
         this.$match = this.stage.$match;
     }
 
-    /** 
-     * Description:
-     *          add in a custom match body and not having to invoke any methods.
-     * @param {Object} [query] the query that will fill out the match stage body
-    */ 
-    customQuery(query) {
+    /** add in a custom match body and not having to invoke any methods.
+     *  @param {Object} [query] the desired query to add into
+    */
+    query(query) {
+        if (!query) return this;
         this.$match = query;
         return this;
     }
 
-    /**
-     * Description:
-     *          add the tags to a match query by utilising the array split methods
-     *  
-     * @param {Number|Array} [tags] will add the tags options to the match stage
+    /**  add in a text search to the match stage
+     *   @param {String} [text] the text to be added into the query
+    */
+    text(text) {
+        if (!text) return this;
+        this.index = 0;
+        this.$match.$text = { $search: text };
+        return this;
+    }
+
+    /** add the tags to a match query by utilising the array split methods 
+     *  @param {Number|Array} [tags] query will match all tags
     */
     tags(tags) {
         if (!tags) return this;
         if (tags instanceof Array) {
             tags.forEach(i => {
-                if (!(i instanceof String))
-                    throw new Error(`Tags array must only contain strings. got ${typeof i}`)
-                })
+                if((typeof i !== 'string')) {
+                    throw new Error(`Tags array may only contain strings got: ${typeof i}`)
+                }
+            })
             this.$match.tags = { $all: tags }
         } else
             this.$match.tags = { $all: tags.replace(/\s+/g, '').split(',') }
         return this;
     }
+
+    /** to add a budget query onto the match stage
+     *  @param {Number} [min] min budget in a trip
+     *  @param {Number} [max] max budget in a trip
+     */
+    budget(min, max) {
+        if (!min && !max) return this;
+        this.$match.budget = { middleBound: {} };
+        let mb = this.$match.budget.middleBound;
+        if (min) mb.$gte = min;
+        if (max) mb.$lte = max;
+        return this;
+    }
 }
+
+let match = new trip_MatchStage(0).budget(1000, 4000).text('Why hello there').tags(["one", 1])
 
 /** 
  * Description: 
