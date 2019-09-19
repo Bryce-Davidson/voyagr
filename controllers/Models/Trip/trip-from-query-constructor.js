@@ -5,7 +5,7 @@ const Trip = require('../../../models/Trip/TripSchema');
  * @param {Number} [index] the index to be included in the pipeline
 */
 
-class trip_ProjectStage {
+class v_trip_ProjectStage {
     constructor(index) {
         this.index = index;
         this.stage = {$project: {}}
@@ -56,7 +56,7 @@ class trip_ProjectStage {
  * @api public
  */
 
-class trip_MatchStage {
+class v_trip_MatchStage {
     constructor(index) {
         this.index = index;
         this.stage = { $match: {} };
@@ -121,35 +121,49 @@ class trip_MatchStage {
  * @param {Number} [index] index of the featured stage in the future pipeline
 */
 
-class FeatureStage {
+class v_trip_FeatureStage {
     constructor(index, sortDirection) {
         this.index = index;
         this.sortDirection = sortDirection;
         this.stage = { $addFields: { featuredScore: { $add: [] } } }
         this.$add = this.stage.$addFields.featuredScore.$add;
+        this.popular_callable = true;
     }
 
     byMostPopular() {
-        this.byLikes(2).byShares(3).byViewCount(1)
-        return this.stage;
+        if (this.popular_callable) 
+            this.byLikes(2).byShares(3).byViewCount(1)
+        else 
+            throw new Error('Cannot call most popular after previous builds.');
+        return this;
     };
 
     and() { return this; };
 
     byLikes(coefficient) {
-        this.$add.push({ $multiply: ["$meta.likes", coefficient] })
+        if (!coefficient) throw new Error(`Missing coefficient for: byLikes()`);
+        this.popular_callable = false;
+        this.$add.push({ $multiply: ["$meta.likes", coefficient] });
         return this;
     };
 
     byViewCount(coefficient) {
-        this.$add.push({ $multiply: ['$meta.viewCount', coefficient] })
+        if (!coefficient) throw new Error(`Missing coefficient for: byViewCount()`);
+        this.popular_callable = false;
+        this.$add.push({ $multiply: ['$meta.viewCount', coefficient] });
         return this;
     };
 
     byShares(coefficient) {
+        if (!coefficient) throw new Error(`Missing coefficient for byShares()`);
+        this.popular_callable = false;
         this.$add.push({ $multiply: ["$meta.numberOfShares", coefficient] });
         return this;
     };
 }
 
-module.exports = v_Trip;
+let match = new v_trip_MatchStage(0).tags('one,two,three')
+let featured = new v_trip_FeatureStage(1)
+
+console.log(match.stage)
+console.log(featured.stage.$addFields.featuredScore.$add)
