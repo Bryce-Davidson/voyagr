@@ -1,5 +1,46 @@
 const Trip = require('../../../models/Trip/TripSchema');
 
+/** 
+ * a project stage to select paths on the trips object before returning
+ * @param {Number} [index] the index to be included in the pipeline
+*/
+
+class trip_ProjectStage {
+    constructor(index) {
+        this.index = index;
+        this.stage = {$project: {}}
+        this.$project = this.stage.$project;
+    }
+
+    /**
+     * include paths in the return documents of the query
+     * @param {String|Array} [paths] the paths to include in query
+     */
+    paths(paths) {
+        if(!paths) return this;
+        if (paths) {
+            paths.replace(/\s+/g, '').split(',').forEach(p => {
+                this.$project[p] = 1;
+            });
+        };
+        return this;
+    }
+
+    /**
+     * Omit paths from the return documents of query
+     * @param {String|Array} [omit] 
+     */
+    
+    omit(omit) {
+        if (omit) {
+            omit.replace(/\s+/g, '').split(',').forEach(p => {
+                this.$project[p] = 0;
+            });
+        };
+        return this;
+    }
+}
+
 /**
  * #Description:
  *          create a match stage to insert into a mongodb pipeline with a desired index
@@ -23,9 +64,9 @@ class trip_MatchStage {
     }
 
     /** add in a custom match body and not having to invoke any methods.
-     *  @param {Object} [query] the desired query to add into
+     *  @param {Object} [custom] the desired query to add into
     */
-    query(query) {
+    custom(query) {
         if (!query) return this;
         this.$match = query;
         return this;
@@ -72,7 +113,6 @@ class trip_MatchStage {
     }
 }
 
-let match = new trip_MatchStage(0).budget(1000, 4000).text('Why hello there').tags(["one", 1])
 
 /** 
  * Description: 
@@ -82,8 +122,9 @@ let match = new trip_MatchStage(0).budget(1000, 4000).text('Why hello there').ta
 */
 
 class FeatureStage {
-    constructor(sortDirection, index) {
+    constructor(index, sortDirection) {
         this.index = index;
+        this.sortDirection = sortDirection;
         this.stage = { $addFields: { featuredScore: { $add: [] } } }
         this.$add = this.stage.$addFields.featuredScore.$add;
     }
@@ -109,112 +150,6 @@ class FeatureStage {
         this.$add.push({ $multiply: ["$meta.numberOfShares", coefficient] });
         return this;
     };
-}
-
-class v_Trip {
-    constructor() {
-        this.pipeline = [];
-        this.$match = {};
-        this.$addFields = {};
-        this.$project = {};
-        this.$limit = {};
-    }
-
-    static where() {
-        return new v_Trip();
-    }
-
-    text(text) {
-        if (arguments.length === 0) return this;
-        this.$match.$text = { $search: text }
-        return this;
-    }
-
-    budget(min, max) {
-        if (arguments.length === 0) return this;
-        this.$match['budget.middleBound'] = {};
-        let mb = this.$match['budget.middleBound'];
-        if (min) mb.$gte = min;
-        if (max) mb.$lte = max;
-        return this;
-    }
-
-    tags(tags) {
-        if (arguments.length === 0) return this;
-        if (tags instanceof Array) {
-            tags.forEach(i => {
-                if (!(i instanceof String)) {
-                    throw new Error(`Tags array must only contain strings. got ${typeof i}`)
-                }
-            })
-            this.$match.tags = { $all: tags }
-        } else
-            this.$match.tags = { $all: tags.replace(/\s+/g, '').split(',') }
-        return this;
-    }
-
-    featuredBy({ mostPopular, likes, views, shares, near } = {}) {
-        if (arguments.length === 0) return this;
-
-        this.$addFields.featuredScore = { $add: [] };
-        let $add = this.$addFields.featuredScore.$add;
-        let bylikes = { $multiply: ["$meta.likes", 2] };
-        let byShares = { $multiply: ["$meta.numberOfShares", 3] };
-        let byViewCount = '$meta.viewCount';
-
-        if (near) {
-            // write the code to aggregate trip loctions and sum them into
-            // a single document
-        }
-        if (mostPopular) {
-            $add.push(bylikes, byShares, byViewCount)
-            return this;
-        }
-        if (likes) $add.push(bylikes);
-        if (views) $add.push(byViewCount);
-        if (shares) $add.push(byShares);
-        return this;
-    }
-
-    select({ paths, omit } = {}) {
-        if (arguments.length === 0) return this;
-        if (paths) {
-            paths.replace(/\s+/g, '').split(',').forEach(p => {
-                this.$project[p] = 1;
-            });
-        }
-        if (omit) {
-            omit.replace(/\s+/g, '').split(',').forEach(p => {
-                this.$project[p] = 0;
-            });
-        }
-        return this;
-    }
-
-    limit(pagenation) {
-        if (arguments.length === 0) return this;
-        this.$limit = pagenation;
-        return this;
-    }
-
-    // will return the raw pipeline
-    build() {
-        for (let stage in this) {
-            if ((this[stage] !== this.pipeline) && (Object.entries(this[stage]).length !== 0))
-                this.pipeline.push({ [stage]: this[stage] })
-            else continue
-        }
-        if (this.pipeline.length === 0) this.pipeline.push({ $match: {} })
-        if (Object.entries(this.$addFields).length !== 0) {
-            this.pipeline = this.pipeline.concat(clean)
-        }
-        return this.pipeline;
-    }
-
-    exec() {
-        this.build()
-        return Trip.aggregate(this.pipeline)
-    }
 }
 
 module.exports = v_Trip;
