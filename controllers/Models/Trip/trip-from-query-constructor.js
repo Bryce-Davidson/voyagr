@@ -1,16 +1,11 @@
 const Trip = require('../../../models/Trip/TripSchema');
 
-/** 
- * each stage should be created by thier own constructors
- * each stage shuold have it's own class to make new stages
- * there should be priority in each to allow for the dynamic placement of each stage
-*/
-
 /**
  * #Description:
- *          create a match stage to insert into a mongodb pipeline with index
+ *          create a match stage to insert into a mongodb pipeline with a desired index
  * ##Example:
  *          new MatchStage({tags : ["some", "tags", "for"]}, 0)
+ * 
  * ###Explanation:
  *          allows to create a match stage with index where it will get inserted
  *          at the fron tof the array
@@ -21,23 +16,77 @@ const Trip = require('../../../models/Trip/TripSchema');
  */
 
 class MatchStage {
-    constructor(query, index) {
+    constructor(index) {
         this.index = index;
-        this.stage = { $match: query }
+        this.stage = { $match: {} };
+        this.$match = this.stage.$match;
+    }
+
+    /** 
+     * Description:
+     *          add in a custom match body and not having to invoke any methods.
+     * @param {Object} [query] the query that will fill out the match stage body
+    */ 
+    customQuery(query) {
+        this.$match = query;
+        return this;
+    }
+
+    /**
+     * Description:
+     *          add the tags to a match query by utilising the array split methods
+     *  
+     * @param {Number|Array} [tags] will add the tags options to the match stage
+    */
+    tags(tags) {
+        if (!tags) return this;
+        if (tags instanceof Array) {
+            tags.forEach(i => {
+                if (!(i instanceof String))
+                    throw new Error(`Tags array must only contain strings. got ${typeof i}`)
+                })
+            this.$match.tags = { $all: tags }
+        } else
+            this.$match.tags = { $all: tags.replace(/\s+/g, '').split(',') }
+        return this;
     }
 }
 
-class FeaturedByStage {
-    constructor({ mostPopular, likes, views, shares } = {}, index) {
+/** 
+ * Description: 
+ *      generate a stage made up of the correct stages to get the featured items from trips
+ * @param {Number} [sortDirection] will we sort by LEAST popular or MOST popular
+ * @param {Number} [index] index of the featured stage in the future pipeline
+*/
+
+class FeatureStage {
+    constructor(sortDirection, index) {
         this.index = index;
         this.stage = { $addFields: { featuredScore: { $add: [] } } }
+        this.$add = this.stage.$addFields.featuredScore.$add;
     }
 
-    add(path) {
-        let $add = this.stage.$addFields.featuredScore.$add;
-        $add.push(path)
+    byMostPopular() {
+        this.byLikes(2).byShares(3).byViewCount(1)
+        return this.stage;
+    };
+
+    and() { return this; };
+
+    byLikes(coefficient) {
+        this.$add.push({ $multiply: ["$meta.likes", coefficient] })
         return this;
-    }
+    };
+
+    byViewCount(coefficient) {
+        this.$add.push({ $multiply: ['$meta.viewCount', coefficient] })
+        return this;
+    };
+
+    byShares(coefficient) {
+        this.$add.push({ $multiply: ["$meta.numberOfShares", coefficient] });
+        return this;
+    };
 }
 
 class v_Trip {
@@ -135,7 +184,6 @@ class v_Trip {
         }
         if (this.pipeline.length === 0) this.pipeline.push({ $match: {} })
         if (Object.entries(this.$addFields).length !== 0) {
-            let clean = [{ "$sort": { 'featuredScore': -1 } }, { $project: { 'featuredScore': 0 } }]
             this.pipeline = this.pipeline.concat(clean)
         }
         return this.pipeline;
