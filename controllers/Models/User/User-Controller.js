@@ -3,12 +3,10 @@ const Day                   = require('../../../models/Day/DaySchema');
 const User                  = require('../../../models/User/UserSchema');
 const { userCanAlter }      = require('../../../util/local-functions/instance-validation');
 const { USERBUCKET }        = require('../../../config/keys').AWS;
-const upload                = require('../../../util/middleware/photo-upload-util');
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
 
-const singleUpload = upload.single('profile');
 
 const userProfileUpload = (req, res, next) => {
     req.bucketName = USERBUCKET;

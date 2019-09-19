@@ -14,7 +14,7 @@ const slugify = require('../../../util/local-functions/slugify-string');
 const notExistMsg = require('../../../util/errors/resource-does-not-exist-msg');
 const unauthorizedMsg = require('../../../util/errors/unauthorized-msg');
 
-const TripsPipeline = require('./trip-pipeline-constructor');
+const v_Trip = require('./trip-from-query-constructor');
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
@@ -24,21 +24,17 @@ const S3 = new AWS.S3()
 
 const getTrips = async function (req, res, next) {
     let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by } = req.query;
-    let pipeline = new TripsPipeline(featured_by)
-                    .text(text)
-                    .tags(tags)
-                    .select({paths, omit})
-                    .budget(min_budget, max_budget)
-                    .limit(pagenation)
-                    .build()
-    Trip.aggregate(pipeline)
-        .then(docs => {
-            return res.send({
-                pipeline,
-                docs
+    v_Trip.where()
+            .text(text)
+            .tags(tags)
+            .select({paths, omit})
+            .budget(min_budget, max_budget)
+            .limit(pagenation)
+            .exec()
+            .then(docs => {
+                return res.send(docs)
             })
-        })
-        .catch(next)
+            .catch(next)
 }
 
 const postTrip = async function (req, res, next) {

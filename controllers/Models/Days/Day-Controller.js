@@ -1,8 +1,6 @@
 const User = require('../../../models/User/UserSchema');
 const Day = require('../../../models/Day/DaySchema');
 const { isOwner } = require('../../../util/local-functions/instance-validation');
-// const { DAYBUCKET }     = require('../../../config/keys').AWS;
-const upload = require('../../../util/middleware/photo-upload-util');
 const flatten = require('flat');
 
 const slugify = require('../../../util/local-functions/slugify-string')
@@ -11,7 +9,6 @@ const recursiveGenerateUniqueUrlid = require('../../../util/local-functions/gene
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
-
 
 const getDays = async function (req, res, next) {
     let { text, tags, min_budget, max_budget, paths, omit, pagenation } = req.query;
