@@ -1,5 +1,45 @@
 const Trip = require('../../../models/Trip/TripSchema');
 
+/** 
+ * each stage should be created by thier own constructors
+ * each stage shuold have it's own class to make new stages
+ * there should be priority in each to allow for the dynamic placement of each stage
+*/
+
+/**
+ * #Description:
+ *          create a match stage to insert into a mongodb pipeline with index
+ * ##Example:
+ *          new MatchStage({tags : ["some", "tags", "for"]}, 0)
+ * ###Explanation:
+ *          allows to create a match stage with index where it will get inserted
+ *          at the fron tof the array
+ * 
+ * @param {Object} [query] for the mongo documents
+ * @param {Number} [index] index of the stage for the pipeline
+ * @api public
+ */
+
+class MatchStage {
+    constructor(query, index) {
+        this.index = index;
+        this.stage = { $match: query }
+    }
+}
+
+class FeaturedByStage {
+    constructor({ mostPopular, likes, views, shares } = {}, index) {
+        this.index = index;
+        this.stage = { $addFields: { featuredScore: { $add: [] } } }
+    }
+
+    add(path) {
+        let $add = this.stage.$addFields.featuredScore.$add;
+        $add.push(path)
+        return this;
+    }
+}
+
 class v_Trip {
     constructor() {
         this.pipeline = [];
@@ -45,10 +85,10 @@ class v_Trip {
     featuredBy({ mostPopular, likes, views, shares, near } = {}) {
         if (arguments.length === 0) return this;
 
-        this.$addFields.featuredScore = { $add: [] } ;
+        this.$addFields.featuredScore = { $add: [] };
         let $add = this.$addFields.featuredScore.$add;
-        let bylikes     = { $multiply: ["$meta.likes", 2] };
-        let byShares    = { $multiply: ["$meta.numberOfShares", 3] };
+        let bylikes = { $multiply: ["$meta.likes", 2] };
+        let byShares = { $multiply: ["$meta.numberOfShares", 3] };
         let byViewCount = '$meta.viewCount';
 
         if (near) {
@@ -58,7 +98,7 @@ class v_Trip {
         if (mostPopular) {
             $add.push(bylikes, byShares, byViewCount)
             return this;
-        } 
+        }
         if (likes) $add.push(bylikes);
         if (views) $add.push(byViewCount);
         if (shares) $add.push(byShares);
