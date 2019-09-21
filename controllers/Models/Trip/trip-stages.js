@@ -1,16 +1,31 @@
 const Trip = require('../../../models/Trip/TripSchema');
 
 /**
+ * parent class for all the stage classes
+ * if the index is not specified we take the next index in line
+ * @param {Number} [index] the index of the stage being created
+ */
+
+class Stages {
+    static stage_count = -1;
+    constructor(_index) {
+        Stages.stage_count++
+        this.index = _index || Stages.stage_count;
+    }
+}
+
+
+/**
  * a $limit stage for a mongo pipeline
  * @param {Number} [index] the index of the limit stage in a pipeline
  * @param {Number} [pagenation] how many documents get returned after the stage
  * @return {Instance}
  */
 
-class v_trip_LimitStage {
-    constructor(index, pagenation) {
-        this.index = index;
-        this.stage = {$limit: pagenation}
+class v_trip_LimitStage extends Stages {
+    constructor(_index, _pagenation) {
+        super(_index)
+        this.stage = {$limit: _pagenation}
     }
 }
 
@@ -20,9 +35,9 @@ class v_trip_LimitStage {
  * @return {Instance}
 */
 
-class v_ProjectStage {
-    constructor(index) {
-        this.index = index;
+class v_ProjectStage extends Stages{
+    constructor(_index) {
+        super(_index)
         this.stage = { $project: {} };
         this.$project = this.stage.$project;
     }
@@ -71,10 +86,9 @@ class v_ProjectStage {
  * @api public
  */
 
-class v_MatchStage {
-    constructor(index) {
-        if(index === undefined) throw new Error('Match stage needs an index.')
-        this.index = index;
+class v_MatchStage extends Stages {
+    constructor(_index) {
+        super(_index)
         this.stage = { $match: {} };
         this.$match = this.stage.$match;
     }
@@ -146,9 +160,9 @@ class v_MatchStage {
     // [] write docs for v_trip_FeaturedSatge class
             // on all functions
 
-class v_trip_FeatureStage {
-    constructor(index, sortDirection) {
-        this.index = index;
+class v_trip_FeatureStage extends Stages {
+    constructor(_index, sortDirection) {
+        super(_index)
         this.sortDirection = sortDirection;
         this.stage = { $addFields: { featuredScore: { $add: [] } } }
         this.$add = this.stage.$addFields.featuredScore.$add;

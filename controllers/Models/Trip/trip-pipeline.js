@@ -16,7 +16,7 @@ class v_Pipeline {
             // if the .index of the [item] has a higher .index than (stage.index)
             // splice in the (stage) at the items[i]
             if (this.items[i].index >= stage.index) {
-                console.warn(`!!!WARNING!!! Atempted to enqueue a stage earlier than a {$text} stage. inserted at index: ${i + 1} instead. Pleade check stage indexes.`)
+                console.warn(`!!! WARNING !!! Atempted to enqueue a stage earlier than {$text} stage. inserted at index: ${i + 1} instead. Pleade check stage indexes.`)
                 // BUT if the item with higher index has attribute this.items[i].$match.$text
                 // splice in at i + 1
                 // this is to keep the {$text} stage at the front of the queue
@@ -40,3 +40,11 @@ class v_Pipeline {
         return this;
     }
 }
+
+let match = new v_MatchStage()
+let match2 = new v_MatchStage()
+let match3 = new v_MatchStage()
+let pipe = new v_Pipeline()
+
+console.log(match, match2, match3)
+console.log(v_MatchStage.index_count)
