@@ -1,19 +1,38 @@
-const {
-    trip_LimitStage,
-    trip_MatchStage,
-    trip_ProjectStage
-} = require('./Trip/trip-stages');
+// TODO:[] documentation
+// TODO:[] semi-colons
+// TODO:[] example codes
+
+/**
+ * Data-Structure: priority-queue 
+ * a pipeline structure for inserting into a mongodb aggregation query
+ * @example
+ * let pipe = new v_Pipeline(); 
+ * let stage = new v_MatchStage().text('Some text for searching');
+ * pipe.enqueue(stage);
+ * 
+ * let pipe_items_array = pipe.items; 
+ * console.log(items) // expected output: [{stage}]
+ * 
+ * @return {Instance}
+ */
 
 class v_Pipeline {
-    constructor() {
-        this.items = [];
-    }
+    constructor() { this.items = []; }
 
     /**
-     * to enqueue many items into an the pipeline
+     * to enqueue many items into the pipeline
      * @param {Array} [stages] the stages to enque into the pipeline
-     * @return {Instance}
+     * @example
+     * let pipe = new v_Pipeline()
+     * 
+     * let stage0 = new v_MatchStage().tags('some,tags')
+     * let stage1 = new v_ProjectStage().paths('_id')
+     * 
+     * pipe.enqueue_many(stage0, stage1)
+     * console.log(pipe.items) // expected output: [{stage0}, {stage1}]
+     * @return {this}
      */
+
     enqueue_many(stages) {
         if (arguments.length > 1)
             stages = Object.values(arguments)
@@ -21,6 +40,18 @@ class v_Pipeline {
             this.enqueue(stages[i])
         return this;
     }
+
+    /**
+     * enqueues a single stage into the pipeline bases on it's internal index/priority property
+     * @param {Object} [stage ] a stage to enqueue into the pipeline
+     * @example
+     * let pipe = new v_Pipeline()
+     * let stage = new v_MatchStage().budget(0, 1000)
+     * 
+     * pipe.enqueue(stage)
+     * console.log(pipe.items) // expected output: [{stage}]
+     * @return {this}
+     */
 
     enqueue(stage) {
         var contain = false;
