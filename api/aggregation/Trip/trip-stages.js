@@ -1,19 +1,18 @@
 const Trip = require('../../../models/Trip/TripSchema');
 
 /**
- * parent class for all the stage classes
+ * PARENT class for the stage classes
  * if the index is not specified we take the next index in line
  * @param {Number} [index] the index of the stage being created
  */
 
 class Stages {
-    static stage_count = -1;
+    static stage_count = 0;
     constructor(_index) {
-        Stages.stage_count++
         this.index = _index || Stages.stage_count;
+        Stages.stage_count++
     }
 }
-
 
 /**
  * a $limit stage for a mongo pipeline
@@ -22,9 +21,10 @@ class Stages {
  * @return {Instance}
  */
 
-class v_trip_LimitStage extends Stages {
+class trip_LimitStage extends Stages {
     constructor(_index, _pagenation) {
         super(_index)
+        if(!_index) _pagenation = _index;
         this.stage = {$limit: _pagenation}
     }
 }
@@ -35,7 +35,7 @@ class v_trip_LimitStage extends Stages {
  * @return {Instance}
 */
 
-class v_ProjectStage extends Stages{
+class trip_ProjectStage extends Stages{
     constructor(_index) {
         super(_index)
         this.stage = { $project: {} };
@@ -86,7 +86,7 @@ class v_ProjectStage extends Stages{
  * @api public
  */
 
-class v_MatchStage extends Stages {
+class trip_MatchStage extends Stages {
     constructor(_index) {
         super(_index)
         this.stage = { $match: {} };
@@ -108,7 +108,7 @@ class v_MatchStage extends Stages {
     */
     text(text) {
         if (!text) return this;
-        if(this.index !== 0)
+        if(this.index &&this.index !== 0)
             console.warn(`!!!WARNING!!! Text stage needs to be 0, USER SET: ${this.index} RESET TO: 0`);
         this.index = 0;
         this.$match.$text = { $search: text };
@@ -160,7 +160,7 @@ class v_MatchStage extends Stages {
     // [] write docs for v_trip_FeaturedSatge class
             // on all functions
 
-class v_trip_FeatureStage extends Stages {
+class trip_FeatureStage extends Stages {
     constructor(_index, sortDirection) {
         super(_index)
         this.sortDirection = sortDirection;
@@ -202,8 +202,9 @@ class v_trip_FeatureStage extends Stages {
 }
 
 module.exports ={
-    v_trip_FeatureStage,
-    v_MatchStage,
-    v_ProjectStage,
-    v_trip_LimitStage
+    trip_FeatureStage,
+    trip_MatchStage,
+    trip_LimitStage,
+    trip_ProjectStage,
+    trip_LimitStage
 }

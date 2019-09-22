@@ -4,17 +4,16 @@ const User = require('../../../models/User/UserSchema');
 const {
     isOwner,
     keysContainString
-} = require('../../../util/local-functions/instance-validation');
+} = require('../../../util/auth/instance-validation');
 
 const ObjectId = require('mongoose').Types.ObjectId;
 const flatten = require('flat');
-const recursiveGenerateUniqueUrlid = require('../../../util/local-functions/generate-unique-urlid');
+const recursiveGenerateUniqueUrlid = require('../../../util/database/generate-unique-urlid');
 const slugify = require('../../../util/local-functions/slugify-string');
 
-const notExistMsg = require('../../../util/errors/resource-does-not-exist-msg');
-const unauthorizedMsg = require('../../../util/errors/unauthorized-msg');
-
-const v_Trip = require('./trip-from-query-constructor');
+const notExistMsg = require('../../../util/http-response/resource-does-not-exist-msg');
+const unauthorizedMsg = require('../../../util/http-response/unauthorized-msg');
+const unableToUpdateImmutable = require('../../../util/http-response/unable-to-update-immutable');
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
@@ -24,17 +23,8 @@ const S3 = new AWS.S3()
 
 const getTrips = async function (req, res, next) {
     let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by } = req.query;
-    v_Trip.where()
-            .text(text)
-            .tags(tags)
-            .select({paths, omit})
-            .budget(min_budget, max_budget)
-            .limit(pagenation)
-            .exec()
-            .then(docs => {
-                return res.send(docs)
-            })
-            .catch(next)
+    // TODO:
+        // INTEGRATE NEW API
 }
 
 const postTrip = async function (req, res, next) {
@@ -78,11 +68,7 @@ const updateTrip = async function (req, res, next) {
     let update = flatten(req.body);
     if (update.name)
         update.slug = slugify(update.name);
-
-    if (keysContainString('meta', update))
-        return res.status(403).json({ msg: 'Unable to update on immutable path "meta".' });
-    if (keysContainString('slug', update))
-        return res.status(403).json({ msg: 'Unable to update on immutable path "slug".' });
+           
     try {
         let tripTobeModified = await Trip.findById(tripid);
         if (!tripTobeModified) return notExistMsg('Trip', res);

@@ -1,11 +1,25 @@
-const { 
-    v_MatchStage,
-    v_ProjectStage
- } = require('./trip-stages');
+const {
+    trip_LimitStage,
+    trip_MatchStage,
+    trip_ProjectStage
+} = require('./Trip/trip-stages');
 
 class v_Pipeline {
     constructor() {
         this.items = [];
+    }
+
+    /**
+     * to enqueue many items into an the pipeline
+     * @param {Array} [stages] the stages to enque into the pipeline
+     * @return {Instance}
+     */
+    enqueue_many(stages) {
+        if (arguments.length > 1)
+            stages = Object.values(arguments)
+        for (var i in stages)
+            this.enqueue(stages[i])
+        return this;
     }
 
     enqueue(stage) {
@@ -20,7 +34,7 @@ class v_Pipeline {
                 // BUT if the item with higher index has attribute this.items[i].$match.$text
                 // splice in at i + 1
                 // this is to keep the {$text} stage at the front of the queue
-                if(this.items[i].$match && this.items[i].$match.$text) {
+                if (this.items[i].$match && this.items[i].$match.$text) {
                     this.items.splice(i + 1, 0, stage);
                     contain = true;
                     break;
@@ -40,11 +54,3 @@ class v_Pipeline {
         return this;
     }
 }
-
-let match = new v_MatchStage()
-let match2 = new v_MatchStage()
-let match3 = new v_MatchStage()
-let pipe = new v_Pipeline()
-
-console.log(match, match2, match3)
-console.log(v_MatchStage.index_count)

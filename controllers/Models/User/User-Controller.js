@@ -4,7 +4,7 @@ const User                  = require('../../../models/User/UserSchema');
 const { userCanAlter }      = require('../../../util/local-functions/instance-validation');
 const { USERBUCKET }        = require('../../../config/keys').AWS;
 
-const AWS = require('aws-sdk')
+const AWS = require('./node_modules/aws-sdk')
 const S3 = new AWS.S3()
 
 

@@ -1,6 +1,6 @@
 const express        = require('express');
 const router         = express.Router();
-const { isLoggedIn } = require('../../../util/middleware/auth-util');
+const { isLoggedIn } = require('../../../util/auth/auth-status');
 const Day            = require('../../../models/Day/DaySchema');
 
 const {

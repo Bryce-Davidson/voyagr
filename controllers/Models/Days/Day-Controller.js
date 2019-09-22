@@ -1,37 +1,16 @@
 const User = require('../../../models/User/UserSchema');
 const Day = require('../../../models/Day/DaySchema');
-const { isOwner } = require('../../../util/local-functions/instance-validation');
+const { isOwner } = require('../../../util/auth/instance-validation');
 const flatten = require('flat');
 
 const slugify = require('../../../util/local-functions/slugify-string')
-const quarantineUpdate = require('../../../util/local-functions/quarantine-update');
-const recursiveGenerateUniqueUrlid = require('../../../util/local-functions/generate-unique-urlid');
+const recursiveGenerateUniqueUrlid = require('../../../util/database/generate-unique-urlid');
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
 
 const getDays = async function (req, res, next) {
-    let { text, tags, min_budget, max_budget, paths, omit, pagenation } = req.query;
-    let query = {};
-    if (paths) { paths = paths.replace(/,/g, ' ') };
-    if (omit) { omit = omit.split(',').map(item => `-${item}`).join(' ') };
-    if (tags) { query['tags'] = { $all: tags.split(',') } };
-    if (text) { query.$text = { $search: text } };
-    if (min_budget || max_budget) {
-        const mb = query['budget.middleBound'] = {};
-        if (min_budget) mb.$gte = min_budget;
-        if (max_budget) mb.$lte = max_budget;
-    };
-
-    Day.find(query)
-        .where({ 'settings.public': true })
-        .select(paths)
-        .select(omit)
-        .limit(Number(pagenation))
-        .then(docs => {
-            delete query;
-            return res.send(docs);
-        }).catch(next);
+    // INTEGRATE NEW API
 }
 
 const postDay = async function (req, res, next) {
@@ -57,14 +36,14 @@ const postDay = async function (req, res, next) {
 const getDay = async function (req, res, next) {
     let dayid = req.params.id;
     try {
-    let dayToSend = await Day.findById(dayid);
-    if (!dayToSend) return notExistMsg('Day', res);
-    if (isOwner(dayToSend, req.user))
-        return res.send(dayToSend);
-    if (!dayToSend.settings.public)
-        return unauthorizedMsg(res);
-    else return Day.findByIdAndUpdate(dayid, { $inc: { 'meta.viewCount': 1 } })
-        .then(uday => { return res.send(uday) });
+        let dayToSend = await Day.findById(dayid);
+        if (!dayToSend) return notExistMsg('Day', res);
+        if (isOwner(dayToSend, req.user))
+            return res.send(dayToSend);
+        if (!dayToSend.settings.public)
+            return unauthorizedMsg(res);
+        else return Day.findByIdAndUpdate(dayid, { $inc: { 'meta.viewCount': 1 } })
+            .then(uday => { return res.send(uday) });
     } catch (err) { next(err) }
 }
 
@@ -75,7 +54,6 @@ const updateDay = async function (req, res, next) {
         update.slug = slugify(update.name);
 
     try {
-        update = await quarantineUpdate(update);
         let dayTobeModified = await Day.findById(dayid);
         if (!dayTobeModified) return notExistMsg('Day', res);
         if (isOwner(dayTobeModified, req.user)) {
@@ -154,35 +132,35 @@ const deleteLocationsFromDay = async function (req, res, next) {
 }
 
 // TODO:
-    // [] Add get likes
+// [] Add get likes
 
-const getDayLikes = async function(req, res, next) {
+const getDayLikes = async function (req, res, next) {
     let dayid = req.params.id;
     try {
         let day = await Day.findById(dayid).populate('likes')
-                             .select('likes')
-                             .select('-_id -user');
+            .select('likes')
+            .select('-_id -user');
         if (!day) return notExistMsg('Day', res);
         if (!day.likes) return res.status(404).json({ msg: "Day currently has 0 likes" });
         else
             return res.send(day.likes);
     } catch (err) { next(err) };
 }
- 
-const likeDay = async function(req, res, next) {
+
+const likeDay = async function (req, res, next) {
     Day.findByIdAndUpdate(req.params.id, {
-        $inc: {'meta.likes': 1}
-    }, {new: true})
-    .then(likedPost => res.send(likedPost))
-    .catch(next)
+        $inc: { 'meta.likes': 1 }
+    }, { new: true })
+        .then(likedPost => res.send(likedPost))
+        .catch(next)
 }
 
-const getDayComments = async function(req, res, next) {
+const getDayComments = async function (req, res, next) {
     let dayid = req.params.id;
     try {
         let day = await Day.findById(dayid).populate('comments')
-                             .select('comments')
-                             .select('-_id -user');
+            .select('comments')
+            .select('-_id -user');
         if (!day) return notExistMsg('Day', res);
         if (!day.comments) return res.status(404).json({ msg: "Day currently has 0 comments" });
         else
@@ -190,21 +168,21 @@ const getDayComments = async function(req, res, next) {
     } catch (err) { next(err) };
 }
 
-const postCommentDay  = async function(req, res, next) {
+const postCommentDay = async function (req, res, next) {
     let postid = req.params.id;
-    let comment = new Comment ({
-            'dayid': postid,
-            "user": req.user,
-            "body": req.body.body
+    let comment = new Comment({
+        'dayid': postid,
+        "user": req.user,
+        "body": req.body.body
     });
     comment.save()
-    .then(comment => {
-        return Day.findByIdAndUpdate(req.params.id, {
-            $inc: {'meta.numberOfComments': 1},
-            $push: {comments: comment._id}
-            }, {new: true})
-            .then(dayWithComment => res.send(dayWithComment))
-    }).catch(next)    
+        .then(comment => {
+            return Day.findByIdAndUpdate(req.params.id, {
+                $inc: { 'meta.numberOfComments': 1 },
+                $push: { comments: comment._id }
+            }, { new: true })
+                .then(dayWithComment => res.send(dayWithComment))
+        }).catch(next)
 }
 
 module.exports = {

@@ -1,21 +1,20 @@
-const Location          = require('../../../models/Location/LocationSchema');
-const User              = require('../../../models/User/UserSchema');
-const { isOwner }       = require('../../../util/local-functions/instance-validation');
+const Location = require('../../../models/Location/LocationSchema');
+const User = require('../../../models/User/UserSchema');
+const { isOwner } = require('../../../util/auth/instance-validation');
 
-const recursiveGenerateUniqueUrlid    = require('../../../util/local-functions/generate-unique-urlid');
-const slugify                         = require('../../../util/local-functions/slugify-string');
-const quarantineUpdate                = require('../../../util/local-functions/quarantine-update');
+const recursiveGenerateUniqueUrlid = require('../../../util/database/generate-unique-urlid');
+const slugify = require('../../../util/local-functions/slugify-string');
 
-const flatten                 = require('flat');
+const flatten = require('flat');
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
 
 const getLocations = async function (req, res, next) {
-  
+
   // TODO: 
-    // add location types to schema and add to query search
-  
+  // add location types to schema and add to query search
+
   let { near, tags, text, min_budget, max_budget, paths, omit, pagenation } = req.query;
   let query = {};
   if (paths) { paths = paths.replace(/,/g, ' ') };
@@ -28,7 +27,7 @@ const getLocations = async function (req, res, next) {
     if (max_budget) mb.$lte = max_budget;
   }
   if (near && text)
-  return res.status(405).send('Near cannot be combined with text, use tags to specify attributes')
+    return res.status(405).send('Near cannot be combined with text, use tags to specify attributes')
   // &near=distance:1000@lat,long -> near=distance:1000@127.4421,41.2345
   if (near) {
     let maxDistance = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
@@ -75,84 +74,83 @@ const postLocation = async function (req, res, next) {
     .catch(next)
 }
 
-const getLocation = async function(req, res, next) {
+const getLocation = async function (req, res, next) {
   let locationid = req.params.id;
   try {
-  let locationToSend = await Location.findById(locationid);
-  if (!locationToSend) return notExistMsg('Location', res);
-  if (isOwner(locationToSend, req.user))
+    let locationToSend = await Location.findById(locationid);
+    if (!locationToSend) return notExistMsg('Location', res);
+    if (isOwner(locationToSend, req.user))
       return res.send(locationToSend);
-  if (!locationToSend.settings.public)
+    if (!locationToSend.settings.public)
       return unauthorizedMsg(res);
-  else return Location.findByIdAndUpdate(locationid, { $inc: { 'meta.viewCount': 1 } })
+    else return Location.findByIdAndUpdate(locationid, { $inc: { 'meta.viewCount': 1 } })
       .then(ulocation => { return res.send(ulocation) });
-  
-  } catch(err) { next(err) } 
-} 
 
-const updateLocation = async function(req, res, next) {
-  let locationid = req.params.id;
-    let update = flatten(req.body);
-    try {
-        update = await quarantineUpdate(update);
-        if (update.name)
-            update.slug = slugify(update.name);
-
-        // we can get access to the budget update within the update middleware by passing
-        // it to update
-        
-
-        let locationTobeModified = await Location.findById(locationid);
-        if (!locationTobeModified) return notExistMsg('Location', res);
-        if (isOwner(locationTobeModified, req.user)) {
-            let updatedlocation = await Location.findByIdAndUpdate(locationid, update, { new: true });
-            return res.send(updatedlocation);
-        } else
-            return unauthorizedMsg(res);
-    } catch (err) {
-        if (err.code === 'Immutable')
-            return res.status(err.code).json(err.msg)
-        else
-            next(err)
-    };
+  } catch (err) { next(err) }
 }
 
-const deleteLocation = async function(req, res, next) {
+const updateLocation = async function (req, res, next) {
   let locationid = req.params.id;
-    try {
-        let location = await Location.findById(locationid);
-        if (!location) return notExistMsg('Location', res);
-        if (isOwner(location, req.user)) {
-            await location.remove();
-            return res.status(200);
-        } else
-            return unauthorizedMsg(res);
-    } catch (err) { next(err) };
+  let update = flatten(req.body);
+  try {
+    if (update.name)
+      update.slug = slugify(update.name);
+
+    // we can get access to the budget update within the update middleware by passing
+    // it to update
+
+
+    let locationTobeModified = await Location.findById(locationid);
+    if (!locationTobeModified) return notExistMsg('Location', res);
+    if (isOwner(locationTobeModified, req.user)) {
+      let updatedlocation = await Location.findByIdAndUpdate(locationid, update, { new: true });
+      return res.send(updatedlocation);
+    } else
+      return unauthorizedMsg(res);
+  } catch (err) {
+    if (err.code === 'Immutable')
+      return res.status(err.code).json(err.msg)
+    else
+      next(err)
+  };
+}
+
+const deleteLocation = async function (req, res, next) {
+  let locationid = req.params.id;
+  try {
+    let location = await Location.findById(locationid);
+    if (!location) return notExistMsg('Location', res);
+    if (isOwner(location, req.user)) {
+      await location.remove();
+      return res.status(200);
+    } else
+      return unauthorizedMsg(res);
+  } catch (err) { next(err) };
 }
 
 const likeLocation = async function (req, res, next) {
   Location.findByIdAndUpdate(req.params.id, {
-      $inc: {'meta.likes': 1}
-  }, {new: true})
-  .then(likedDay => res.send(likedDay))
-  .catch(next)
+    $inc: { 'meta.likes': 1 }
+  }, { new: true })
+    .then(likedDay => res.send(likedDay))
+    .catch(next)
 }
 
 const commentLocation = async function (req, res, next) {
   let postid = req.params.id;
-  let comment = new Comment ({
-          'locationid': postid,
-          "user": req.user,
-          "body": req.body.body
+  let comment = new Comment({
+    'locationid': postid,
+    "user": req.user,
+    "body": req.body.body
   });
   comment.save()
-  .then(comment => {
+    .then(comment => {
       return Location.findByIdAndUpdate(req.params.id, {
-          $inc: {'meta.numberOfComments': 1},
-          $push: {comments: comment._id}
-          }, {new: true})
-          .then(locationWithComment => res.send(locationWithComment))
-  }).catch(next)   
+        $inc: { 'meta.numberOfComments': 1 },
+        $push: { comments: comment._id }
+      }, { new: true })
+        .then(locationWithComment => res.send(locationWithComment))
+    }).catch(next)
 }
 
 module.exports = {
