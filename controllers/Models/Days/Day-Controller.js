@@ -131,9 +131,6 @@ const deleteLocationsFromDay = async function (req, res, next) {
     } catch (err) { next(err) };
 }
 
-// TODO:
-// [] Add get likes
-
 const getDayLikes = async function (req, res, next) {
     let dayid = req.params.id;
     try {

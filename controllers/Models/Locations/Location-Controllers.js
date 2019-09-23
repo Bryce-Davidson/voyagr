@@ -12,8 +12,7 @@ const S3 = new AWS.S3()
 
 const getLocations = async function (req, res, next) {
 
-  // TODO: 
-  // add location types to schema and add to query search
+  // TODO:[] add location types to schema and add to query search
 
   let { near, tags, text, min_budget, max_budget, paths, omit, pagenation } = req.query;
   let query = {};

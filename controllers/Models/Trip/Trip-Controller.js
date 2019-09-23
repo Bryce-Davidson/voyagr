@@ -21,7 +21,7 @@ const S3 = new AWS.S3()
 // /trips ----------------------------------------------------------------
 
 const getTrips = async function (req, res, next) {
-    // TODO: integrate new api 
+    // TODO:[] integrate new api 
     let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by } = req.query; 
 }
 
@@ -127,7 +127,7 @@ const addDayToTrip = async function (req, res, next) {
 const deleteDaysFromTrip = async function (req, res, next) {
     let tripid = req.params.id;
     let dayids = req.query.dayids.split(',');
-    //TODO: Replace dayid in query with urlid
+    //TODO:[] Replace dayid in query with urlid
     if (!dayids) return res.status(400).json({ msg: 'Please Provide at least one days.' });
     dayids.forEach(id => {
         if (!ObjectId.isValid(id))
@@ -146,7 +146,7 @@ const deleteDaysFromTrip = async function (req, res, next) {
 }
 
 const changeDaysPublicStatus = async function (req, res, next) {
-    // Invoke child status change instance method
+    //TODO:[] Invoke child status change instance method
 }
 
 const getTripLikes = async function (req, res, next) {

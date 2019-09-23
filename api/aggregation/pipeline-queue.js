@@ -1,7 +1,3 @@
-// TODO:[] documentation
-// TODO:[] semi-colons
-// TODO:[] example codes
-
 /**
  * Data-Structure: priority-queue 
  * a pipeline structure for inserting into a mongodb aggregation query
@@ -11,33 +7,31 @@
  * pipe.enqueue(stage);
  * 
  * let pipe_items_array = pipe.items; 
- * console.log(items) // expected output: [{stage}]
- * 
- * @return {Instance}
+ * console.log(items); // expected output: [{stage}]
  */
 
 class v_Pipeline {
-    constructor() { this.items = []; }
+    constructor() { this.items = []; };
 
     /**
      * to enqueue many items into the pipeline
      * @param {Array} [stages] the stages to enque into the pipeline
      * @example
-     * let pipe = new v_Pipeline()
+     * let pipe = new v_Pipeline();
      * 
-     * let stage0 = new v_MatchStage().tags('some,tags')
-     * let stage1 = new v_ProjectStage().paths('_id')
+     * let stage0 = new v_MatchStage().tags('some,tags');
+     * let stage1 = new v_ProjectStage().paths('_id');
      * 
-     * pipe.enqueue_many(stage0, stage1)
-     * console.log(pipe.items) // expected output: [{stage0}, {stage1}]
+     * pipe.enqueue_many(stage0, stage1);
+     * console.log(pipe.items); // expected output: [{stage0}, {stage1}]
      * @return {this}
      */
 
     enqueue_many(stages) {
         if (arguments.length > 1)
-            stages = Object.values(arguments)
+            stages = Object.values(arguments);
         for (var i in stages)
-            this.enqueue(stages[i])
+            this.enqueue(stages[i]);
         return this;
     }
 
@@ -45,11 +39,11 @@ class v_Pipeline {
      * enqueues a single stage into the pipeline bases on it's internal index/priority property
      * @param {Object} [stage ] a stage to enqueue into the pipeline
      * @example
-     * let pipe = new v_Pipeline()
-     * let stage = new v_MatchStage().budget(0, 1000)
+     * let pipe = new v_Pipeline();
+     * let stage = new v_MatchStage().budget(0, 1000);
      * 
-     * pipe.enqueue(stage)
-     * console.log(pipe.items) // expected output: [{stage}]
+     * pipe.enqueue(stage);
+     * console.log(pipe.items); // expected output: [{stage}]
      * @return {this}
      */
 
@@ -61,7 +55,7 @@ class v_Pipeline {
             // if the .index of the [item] has a higher .index than (stage.index)
             // splice in the (stage) at the items[i]
             if (this.items[i].index >= stage.index) {
-                console.warn(`!!! WARNING !!! Atempted to enqueue a stage earlier than {$text} stage. inserted at index: ${i + 1} instead. Pleade check stage indexes.`)
+                console.warn(`!!! WARNING !!! Atempted to enqueue a stage earlier than {$text} stage. inserted at index: ${i + 1} instead. Pleade check stage indexes.`);
                 // BUT if the item with higher index has attribute this.items[i].$match.$text
                 // splice in at i + 1
                 // this is to keep the {$text} stage at the front of the queue
