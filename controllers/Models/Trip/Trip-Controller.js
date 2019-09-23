@@ -1,9 +1,6 @@
 const Trip = require('../../../models/Trip/TripSchema');
 const Day = require('../../../models/Day/DaySchema');
-const {
-    isOwner,
-    keysContainString
-} = require('../../../util/auth/instance-validation');
+const { isOwner } = require('../../../util/auth/instance-validation');
 
 const ObjectId = require('mongoose').Types.ObjectId;
 const flatten = require('flat');
@@ -22,7 +19,7 @@ const S3 = new AWS.S3()
 
 const getTrips = async function (req, res, next) {
     // TODO:[] integrate new api 
-    let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by } = req.query; 
+    let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by } = req.query;
 }
 
 const postTrip = async function (req, res, next) {

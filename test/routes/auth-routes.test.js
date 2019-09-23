@@ -1,7 +1,6 @@
 const request = require('supertest');
 const app = require('../../app');
 const User = require('../../models/User/UserSchema');
-const Trip = require('../../models/Trip/TripSchema');
 const should = require('should');
 
 const slugify = require('../../util/local-functions/slugify-string');
@@ -54,6 +53,7 @@ describe('/trips - Routes', () => {
     })
 
     it('Should get all trips array', (done) => {
+        // NOTE: test is failing due to API integration failure getTrips in ../../trip-controller.js
         agent
             .get('/trips')
             .expect(200)

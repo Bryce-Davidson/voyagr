@@ -1,8 +1,10 @@
 const Stages = require('./parent-stage');
 
+//TODO: add docs and sort order example 
+
 /** 
- * generate a stage made up of the multiple stages to get the featured items from trips
- * @param {Number} [sortDirection] will we sort by LEAST popular or MOST popular
+ * a multi-stage process to get fetured resources based on some criteria
+ * @param {Number} [sortDirection] will we sort by LEAST or MOST
  * @param {Number} [index] index of the featured stage in the future pipeline
  * @return {Instance}
 */
@@ -10,12 +12,18 @@ const Stages = require('./parent-stage');
 // TODO:[] write docs for v_FeaturedSatge class
 
 class FeatureStage extends Stages {
-    constructor(_index, sortDirection) {
+    constructor(_index, _sortDirection) {
         super(_index)
-        this.sortDirection = sortDirection;
-        this.stage = { $addFields: { featuredScore: { $add: [] } } }
-        this.$add = this.stage.$addFields.featuredScore.$add;
+        this.sortDirection = _sortDirection;
+        this.featured_stage = { $addFields: { featuredScore: { $add: [] } } }
+        this.sort_stage = { "$sort": { 'featuredScore': _sortDirection } };
+        this.clean_stage = { $project: { 'featuredScore': 0 } }
+        this.$add = this.featured_stage.$addFields.featuredScore.$add;
         this.popular_callable = true;
+    }
+
+    get stage() {
+        return [this.featured_stage, this.sort_stage, this.clean_stage]
     }
 
     byMostPopular() {
