@@ -12,7 +12,8 @@ const Stages = require('./parent-stage');
 class LimitStage extends Stages {
     constructor(_index, _pagenation) {
         super(_index)
-        if (!_index) _pagenation = _index;
+        this.has_field = false;
+        if (_pagenation) {this.has_field = true;}
         this.stage = { $limit: _pagenation }
     }
 }

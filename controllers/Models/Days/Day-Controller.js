@@ -14,22 +14,22 @@ const getDays = async function (req, res, next) {
 }
 
 const postDay = async function (req, res, next) {
-    let { name, description, tags, upperBound, lowerBound, public } = req.body;
+    let { name, description, tags, upperBound, lowerBound, public, currency } = req.body;
     let slug = slugify(name);
     try {
         let uniqueid = await recursiveGenerateUniqueUrlid(slug, Day);
-        return new Day({
+        let saved_day = await new Day({
             user: req.user,
             slug,
             name,
             description,
             tags,
-            meta: { upperBound, lowerBound, urlid: uniqueid },
+            budget: {upperBound, lowerBound, currency},
+            meta: { urlid: uniqueid },
             settings: { public }
-        })
-            .save()
-            .then(ntrip => res.status(201).send(ntrip))
-            .catch(next);
+        }).save();
+        await User.findByIdAndUpdate(req.user, {posts: {trips: saved_day._id}})
+        res.status(201).send(saved_day);
     } catch (err) { next(err) }
 }
 
@@ -76,7 +76,7 @@ const deleteDay = async function (req, res, next) {
         if (!day) return notExistMsg('Day', res);
         if (isOwner(day, req.user)) {
             await day.remove();
-            return res.status(200);
+            return res.status(200).json({ msg: "Day deleted succesfully" });
         } else
             return unauthorizedMsg(res);
     } catch (err) { next(err) };
@@ -104,7 +104,8 @@ const addLocationToDay = async function (req, res, next) {
         let dayToAddlocationTo = await day.findById(dayid);
         if (!dayToAddlocationTo) return notExistMsg('Day', res);
         if (isOwner(dayToAddlocationTo, req.user)) {
-            let dayWithLocationAdded = await day.findByIdAndUpdate(dayid, { $push: { locations: locationid } }, { new: true });
+            let dayWithLocationAdded = await Day.findByIdAndUpdate(dayid, { $push: { locations: locationid } }, { new: true });
+            await Location.findByIdAndUpdate(locationid, {$push: { days: dayid }});
             return res.send(dayWithLocationAdded);
         } else
             return unauthorizedMsg(res);

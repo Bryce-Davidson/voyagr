@@ -13,6 +13,21 @@
 class v_Pipeline {
     constructor() { this.items = []; };
 
+    get pipeline() {
+        let pipeline = [];
+        this.items.forEach(item => {
+            if(item.has_field) {
+                if (item.stage instanceof Array) {
+                    item.stage.forEach(stage => {
+                        pipeline.push(stage)
+                    })
+                } else 
+                    pipeline.push(item.stage)
+            }
+        })
+        return pipeline;
+    }
+
     /**
      * to enqueue many items into the pipeline
      * @param {Array} [stages] the stages to enque into the pipeline
@@ -79,3 +94,5 @@ class v_Pipeline {
         return this;
     }
 }
+
+module.exports = v_Pipeline;

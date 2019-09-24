@@ -11,6 +11,7 @@ const TripSchema = new mongoose.Schema({
   locations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Location' }],
   description: { type: String, required: true, maxlength: [500, 'Description must be less than 500 characters'] },
   budget: {
+    currency: {type: String, required: true, uppercase: true},
     lowerBound: Number,
     upperBound: Number,
     middleBound: Number

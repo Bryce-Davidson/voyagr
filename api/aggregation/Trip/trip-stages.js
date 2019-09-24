@@ -24,8 +24,8 @@ class trip_Project extends u_Project {
 }
 
 class trip_Limit extends u_Limit {
-    constructor(_index) {
-        super(_index)
+    constructor(_index, _pagenation) {
+        super(_index, _pagenation)
         // lay out custom aggregation stages here...
 
 
@@ -34,15 +34,14 @@ class trip_Limit extends u_Limit {
 }
 
 class trip_Featured extends u_Featured {
-    constructor(_index) {
-        super(_index)
+    constructor(_index, _sortDirection) {
+        super(_index, _sortDirection)
         // lay out custom aggregation stages here...
 
 
         //
     }
 }
-
 module.exports = {
     trip_Featured,
     trip_Limit,

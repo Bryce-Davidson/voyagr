@@ -13,6 +13,7 @@ const Stages = require('./parent-stage');
 class MatchStage extends Stages {
     constructor(_index) {
         super(_index);
+        this.has_field = false;
         this.stage = { $match: {} };
         this.$match = this.stage.$match;
     }
@@ -36,6 +37,7 @@ class MatchStage extends Stages {
             console.warn(`!!!WARNING!!! Text stage needs to be 0, USER SET: ${this.index} RESET TO: 0`);
         this.index = 0;
         this.$match.$text = { $search: text };
+        this.has_field = true;
         return this;
     }
 
@@ -54,6 +56,7 @@ class MatchStage extends Stages {
             this.$match.tags = { $all: tags }
         } else
             this.$match.tags = { $all: tags.replace(/\s+/g, '').split(',') }
+        this.has_field = true;
         return this;
     }
 
@@ -68,6 +71,7 @@ class MatchStage extends Stages {
         let mb = this.$match.budget.middleBound;
         if (min) mb.$gte = min;
         if (max) mb.$lte = max;
+        this.has_field = true;
         return this;
     }
 }

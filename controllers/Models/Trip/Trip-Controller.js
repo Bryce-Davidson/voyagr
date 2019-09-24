@@ -1,5 +1,6 @@
 const Trip = require('../../../models/Trip/TripSchema');
 const Day = require('../../../models/Day/DaySchema');
+const User = require('../../../models/User/UserSchema');
 const { isOwner } = require('../../../util/auth/instance-validation');
 
 const ObjectId = require('mongoose').Types.ObjectId;
@@ -9,36 +10,53 @@ const slugify = require('../../../util/local-functions/slugify-string');
 
 const notExistMsg = require('../../../util/http-response/resource-does-not-exist-msg');
 const unauthorizedMsg = require('../../../util/http-response/unauthorized-msg');
-const unableToUpdateImmutable = require('../../../util/http-response/unable-to-update-immutable');
+
+const Pipeline = require('../../../api/aggregation/pipeline-queue');
+const { 
+    trip_Project, 
+    trip_Match, 
+    trip_Featured, 
+    trip_Limit
+} = require('../../../api/aggregation/Trip/trip-stages')
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
 
-
 // /trips ----------------------------------------------------------------
 
 const getTrips = async function (req, res, next) {
-    // TODO:[] integrate new api 
     let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by } = req.query;
+    let pipe = new Pipeline();
+    let match = new trip_Match()
+                    .text(text)
+                    .tags(tags)
+                    .budget(min_budget, max_budget)
+    let project = new trip_Project()
+                    .paths(paths)
+                    .omit(omit)
+    let featured = new trip_Featured(null, -1).by({[featured_by]: true})
+    console.log(featured)
+    let limit = new trip_Limit(null, pagenation)
 }
 
 const postTrip = async function (req, res, next) {
-    let { name, description, tags, upperBound, lowerBound, public } = req.body;
+    let { name, description, tags, upperBound, lowerBound, public, currency } = req.body;
     let slug = slugify(name);
-    let uniqueid = await recursiveGenerateUniqueUrlid(slug, Trip);
-    return new Trip({
-        user: req.user,
-        slug,
-        name,
-        description,
-        tags,
-        budget: { upperBound, lowerBound },
-        meta: { urlid: uniqueid },
-        settings: { public }
-    })
-        .save()
-        .then(ntrip => res.status(201).send(ntrip))
-        .catch(next);
+    try {
+        let uniqueid = await recursiveGenerateUniqueUrlid(slug, Trip);
+        let saved_trip = await new Trip({
+            user: req.user,
+            slug,
+            name,
+            description,
+            tags,
+            budget: { upperBound, lowerBound, currency },
+            meta: { urlid: uniqueid },
+            settings: { public }
+        }).save();
+        await User.findByIdAndUpdate(req.user, {$push: {'posts.trips': saved_trip._id}})
+        return res.status(201).send(saved_trip);
+    } catch (err) { next(err) }
 }
 
 // //trips/:id ?populate
@@ -115,6 +133,7 @@ const addDayToTrip = async function (req, res, next) {
         if (!tripToAddDayTo) return notExistMsg('Trip', res);
         if (isOwner(tripToAddDayTo, req.user)) {
             let utrip = await Trip.findByIdAndUpdate(tripid, { $push: { days: dayid } }, { new: true });
+            await Day.findByIdAndUpdate(dayid, {$push: { trips: tripid }});
             return res.send(utrip);
         } else
             return unauthorizedMsg(res);
@@ -124,7 +143,6 @@ const addDayToTrip = async function (req, res, next) {
 const deleteDaysFromTrip = async function (req, res, next) {
     let tripid = req.params.id;
     let dayids = req.query.dayids.split(',');
-    //TODO:[] Replace dayid in query with urlid
     if (!dayids) return res.status(400).json({ msg: 'Please Provide at least one days.' });
     dayids.forEach(id => {
         if (!ObjectId.isValid(id))

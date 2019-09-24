@@ -23,12 +23,12 @@ const LocationSchema = new mongoose.Schema({
     validate: [arrayLengthVal, '{PATH} exceeds the limit of 15']
   },
   meta: {
-    urlid: {type: String, required: true, index: true},
-    created: { type : Date, default: Date.now },
-    viewCount: {type: Number, default: 0},
-    likes: {type: Number, default: 0},
-    numberOfComments: {type: Number, default: 0},
-    numberOfShares: {type: Number, default: 0}
+    urlid: {type: String, required: true, index: true, immutable: true},
+    created: { type : Date, default: Date.now, immutable: true },
+    viewCount: {type: Number, default: 0, immutable: true},
+    likes: {type: Number, default: 0, immutable: true},
+    numberOfComments: {type: Number, default: 0, immutable: true},
+    numberOfShares: {type: Number, default: 0, immutable: true}
   },
   // photos: {
   //   image_1: String,
@@ -39,6 +39,7 @@ const LocationSchema = new mongoose.Schema({
   // },
   comments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
   budget: {
+    currency: {type: String, required: true, uppercase: true},
     lowerBound: Number,
     upperBound: Number,
     middleBound: Number

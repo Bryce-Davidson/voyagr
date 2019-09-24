@@ -11,6 +11,7 @@ const Stages = require('./parent-stage');
 class ProjectStage extends Stages {
     constructor(_index) {
         super(_index)
+        this.has_field = false;
         this.stage = { $project: {} };
         this.$project = this.stage.$project;
     }
@@ -28,6 +29,7 @@ class ProjectStage extends Stages {
                 this.$project[p] = 1;
             });
         };
+        this.has_field = true;
         return this;
     }
 
@@ -38,11 +40,13 @@ class ProjectStage extends Stages {
      */
 
     omit(omit) {
+        if (!omit) return this;
         if (omit) {
             omit.replace(/\s+/g, '').split(',').forEach(p => {
                 this.$project[p] = 0;
             });
         };
+        this.has_field = true;
         return this;
     }
 }

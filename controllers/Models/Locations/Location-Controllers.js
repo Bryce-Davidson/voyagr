@@ -12,7 +12,7 @@ const S3 = new AWS.S3()
 
 const getLocations = async function (req, res, next) {
 
-  // TODO:[] add location types to schema and add to query search
+  // TODO:[] clean out into new aggregation API
 
   let { near, tags, text, min_budget, max_budget, paths, omit, pagenation } = req.query;
   let query = {};
@@ -49,11 +49,10 @@ const getLocations = async function (req, res, next) {
 const postLocation = async function (req, res, next) {
   const { coordinates, name, tags, upperBound, lowerBound, type } = req.body
   let slug = slugify(name);
-  // G: [lat, long], N: [long, lat]
   coordinates.reverse();
   let uniqueid = await recursiveGenerateUniqueUrlid(slug, Location);
 
-  new Location({
+  let saved_trip = new Location({
     "name": name,
     "slug": slug,
     "user": req.user,
@@ -65,12 +64,9 @@ const postLocation = async function (req, res, next) {
     "tags": tags,
     "meta": { urlid: uniqueid },
     "budget": { upperBound, lowerBound }
-  })
-    .save()
-    .then(loc => {
-      return res.send(loc)
-    })
-    .catch(next)
+  }).save();
+  await User.findByIdAndUpdate(req.user, {posts: {trips: saved_location._id}})
+  return res.send(saved_trip)
 }
 
 const getLocation = async function (req, res, next) {

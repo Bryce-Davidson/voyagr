@@ -7,7 +7,6 @@ const { USERBUCKET }        = require('../../../config/keys').AWS;
 const AWS = require('./node_modules/aws-sdk')
 const S3 = new AWS.S3()
 
-
 const userProfileUpload = (req, res, next) => {
     req.bucketName = USERBUCKET;
     User.findById(req.params.id)
