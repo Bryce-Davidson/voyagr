@@ -12,8 +12,6 @@ const Stages = require('./parent-stage');
  * let stage = new FeatureStage(88, -1).by('likes,views,shares')
 */
 
-// TODO:[] write docs for v_FeaturedSatge class
-
 class FeatureStage extends Stages {
     constructor(_index, _sortDirection) {
         super(_index)
@@ -31,6 +29,12 @@ class FeatureStage extends Stages {
         return [this.featured_stage, this.sort_stage, this.clean_stage]
     }
 
+    /**
+     * add params to the stage using a CSV string
+     * @param {String} [featured_by] CSV string
+     * @return {this}
+     */
+
     by(featured_by) {
         if (!featured_by)
             return this;
@@ -43,6 +47,11 @@ class FeatureStage extends Stages {
         return this;
     }
 
+    /**
+     * find documents by popularity
+     * @return {this}
+     */
+
     byMostPopular() {
         if (this.popular_can_be_called) {
             this.byLikes(2).byShares(3).byViewCount(1);
@@ -52,6 +61,10 @@ class FeatureStage extends Stages {
             throw new Error('Cannot call most popular after previous method calls.');
         return this;
     };
+
+    /**
+     * syntax helper
+     */
 
     and() { return this; };
 
@@ -66,6 +79,11 @@ class FeatureStage extends Stages {
         return this;
     };
 
+    /**
+     * find documents by view count
+     * @return {this}
+     */
+
     byViewCount(coefficient) {
         if (!coefficient) throw new Error(`Missing coefficient for: byViewCount()`);
         if (this.can_add_stages) {
@@ -76,6 +94,11 @@ class FeatureStage extends Stages {
             throw new Error('Cannot add more stages after popular call')
         return this;
     };
+
+    /**
+     * find documents by shares
+     * @return {this}
+     */
 
     byShares(coefficient) {
         if (!coefficient) throw new Error(`Missing coefficient for byShares()`);
