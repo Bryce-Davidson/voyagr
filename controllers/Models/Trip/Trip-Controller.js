@@ -34,9 +34,15 @@ const getTrips = async function (req, res, next) {
     let project = new trip_Project()
                     .paths(paths)
                     .omit(omit)
-    let featured = new trip_Featured(null, -1).by({[featured_by]: true})
-    console.log(featured)
+    let featured = new trip_Featured(null, -1).by(featured_by)
     let limit = new trip_Limit(null, pagenation)
+    pipe.enqueue_many(match,project,featured,limit)
+    console.log(pipe.pipeline)
+    Trip.aggregate(pipe.pipeline)
+        .then(docs => {
+            res.send(docs)
+        })
+        .catch(next)
 }
 
 const postTrip = async function (req, res, next) {
