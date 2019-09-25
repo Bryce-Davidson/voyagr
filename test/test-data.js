@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 module.exports = {
     user: {
         local: {
@@ -33,13 +35,40 @@ module.exports = {
         "currency": "cad",
         "public": true
     },
-    day_2: {
+    save_day: {
         "name": "Sailing in Rome",
+        "slug": "just-a-test-day",
         "description": "A day for sailing and enjoying drinks",
         "tags": ["Sea", "Ocean", "Water", "Swimming"],
-        "upperBound": 100,
-        "lowerBound": 0,
-        "currency": "cad",
-        "public": true
+        "settings": {
+            "public": true
+        },
+        "meta": {
+            "urlid": "Hae4NsQ"
+        },
+        "budget": {
+            "upperBound": 100,
+            "lowerBound": 0,
+            "currency": "cad",
+        }
     },
+    save_location: {
+        "name": "Test Location",
+        "slug": "some-test-location",
+        "typeOfLocation": "Restaurant",
+        "description": "Test location and should be deleted",
+        "tags": ["one", "two", "three"],
+        "meta": {
+            "urlid": "h897tf86"
+        },
+        "budget": {
+            "upperBound": 1000,
+            "lowerBound": 500,
+            "currency": "cad"
+        },
+        "location": {
+            "type": "Point",
+            "coordinates": [40.7143528, -74.0059731],
+          },
+    }
 }

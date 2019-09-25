@@ -1,17 +1,44 @@
 const User = require('../../../models/User/UserSchema');
 const Day = require('../../../models/Day/DaySchema');
+const Location = require('../../../models/Location/LocationSchema');
 const { isOwner } = require('../../../util/auth/instance-validation');
 const flatten = require('flat');
 
+const ObjectId = require('mongoose').Types.ObjectId;
+
 const slugify = require('../../../util/local-functions/slugify-string')
 const recursiveGenerateUniqueUrlid = require('../../../util/database/generate-unique-urlid');
+
+const {
+    day_Project,
+    day_Match,
+    day_Featured,
+    day_Limit
+} = require('../../../modules/aggregation/Day/day-stages');
+
+const Pipeline = require('../../../modules/aggregation/pipeline-queue')
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
 
 const getDays = async function (req, res, next) {
-    // INTEGRATE NEW API
-}
+    let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by, sort_by  } = req.query;
+    let limit = Number(pagenation) || 15;
+    try {
+        let pipe = new Pipeline();
+        let match_stage = new day_Match()
+            .text(text)
+            .tags(tags)
+            .budget(min_budget, max_budget)
+        let project_stage = new day_Project()
+            .paths(paths)
+            .omit(omit)
+        let featured_stage  = new day_Featured(null, -1).by(featured_by)
+        let limit_stage  = new day_Limit(null, limit)
+        pipe.enqueue_many(match_stage, project_stage, featured_stage , limit_stage )
+        let docs = await Day.aggregate(pipe.pipeline);
+        return res.send(docs);
+    } catch (err) { next(err) }}
 
 const postDay = async function (req, res, next) {
     let { name, description, tags, upperBound, lowerBound, public, currency } = req.body;
@@ -101,7 +128,7 @@ const addLocationToDay = async function (req, res, next) {
     try {
         let locationToBeAdded = await Location.findById(locationid);
         if (!locationToBeAdded) return notExistMsg('Location', res);
-        let dayToAddlocationTo = await day.findById(dayid);
+        let dayToAddlocationTo = await Day.findById(dayid);
         if (!dayToAddlocationTo) return notExistMsg('Day', res);
         if (isOwner(dayToAddlocationTo, req.user)) {
             let dayWithLocationAdded = await Day.findByIdAndUpdate(dayid, { $push: { locations: locationid } }, { new: true });

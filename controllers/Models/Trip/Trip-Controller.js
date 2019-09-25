@@ -11,13 +11,13 @@ const slugify = require('../../../util/local-functions/slugify-string');
 const notExistMsg = require('../../../util/http-response/resource-does-not-exist-msg');
 const unauthorizedMsg = require('../../../util/http-response/unauthorized-msg');
 
-const Pipeline = require('../../../api/aggregation/pipeline-queue');
+const Pipeline = require('../../../modules/aggregation/pipeline-queue');
 const {
     trip_Project,
     trip_Match,
     trip_Featured,
     trip_Limit
-} = require('../../../api/aggregation/Trip/trip-stages')
+} = require('../../../modules/aggregation/Trip/trip-stages')
 
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
@@ -25,20 +25,20 @@ const S3 = new AWS.S3()
 // /trips ----------------------------------------------------------------
 
 const getTrips = async function (req, res, next) {
-    let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by } = req.query;
+    let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by, sort_by  } = req.query;
+    let limit = Number(pagenation) || 15;
     try {
         let pipe = new Pipeline();
-        let match = new trip_Match()
+        let match_stage = new trip_Match()
             .text(text)
             .tags(tags)
             .budget(min_budget, max_budget)
-        let project = new trip_Project()
+        let project_stage = new trip_Project()
             .paths(paths)
             .omit(omit)
-        let featured = new trip_Featured(null, -1).by(featured_by)
-        let limit = new trip_Limit(null, Number(pagenation))
-        pipe.enqueue_many(match, project, featured, limit)
-        console.log(pipe.pipeline)
+        let featured_stage  = new trip_Featured(null, -1).by(featured_by)
+        let limit_stage  = new trip_Limit(null, limit)
+        pipe.enqueue_many(match_stage, project_stage, featured_stage , limit_stage )
         let docs = await Trip.aggregate(pipe.pipeline);
         return res.send(docs);
     } catch (err) { next(err) }
