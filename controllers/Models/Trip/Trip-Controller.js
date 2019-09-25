@@ -12,10 +12,10 @@ const notExistMsg = require('../../../util/http-response/resource-does-not-exist
 const unauthorizedMsg = require('../../../util/http-response/unauthorized-msg');
 
 const Pipeline = require('../../../api/aggregation/pipeline-queue');
-const { 
-    trip_Project, 
-    trip_Match, 
-    trip_Featured, 
+const {
+    trip_Project,
+    trip_Match,
+    trip_Featured,
     trip_Limit
 } = require('../../../api/aggregation/Trip/trip-stages')
 
@@ -26,23 +26,22 @@ const S3 = new AWS.S3()
 
 const getTrips = async function (req, res, next) {
     let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by } = req.query;
-    let pipe = new Pipeline();
-    let match = new trip_Match()
-                    .text(text)
-                    .tags(tags)
-                    .budget(min_budget, max_budget)
-    let project = new trip_Project()
-                    .paths(paths)
-                    .omit(omit)
-    let featured = new trip_Featured(null, -1).by(featured_by)
-    let limit = new trip_Limit(null, pagenation)
-    pipe.enqueue_many(match,project,featured,limit)
-    console.log(pipe.pipeline)
-    Trip.aggregate(pipe.pipeline)
-        .then(docs => {
-            res.send(docs)
-        })
-        .catch(next)
+    try {
+        let pipe = new Pipeline();
+        let match = new trip_Match()
+            .text(text)
+            .tags(tags)
+            .budget(min_budget, max_budget)
+        let project = new trip_Project()
+            .paths(paths)
+            .omit(omit)
+        let featured = new trip_Featured(null, -1).by(featured_by)
+        let limit = new trip_Limit(null, Number(pagenation))
+        pipe.enqueue_many(match, project, featured, limit)
+        console.log(pipe.pipeline)
+        let docs = await Trip.aggregate(pipe.pipeline);
+        return res.send(docs);
+    } catch (err) { next(err) }
 }
 
 const postTrip = async function (req, res, next) {
@@ -60,7 +59,7 @@ const postTrip = async function (req, res, next) {
             meta: { urlid: uniqueid },
             settings: { public }
         }).save();
-        await User.findByIdAndUpdate(req.user, {$push: {'posts.trips': saved_trip._id}})
+        await User.findByIdAndUpdate(req.user, { $push: { 'posts.trips': saved_trip._id } })
         return res.status(201).send(saved_trip);
     } catch (err) { next(err) }
 }
@@ -139,7 +138,7 @@ const addDayToTrip = async function (req, res, next) {
         if (!tripToAddDayTo) return notExistMsg('Trip', res);
         if (isOwner(tripToAddDayTo, req.user)) {
             let utrip = await Trip.findByIdAndUpdate(tripid, { $push: { days: dayid } }, { new: true });
-            await Day.findByIdAndUpdate(dayid, {$push: { trips: tripid }});
+            await Day.findByIdAndUpdate(dayid, { $push: { trips: tripid } });
             return res.send(utrip);
         } else
             return unauthorizedMsg(res);
