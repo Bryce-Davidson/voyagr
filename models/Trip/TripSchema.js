@@ -11,7 +11,7 @@ const TripSchema = new mongoose.Schema({
   locations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Location' }],
   description: { type: String, required: true, maxlength: [500, 'Description must be less than 500 characters'] },
   budget: {
-    currency: {type: String, required: true, uppercase: true},
+    currency: { type: String, required: true, uppercase: true },
     lowerBound: Number,
     upperBound: Number,
     middleBound: Number
@@ -29,11 +29,11 @@ const TripSchema = new mongoose.Schema({
   },
   meta: {
     urlid: { type: String, required: true, index: true, immutable: true },
-    created: { type: Date, default: Date.now, immutable: true},
-    likes: { type: Number, default: 0, immutable: true },
-    viewCount: { type: Number, default: 0, immutable: true },
-    numberOfComments: { type: Number, default: 0, immutable: true },
-    numberOfShares: { type: Number, default: 0, immutable: true }, 
+    created: { type: Date, default: Date.now, immutable: true },
+    likes: { type: Number, default: 0 },
+    viewCount: { type: Number, default: 0 },
+    numberOfComments: { type: Number, default: 0 },
+    numberOfShares: { type: Number, default: 0 },
   },
   comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }],
   photos: {

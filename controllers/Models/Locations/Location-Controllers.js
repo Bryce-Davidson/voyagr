@@ -11,39 +11,7 @@ const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
 
 const getLocations = async function (req, res, next) {
-
-  // TODO:[] clean out into new aggregation API
-
-  let { near, tags, text, min_budget, max_budget, paths, omit, pagenation } = req.query;
-  let query = {};
-  if (paths) { paths = paths.replace(/,/g, ' ') };
-  if (omit) { omit = omit.split(',').map(item => `-${item}`).join(' ') };
-  if (tags) { query['tags'] = { $all: tags.split(',') } }
-  if (text) { query.$text = { $search: text } }
-  if (min_budget || max_budget) {
-    const mb = query['budget.middleBound'] = {};
-    if (min_budget) mb.$gte = min_budget;
-    if (max_budget) mb.$lte = max_budget;
-  }
-  if (near && text)
-    return res.status(405).send('Near cannot be combined with text, use tags to specify attributes')
-  // &near=distance:1000@lat,long -> near=distance:1000@127.4421,41.2345
-  if (near) {
-    let maxDistance = near.substring(near.indexOf(':') + 1, near.indexOf('@'))
-    // G: [lat, long], N: [long, lat]
-    let coordinates = near.substring(near.indexOf('@') + 1).split(',').reverse()
-    query.location = { $near: { $geometry: { type: 'Point', coordinates }, $maxDistance: maxDistance } }
-  }
-
-  Location.find(query)
-    .where({ 'settings.public': true })
-    .select(paths)
-    .select(omit)
-    .limit(Number(pagenation))
-    .then(docs => {
-      delete query;
-      return res.send(docs);
-    }).catch(next);
+  //TODO: integrate new api
 }
 
 const postLocation = async function (req, res, next) {

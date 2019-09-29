@@ -183,11 +183,16 @@ const getTripLikes = async function (req, res, next) {
 }
 
 const likeTrip = async function (req, res, next) {
-    Trip.findByIdAndUpdate(req.params.id, {
-        $inc: { 'meta.likes': 1 }
-    }, { new: true })
-        .then(likedDay => res.send(likedDay))
-        .catch(next)
+    //TODO: make sure users who have already liked the post can't like again
+    let tripid = req.params.id;
+    let trip_to_be_liked = await Trip.findById(tripid);
+    if (!trip_to_be_liked) return notExistMsg('Day', res);
+    if(isOwner(trip_to_be_liked, req.user)) {
+        return res.send(trip_to_be_liked)
+    } else {
+        let liked_trip = await Trip.findByIdAndUpdate(tripid, { $inc: {'meta.likes': 1} }, { new: true })
+        return res.send(liked_trip);
+    }
 }
 
 const getTripComments = async function (req, res, next) {
@@ -203,6 +208,7 @@ const getTripComments = async function (req, res, next) {
     } catch (err) { next(err) };
 }
 
+// We have these written pretty wet to increase the functionality of future releases
 const postCommentTrip = async function (req, res, next) {
     let postid = req.params.id;
     let comment = new Comment({

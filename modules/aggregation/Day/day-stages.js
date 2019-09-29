@@ -24,8 +24,8 @@ class day_Project extends u_Project {
 }
 
 class day_Limit extends u_Limit {
-    constructor(_index) {
-        super(_index)
+    constructor(_index, _pagenation) {
+        super(_index, _pagenation)
         // lay out custom aggregation stages here...
 
 
@@ -34,8 +34,8 @@ class day_Limit extends u_Limit {
 }
 
 class day_Featured extends u_Featured {
-    constructor(_index) {
-        super(_index)
+    constructor(_index, _sortDirection) {
+        super(_index, _sortDirection)
         // lay out custom aggregation stages here...
 
 

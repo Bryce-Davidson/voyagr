@@ -48,7 +48,7 @@ router.route('/:id/comments')
 
 router.route('/:id/likes')
     .get(getTripLikes)
-    .post(likeTrip)
+    .put(likeTrip)
     // .delete('unlike post')
 
 module.exports = router;

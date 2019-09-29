@@ -25,18 +25,11 @@ const LocationSchema = new mongoose.Schema({
   meta: {
     urlid: {type: String, required: true, index: true, immutable: true},
     created: { type : Date, default: Date.now, immutable: true },
-    viewCount: {type: Number, default: 0, immutable: true},
-    likes: {type: Number, default: 0, immutable: true},
-    numberOfComments: {type: Number, default: 0, immutable: true},
-    numberOfShares: {type: Number, default: 0, immutable: true}
+    viewCount: {type: Number, default: 0},
+    likes: {type: Number, default: 0},
+    numberOfComments: {type: Number, default: 0},
+    numberOfShares: {type: Number, default: 0}
   },
-  // photos: {
-  //   image_1: String,
-  //   image_2: String,
-  //   image_3: String,
-  //   image_4: String,
-  //   image_5: String
-  // },
   comments: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}],
   budget: {
     currency: {type: String, required: true, uppercase: true},
@@ -49,7 +42,7 @@ const LocationSchema = new mongoose.Schema({
 // VIRTUALS -------------------------------------------------
 
 // use the virtual setter method here in order to call the instance set. this will
-// not triger any mniddleware
+// not triger any middleware
 
 
 // QUERIES ---------------------------------------------------

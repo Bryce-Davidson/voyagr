@@ -24,10 +24,10 @@ const DaySchema = new mongoose.Schema({
   meta: {
     urlid: { type: String, required: true, index: true, immutable: true },
     created: { type: Date, default: Date.now(), immutable: true },
-    viewCount: { type: Number, default: 0, immutable: true },
-    likes: { type: Number, default: 0, immutable: true },
-    numberOfComments: { type: Number, default: 0, immutable: true },
-    numberOfShares: { type: Number, default: 0, immutable: true }
+    viewCount: { type: Number, default: 0},
+    likes: { type: Number, default: 0},
+    numberOfComments: { type: Number, default: 0},
+    numberOfShares: { type: Number, default: 0}
   },
   photos: {
     banner: String,

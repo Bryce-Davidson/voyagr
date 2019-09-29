@@ -111,6 +111,17 @@ describe('/trips - Routes --------------------------------------------------- \n
             })
     })
 
+    it('Should like a trip by id', (done) => {
+        agent
+            .put(`/trips/${tripid}/likes`)
+            .expect(200)
+            .end((err, res) => {
+                let trip = res.body;
+                trip.meta.likes.should.equal(0)
+                done()
+            })
+    })
+
     it('Should delete trip by id', (done) => {
         agent
             .delete(`/trips/${tripid}`)
