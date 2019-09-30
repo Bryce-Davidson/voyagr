@@ -46,7 +46,7 @@ const getTrips = async function (req, res, next) {
 
 const postTrip = async function (req, res, next) {
     let { name, description, tags, upperBound, lowerBound, public, currency } = req.body;
-    let slug = slugify(name);
+    let slug = await slugify(name);
     try {
         let uniqueid = await recursiveGenerateUniqueUrlid(slug, Trip);
         let saved_trip = await new Trip({
@@ -85,9 +85,10 @@ const getTrip = async function (req, res, next) {
 const updateTrip = async function (req, res, next) {
     let tripid = req.params.id;
     let update = flatten(req.body);
-    if (update.name)
-        update.slug = slugify(update.name);
-
+    if (update.name) {
+        updatedSlug = await slugify(update.name);      
+        update.slug = updatedSlug;
+    }
     try {
         let tripTobeModified = await Trip.findById(tripid);
         if (!tripTobeModified) return notExistMsg('Trip', res);

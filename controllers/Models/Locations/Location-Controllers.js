@@ -16,7 +16,7 @@ const getLocations = async function (req, res, next) {
 
 const postLocation = async function (req, res, next) {
   const { coordinates, name, tags, upperBound, lowerBound, type } = req.body
-  let slug = slugify(name);
+  let slug = await slugify(name);
   coordinates.reverse();
   let uniqueid = await recursiveGenerateUniqueUrlid(slug, Location);
 
@@ -58,7 +58,7 @@ const updateLocation = async function (req, res, next) {
   let update = flatten(req.body);
   try {
     if (update.name)
-      update.slug = slugify(update.name);
+      update.slug = await slugify(update.name);
 
     let locationTobeModified = await Location.findById(locationid);
     if (!locationTobeModified) return notExistMsg('Location', res);

@@ -42,7 +42,7 @@ const getDays = async function (req, res, next) {
 
 const postDay = async function (req, res, next) {
     let { name, description, tags, upperBound, lowerBound, public, currency } = req.body;
-    let slug = slugify(name);
+    let slug = await slugify(name);
     try {
         let uniqueid = await recursiveGenerateUniqueUrlid(slug, Day);
         let saved_day = await new Day({
@@ -80,7 +80,7 @@ const updateDay = async function (req, res, next) {
     let dayid = req.params.id;
     let update = flatten(req.body);
     if (update.name)
-        update.slug = slugify(update.name);
+        update.slug = await slugify(update.name);
 
     try {
         let dayTobeModified = await Day.findById(dayid);

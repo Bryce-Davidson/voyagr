@@ -106,7 +106,7 @@ describe('/trips - Routes --------------------------------------------------- \n
             .end((err, res) => {
                 trip = res.body;
                 trip.name.should.equal("Update test trip name")
-                trip.slug.should.equal(slugify("Update test trip name"))
+                trip.slug.should.equal("update-test-trip-name")
                 done()
             })
     })
@@ -210,7 +210,7 @@ describe('/days - Routes ---------------------------------------------------- \n
             .end((err, res) => {
                 day = res.body;
                 day.name.should.equal("Update test day name")
-                day.slug.should.equal(slugify("Update test day name"))
+                day.slug.should.equal("update-test-day-name")
                 done()
             })
     })
