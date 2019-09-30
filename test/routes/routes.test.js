@@ -6,7 +6,6 @@ const Location = require('../../models/Location/LocationSchema');
 const Trip = require('../../models/Trip/TripSchema');
 const should = require('should');
 
-const slugify = require('../../util/local-functions/slugify-string');
 const test = require('../test-data');
 
 var agent = request.agent(app);

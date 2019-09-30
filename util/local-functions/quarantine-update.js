@@ -1,18 +1,28 @@
-const { keysContainString } = require('../../util/local-functions/instance-validation');
+const slugify = require('../../util/local-functions/slugify-string');
 
-module.exports = async function(update) {
-    return new Promise((resolve, reject) => {
-    if (keysContainString('meta', update))
-        return reject({
-            msg: 'Unable to update on immutable path "meta".',
-            code: 'Immutable'
-        });
-    if (keysContainString('slug', update))
-        return reject({
-            msg: 'Unable to update on immutable path "slug".',
-            code: 'Immutable'
-        });
-    else 
-        return resolve(update)
-    })
+async function deleteKeyByString(string, obj) {
+        for (var k in obj)
+            if(~k.indexOf(string));
+                delete obj[k]
 }
+
+async function deleteUndefinedKeys(obj) {
+    for(var k in obj) {
+        if(obj[k] === undefined) {
+            delete obj[k]
+        }
+    }
+}
+
+async function qurantineUpdate(update) { 
+    // key selection
+    let qurantined = ({name, description, budget, settings} = update, {name, description, budget, settings})
+    if (qurantined.name)
+        qurantined.slug = await slugify(qurantined.name);
+    if (qurantined.budget)
+        await deleteKeyByString('middle', qurantined.budget)
+    await deleteUndefinedKeys(qurantined)
+    return qurantined;
+}
+
+module.exports = qurantineUpdate;

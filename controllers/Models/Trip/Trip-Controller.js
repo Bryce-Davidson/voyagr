@@ -8,8 +8,10 @@ const flatten = require('flat');
 const recursiveGenerateUniqueUrlid = require('../../../util/database/generate-unique-urlid');
 const slugify = require('../../../util/local-functions/slugify-string');
 
-const notExistMsg = require('../../../util/http-response/resource-does-not-exist-msg');
+const resourceDoesNotExistMsg = require('../../../util/http-response/resource-does-not-exist-msg');
 const unauthorizedMsg = require('../../../util/http-response/unauthorized-msg');
+
+const { keysContainString } = require('../../../util/auth/instance-validation');
 
 const Pipeline = require('../../../modules/aggregation/pipeline-queue');
 const {
@@ -70,7 +72,7 @@ const getTrip = async function (req, res, next) {
     let tripid = req.params.id;
     try {
         let trip = await Trip.findById(tripid);
-        if (!trip) return notExistMsg('Trip', res);
+        if (!trip) return resourceDoesNotExistMsg('Trip', res);
         if (isOwner(trip, req.user))
             return res.send(trip);
         if (!trip.settings.public)
@@ -85,13 +87,17 @@ const getTrip = async function (req, res, next) {
 const updateTrip = async function (req, res, next) {
     let tripid = req.params.id;
     let update = flatten(req.body);
+
+    //TODO: implement quarantine update
+
     if (update.name) {
         updatedSlug = await slugify(update.name);      
         update.slug = updatedSlug;
     }
+
     try {
         let tripTobeModified = await Trip.findById(tripid);
-        if (!tripTobeModified) return notExistMsg('Trip', res);
+        if (!tripTobeModified) return resourceDoesNotExistMsg('Trip', res);
         if (isOwner(tripTobeModified, req.user)) {
             let updatedTrip = await Trip.findByIdAndUpdate(tripid, update, { new: true });
             return res.send(updatedTrip);
@@ -106,7 +112,7 @@ const deleteTrip = async function (req, res, next) {
     let tripid = req.params.id;
     try {
         let trip = await Trip.findById(tripid);
-        if (!trip) return notExistMsg('Trip', res);
+        if (!trip) return resourceDoesNotExistMsg('Trip', res);
         if (isOwner(trip, req.user)) {
             await trip.remove();
             return res.status(200).json({ msg: "Trip deleted succesfully" });
@@ -121,7 +127,7 @@ const getTripDays = async function (req, res, next) {
         let trip = await Trip.findById(tripid).populate('days')
             .select('days')
             .select('-_id -user');
-        if (!trip) return notExistMsg('Trip', res);
+        if (!trip) return resourceDoesNotExistMsg('Trip', res);
         if (!trip.days) return res.status(404).json({ msg: "Trip currently has 0 days" });
         else
             return res.send(trip.days);
@@ -135,9 +141,9 @@ const addDayToTrip = async function (req, res, next) {
         return res.status(422).json({ msg: `Invalid day id: ${dayid}` });
     try {
         let dayToBeAdded = await Day.findById(dayid);
-        if (!dayToBeAdded) return notExistMsg('Day', res);
+        if (!dayToBeAdded) return resourceDoesNotExistMsg('Day', res);
         let tripToAddDayTo = await Trip.findById(tripid);
-        if (!tripToAddDayTo) return notExistMsg('Trip', res);
+        if (!tripToAddDayTo) return resourceDoesNotExistMsg('Trip', res);
         if (isOwner(tripToAddDayTo, req.user)) {
             let utrip = await Trip.findByIdAndUpdate(tripid, { $push: { days: dayid } }, { new: true });
             await Day.findByIdAndUpdate(dayid, { $push: { trips: tripid } });
@@ -158,7 +164,7 @@ const deleteDaysFromTrip = async function (req, res, next) {
 
     try {
         let tripTobeModified = await Trip.findById(tripid);
-        if (!tripTobeModified) return notExistMsg('Trip', res);
+        if (!tripTobeModified) return resourceDoesNotExistMsg('Trip', res);
         if (isOwner(tripTobeModified, req.user)) {
             let tripWithDayRemoved = await Trip.findByIdAndUpdate(tripid, { $pullAll: { days: dayids } }, { new: true });
             return res.send(tripWithDayRemoved);
@@ -177,7 +183,7 @@ const getTripLikes = async function (req, res, next) {
         let trip = await Trip.findById(tripid).populate('likes')
             .select('likes')
             .select('-_id -user');
-        if (!trip) return notExistMsg('trip', res);
+        if (!trip) return resourceDoesNotExistMsg('trip', res);
         if (!trip.likes) return res.status(404).json({ msg: "Trip currently has 0 likes" });
         else
             return res.send(trip.likes);
@@ -188,7 +194,7 @@ const likeTrip = async function (req, res, next) {
     //TODO: make sure users who have already liked the post can't like again
     let tripid = req.params.id;
     let trip_to_be_liked = await Trip.findById(tripid);
-    if (!trip_to_be_liked) return notExistMsg('Day', res);
+    if (!trip_to_be_liked) return resourceDoesNotExistMsg('Day', res);
     if (isOwner(trip_to_be_liked, req.user)) {
         return res.send(trip_to_be_liked)
     } else {
@@ -203,7 +209,7 @@ const getTripComments = async function (req, res, next) {
         let trip = await Trip.findById(tripid).populate('comments')
             .select('comments')
             .select('-_id -user');
-        if (!trip) return notExistMsg('trip', res);
+        if (!trip) return resourceDoesNotExistMsg('trip', res);
         if (!trip.comments) return res.status(404).json({ msg: "Trip currently has 0 comments" });
         else
             return res.send(trip.comments);

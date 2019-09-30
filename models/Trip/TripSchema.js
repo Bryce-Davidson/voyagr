@@ -1,15 +1,14 @@
 const Day = require('../../models/Day/DaySchema');
 const mongoose = require('mongoose');
-const { pointSchema } = require('../Geoschema-Types/GeoSchemas');
 const arrayLengthVal = require('../validators/array-length-validator');
 
 const TripSchema = new mongoose.Schema({
   name: { type: String, required: true, maxlength: [50, 'Name must be less than 50 characters'] },
   slug: { type: String, index: true, required: true },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   days: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Day' }],
   locations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Location' }],
   description: { type: String, required: true, maxlength: [500, 'Description must be less than 500 characters'] },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   budget: {
     currency: { type: String, required: true, uppercase: true },
     lowerBound: Number,

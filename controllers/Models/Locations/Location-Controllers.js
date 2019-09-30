@@ -20,7 +20,7 @@ const postLocation = async function (req, res, next) {
   coordinates.reverse();
   let uniqueid = await recursiveGenerateUniqueUrlid(slug, Location);
 
-  let saved_trip = new Location({
+  let saved_location = new Location({
     "name": name,
     "slug": slug,
     "user": req.user,
@@ -33,7 +33,7 @@ const postLocation = async function (req, res, next) {
     "meta": { urlid: uniqueid },
     "budget": { upperBound, lowerBound }
   }).save();
-  await User.findByIdAndUpdate(req.user, {posts: {trips: saved_location._id}})
+  await User.findByIdAndUpdate(req.user, {posts: {locations: saved_location._id}})
   return res.send(saved_trip)
 }
 
