@@ -25,7 +25,7 @@ const S3 = new AWS.S3()
 // /trips ----------------------------------------------------------------
 
 const getTrips = async function (req, res, next) {
-    let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by, sort_by  } = req.query;
+    let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by, sort_by } = req.query;
     let limit = Number(pagenation) || 15;
     try {
         let pipe = new Pipeline();
@@ -36,9 +36,9 @@ const getTrips = async function (req, res, next) {
         let project_stage = new trip_Project()
             .paths(paths)
             .omit(omit)
-        let featured_stage  = new trip_Featured(null, -1).by(featured_by)
-        let limit_stage  = new trip_Limit(null, limit)
-        pipe.enqueue_many(match_stage, project_stage, featured_stage , limit_stage )
+        let featured_stage = new trip_Featured(null, -1).by(featured_by)
+        let limit_stage = new trip_Limit(null, limit)
+        pipe.enqueue_many(match_stage, project_stage, featured_stage, limit_stage)
         let docs = await Trip.aggregate(pipe.pipeline);
         return res.send(docs);
     } catch (err) { next(err) }
@@ -68,17 +68,18 @@ const postTrip = async function (req, res, next) {
 
 const getTrip = async function (req, res, next) {
     let tripid = req.params.id;
-    Trip.findById(tripid)
-        .then(trip => {
-            if (!trip) return notExistMsg('Trip', res);
-            if (isOwner(trip, req.user))
-                return res.send(trip);
-            if (!trip.settings.public)
-                return unauthorizedMsg(res);
-            else return Trip.findByIdAndUpdate(tripid, { $inc: { 'meta.viewCount': 1 } })
-                .then(utrip => { return res.send(utrip) });
-        })
-        .catch(next);
+    try {
+        let trip = await Trip.findById(tripid);
+        if (!trip) return notExistMsg('Trip', res);
+        if (isOwner(trip, req.user))
+            return res.send(trip);
+        if (!trip.settings.public)
+            return unauthorizedMsg(res);
+        else {
+            let tripWithNewView = await Trip.findByIdAndUpdate(tripid, { $inc: { 'meta.viewCount': 1 } });
+            return res.send(tripWithNewView);
+        }
+    } catch (err) { next(err) }
 }
 
 const updateTrip = async function (req, res, next) {
@@ -187,10 +188,10 @@ const likeTrip = async function (req, res, next) {
     let tripid = req.params.id;
     let trip_to_be_liked = await Trip.findById(tripid);
     if (!trip_to_be_liked) return notExistMsg('Day', res);
-    if(isOwner(trip_to_be_liked, req.user)) {
+    if (isOwner(trip_to_be_liked, req.user)) {
         return res.send(trip_to_be_liked)
     } else {
-        let liked_trip = await Trip.findByIdAndUpdate(tripid, { $inc: {'meta.likes': 1} }, { new: true })
+        let liked_trip = await Trip.findByIdAndUpdate(tripid, { $inc: { 'meta.likes': 1 } }, { new: true })
         return res.send(liked_trip);
     }
 }
@@ -216,14 +217,14 @@ const postCommentTrip = async function (req, res, next) {
         "user": req.user,
         "body": req.body.body
     });
-    comment.save()
-        .then(comment => {
-            return Trip.findByIdAndUpdate(req.params.id, {
-                $inc: { 'meta.numberOfComments': 1 },
-                $push: { comments: comment._id }
-            }, { new: true })
-                .then(tripWithComment => res.send(tripWithComment))
-        }).catch(next)
+    try {
+        let savedComment = comment.save()
+        let tripWithComment = await Trip.findByIdAndUpdate(req.params.id, {
+            $inc: { 'meta.numberOfComments': 1 },
+            $push: { comments: savedComment._id }
+        }, { new: true });
+        return res.send(tripWithComment)
+    } catch (err) { next(err) };
 }
 
 module.exports = {

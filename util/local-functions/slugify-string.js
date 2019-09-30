@@ -1,4 +1,4 @@
-module.exports = function slugify(text) {
+module.exports = async function slugify(text) {
     text = text.toString().toLowerCase().trim();
 
     const sets = [

@@ -69,8 +69,10 @@ const getDay = async function (req, res, next) {
             return res.send(dayToSend);
         if (!dayToSend.settings.public)
             return unauthorizedMsg(res);
-        else return Day.findByIdAndUpdate(dayid, { $inc: { 'meta.viewCount': 1 } })
-            .then(uday => { return res.send(uday) });
+        else {
+            let updatedDay = await Day.findByIdAndUpdate(dayid, { $inc: { 'meta.viewCount': 1 } })
+            return res.send(updatedDay)
+        } 
     } catch (err) { next(err) }
 }
 
@@ -173,11 +175,12 @@ const getDayLikes = async function (req, res, next) {
 }
 
 const likeDay = async function (req, res, next) {
-    Day.findByIdAndUpdate(req.params.id, {
-        $inc: { 'meta.likes': 1 }
-    }, { new: true })
-        .then(likedPost => res.send(likedPost))
-        .catch(next)
+    try {
+        let likedPost = await Day.findByIdAndUpdate(req.params.id, {
+            $inc: { 'meta.likes': 1 }
+        }, { new: true })
+        return res.send(likedPost);
+    } catch (err) { next(err) }
 }
 
 const getDayComments = async function (req, res, next) {
@@ -200,14 +203,14 @@ const postCommentDay = async function (req, res, next) {
         "user": req.user,
         "body": req.body.body
     });
-    comment.save()
-        .then(comment => {
-            return Day.findByIdAndUpdate(req.params.id, {
-                $inc: { 'meta.numberOfComments': 1 },
-                $push: { comments: comment._id }
-            }, { new: true })
-                .then(dayWithComment => res.send(dayWithComment))
-        }).catch(next)
+    try {
+        let savedComment = await comment.save();
+        let dayWithComment = await Day.findByIdAndUpdate(req.params.id, {
+            $inc: { 'meta.numberOfComments': 1 },
+            $push: { comments: savedComment._id }
+        }, { new: true })
+        return res.send(dayWithComment)
+    } catch(err) { next(err) }
 }
 
 module.exports = {

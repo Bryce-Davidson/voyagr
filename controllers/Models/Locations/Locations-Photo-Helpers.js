@@ -1,5 +1,5 @@
 module.exports = {
-    collisionPaths(locationPhotos, reqFiles) {
+   async collisionPaths(locationPhotos, reqFiles) {
         // get keys of req.files aka: field names
         let newPhotoKeys = Object.keys(reqFiles);
         let deletePaths = [];
@@ -16,7 +16,7 @@ module.exports = {
         })
         return deletePaths;
       },
-      newPhotoPaths(target, filesobj) {
+      async newPhotoPaths(target, filesobj) {
         let update = {};
         Object.entries(filesobj).forEach(([key, val]) => {
           update[key] = val[0].location

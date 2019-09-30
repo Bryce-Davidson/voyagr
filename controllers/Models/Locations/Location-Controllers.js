@@ -46,9 +46,10 @@ const getLocation = async function (req, res, next) {
       return res.send(locationToSend);
     if (!locationToSend.settings.public)
       return unauthorizedMsg(res);
-    else return Location.findByIdAndUpdate(locationid, { $inc: { 'meta.viewCount': 1 } })
-      .then(ulocation => { return res.send(ulocation) });
-
+    else {
+      let updatdLocation = Location.findByIdAndUpdate(locationid, { $inc: { 'meta.viewCount': 1 } })
+      return res.send(updatdLocation);
+    }
   } catch (err) { next(err) }
 }
 
@@ -58,10 +59,6 @@ const updateLocation = async function (req, res, next) {
   try {
     if (update.name)
       update.slug = slugify(update.name);
-
-    // we can get access to the budget update within the update middleware by passing
-    // it to update
-
 
     let locationTobeModified = await Location.findById(locationid);
     if (!locationTobeModified) return notExistMsg('Location', res);
@@ -92,11 +89,10 @@ const deleteLocation = async function (req, res, next) {
 }
 
 const likeLocation = async function (req, res, next) {
-  Location.findByIdAndUpdate(req.params.id, {
+  let likedLocation = await Location.findByIdAndUpdate(req.params.id, {
     $inc: { 'meta.likes': 1 }
-  }, { new: true })
-    .then(likedDay => res.send(likedDay))
-    .catch(next)
+  }, { new: true });
+  return res.send(likeLocation);
 }
 
 const commentLocation = async function (req, res, next) {
@@ -106,14 +102,14 @@ const commentLocation = async function (req, res, next) {
     "user": req.user,
     "body": req.body.body
   });
-  comment.save()
-    .then(comment => {
-      return Location.findByIdAndUpdate(req.params.id, {
-        $inc: { 'meta.numberOfComments': 1 },
-        $push: { comments: comment._id }
-      }, { new: true })
-        .then(locationWithComment => res.send(locationWithComment))
-    }).catch(next)
+  try {
+    let savedComment = await comment.save();
+    let locationWithComment = await Location.findByIdAndUpdate(req.params.id, {
+      $inc: { 'meta.numberOfComments': 1 },
+      $push: { comments: savedComment._id }
+    }, { new: true });
+    return res.send(locationWithComment)
+  } catch (err) { next(err) }
 }
 
 module.exports = {

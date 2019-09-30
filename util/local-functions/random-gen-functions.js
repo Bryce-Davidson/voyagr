@@ -1,5 +1,5 @@
 module.exports = {
-    getRandom : function(arr, n) {
+    getRandom : async function(arr, n) {
         var result = new Array(n),
         len = arr.length,
         taken = new Array(len);
@@ -12,10 +12,10 @@ module.exports = {
         }
     return result;
     },
-    getRandomInt: function(min, max) {
+    getRandomInt: async function(min, max) {
         return Math.floor(Math.random() * (max - min) + min);
     },
-    randomGeoFromSeed: function(center, radius) {
+    randomGeoFromSeed: async function(center, radius) {
         var y0 = center.latitude;
         var x0 = center.longitude;
         var rd = radius / 111300;
