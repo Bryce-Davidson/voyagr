@@ -9,19 +9,22 @@ const should = require('should');
 const test = require('../test-data');
 
 var agent = request.agent(app);
-
+var agent_2 = request.agent(app);
 //TODO: break out logging in into a seperate file and require the agent from there
 
-before((done) => {
-    let new_user = new User(test.user);
-    new_user.save()
-        .then(user => {
-            done()
-        })
+before(async (done) => {
+    let new_user =  new User(test.user).save();
+    let new_user_2 = new User(test.user_2).save();
+    done()
 })
 
+// GLOBALS ------------------------------------------------------------------------
+
+let TEST_TRIP_ID;
+let TEST_DAY_ID;
+
 describe('Agent Login ----------------------------------------------- \n', () => {
-    it('Should log a user in', (done) => {
+    it('Should log user 1 in', (done) => {
         agent
             .post('/login')
             .send({
@@ -33,19 +36,32 @@ describe('Agent Login ----------------------------------------------- \n', () =>
                 done()
             })
     })
+
+    it('Should log user 2 in', (done) => {
+        agent_2
+            .post('/login')
+            .send({
+                email: test.user_2.local.email,
+                password: test.user_2.local.password
+            })
+            .expect(302)
+            .end((err, res) => {
+                done()
+            })
+    })
 })
 
 // TRIP ROUTES --------------------------------------------------------------
 
 describe('/trips - Routes --------------------------------------------------- \n ', () => {
-    let tripid;
-    let dayid;
+    // let TEST_TRIP_ID;
+    let TEST_DAY_ID;
     // create child resources
     before(async (done) => {
         let new_day = new Day(test.save_day);
         new_day.save()
             .then(day => {
-                dayid = String(day._id);
+                TEST_DAY_ID = String(day._id);
             })
             done()
     })
@@ -57,9 +73,9 @@ describe('/trips - Routes --------------------------------------------------- \n
             .expect(201)
             .end((err, res) => {
                 let trip = res.body;
-                tripid = trip._id;
+                TEST_TRIP_ID = trip._id;
                 trip.budget.currency.should.equal("USD")
-                trip._id.should.equal(tripid)
+                trip._id.should.equal(TEST_TRIP_ID)
                 done()
             })
     })
@@ -76,30 +92,30 @@ describe('/trips - Routes --------------------------------------------------- \n
 
     it('Should get trip by id', (done) => {
         agent
-            .get(`/trips/${tripid}`)
+            .get(`/trips/${TEST_TRIP_ID}`)
             .expect(200)
             .end((err, res) => {
                 res.body.budget.middleBound.should.equal(750);
-                res.body._id.should.equal(tripid)
+                res.body._id.should.equal(TEST_TRIP_ID)
                 done()
             })
     })
 
     it('Should add a day to the trip', (done) => {
         agent
-            .post(`/trips/${tripid}/days`)
-            .query({ dayid })
+            .post(`/trips/${TEST_TRIP_ID}/days`)
+            .query({ dayid: TEST_DAY_ID })
             .expect(200)
             .end((err, res) => {
                 let trip = res.body;
-                trip.days.should.containEql(dayid);
+                trip.days.should.containEql(TEST_DAY_ID);
                 done()
             })
     })
 
     it('Should update trip name', (done) => {
         agent
-            .put(`/trips/${tripid}`)
+            .put(`/trips/${TEST_TRIP_ID}`)
             .send({ name: 'Update test trip name' })
             .expect(200)
             .end((err, res) => {
@@ -110,20 +126,44 @@ describe('/trips - Routes --------------------------------------------------- \n
             })
     })
 
-    it('Should like a trip by id', (done) => {
+    it('Should BLOCK and update to trips name', (done) => {
         agent
-            .put(`/trips/${tripid}/likes`)
+            .put(`/trips/${TEST_TRIP_ID}`)
+            .send({ name: 'Update test trip name' })
+            .expect(200)
+            .end((err, res) => {
+                trip = res.body;
+                trip.name.should.equal("Update test trip name")
+                trip.slug.should.equal("update-test-trip-name")
+                done()
+            })
+    })
+
+    it('Should LIKE a trip by id', (done) => {
+        agent_2
+            .put(`/trips/${TEST_TRIP_ID}/likes`)
             .expect(200)
             .end((err, res) => {
                 let trip = res.body;
-                trip.meta.likes.should.equal(0)
+                trip.meta.likes.should.equal(1)
+                done()
+            })
+    })
+
+    it('Should VIEW a trip by id', (done) => {
+        agent_2
+            .get(`/trips/${TEST_TRIP_ID}`)
+            .expect(200)
+            .end((err, res) => {
+                let trip = res.body;
+                trip.meta.viewCount.should.equal(1)
                 done()
             })
     })
 
     it('Should delete trip by id', (done) => {
         agent
-            .delete(`/trips/${tripid}`)
+            .delete(`/trips/${TEST_TRIP_ID}`)
             .expect(200)
             .end((err, res) => {
                 res.body.msg.should.equal("Trip deleted succesfully")
@@ -133,7 +173,7 @@ describe('/trips - Routes --------------------------------------------------- \n
 
     // clean days
     after((done) => {
-        Day.findByIdAndDelete(dayid)
+        Day.findByIdAndDelete(TEST_DAY_ID)
             .then(d => {
                 done()
             })
@@ -143,7 +183,7 @@ describe('/trips - Routes --------------------------------------------------- \n
 // DAY ROUTES ---------------------------------------------------------------
 
 describe('/days - Routes ---------------------------------------------------- \n', () => {
-    let dayid;
+    let TEST_DAY_ID;
     let locationid;
 
 
@@ -161,7 +201,7 @@ describe('/days - Routes ---------------------------------------------------- \n
             .send(test.day_1)
             .expect(201)
             .end((err, res) => {
-                dayid = res.body._id;
+                TEST_DAY_ID = res.body._id;
                 res.body.budget.currency.should.equal('CAD')
                 should.not.exist(err);
                 done()
@@ -180,18 +220,18 @@ describe('/days - Routes ---------------------------------------------------- \n
 
     it('Should get day by id', (done) => {
         agent
-            .get(`/days/${dayid}`)
+            .get(`/days/${TEST_DAY_ID}`)
             .expect(200)
             .end((err, res) => {
                 res.body.budget.middleBound.should.equal(50);
-                res.body._id.should.equal(dayid)
+                res.body._id.should.equal(TEST_DAY_ID)
                 done()
             })
     })
 
     it('Should add a location to a day', (done) => {
         agent
-            .post(`/days/${dayid}/locations`)
+            .post(`/days/${TEST_DAY_ID}/locations`)
             .query({locationid:locationid})
             .expect(200)
             .end((err, res) => {
@@ -203,7 +243,7 @@ describe('/days - Routes ---------------------------------------------------- \n
 
     it('Should update day name', (done) => {
         agent
-            .put(`/days/${dayid}`)
+            .put(`/days/${TEST_DAY_ID}`)
             .send({ name: 'Update test day name' })
             .expect(200)
             .end((err, res) => {
@@ -216,7 +256,7 @@ describe('/days - Routes ---------------------------------------------------- \n
 
     it('Should delete day by id', (done) => {
         agent
-            .delete(`/days/${dayid}`)
+            .delete(`/days/${TEST_DAY_ID}`)
             .expect(200)
             .end((err, res) => {
                 res.body.msg.should.equal("Day deleted succesfully")
@@ -238,9 +278,12 @@ after("Log user out and delete", (done) => {
     User.findOneAndDelete({
         email: test.user.email,
     })
-        .then(duser => {
-            console.log("Deleted User")
-            done()
+    User.findOneAndDelete({
+        email: test.user_2.email,
+    })
+    .then(duser => {
+        console.log("Deleted User")
+        done()
         })
 })
 

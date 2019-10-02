@@ -78,7 +78,7 @@ const getTrip = async function (req, res, next) {
         if (!trip.settings.public)
             return unauthorizedMsg(res);
         else {
-            let tripWithNewView = await Trip.findByIdAndUpdate(tripid, { $inc: { 'meta.viewCount': 1 } });
+            let tripWithNewView = await Trip.findByIdAndUpdate(tripid, { $inc: { 'meta.viewCount': 1 } }, {new:true});
             return res.send(tripWithNewView);
         }
     } catch (err) { next(err) }

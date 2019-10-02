@@ -8,6 +8,13 @@ module.exports = {
             username: 'tester'
         }
     },
+    user_2: {
+        local: {
+            email: 'testuser2@mail.com',
+            password: 'testPassword',
+            username: 'tester2'
+        }
+    },
     trip_1: {
         "name": "Mexico 2019 - Bryce",
         "description": "A crazy booze filled trip for one",
