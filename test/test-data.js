@@ -59,6 +59,23 @@ module.exports = {
             "currency": "cad",
         }
     },
+    save_day_2: {
+        "name": "Sailing in Rome",
+        "slug": "just-a-test-day",
+        "description": "A day for sailing and enjoying drinks",
+        "tags": ["Sea", "Ocean", "Water", "Swimming"],
+        "settings": {
+            "public": true
+        },
+        "meta": {
+            "urlid": "Hae4NsQ"
+        },
+        "budget": {
+            "upperBound": 100,
+            "lowerBound": 0,
+            "currency": "cad",
+        }
+    },
     save_location: {
         "name": "Test Location",
         "slug": "some-test-location",

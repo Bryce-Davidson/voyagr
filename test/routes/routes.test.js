@@ -10,12 +10,13 @@ const test = require('../test-data');
 
 var agent = request.agent(app);
 var agent_2 = request.agent(app);
-//TODO: break out logging in into a seperate file and require the agent from there
 
-before(async (done) => {
-    let new_user =  new User(test.user).save();
-    let new_user_2 = new User(test.user_2).save();
-    done()
+before((done) => {
+    let new_user = new User(test.user).save().then(user => {
+        let new_user_2 = new User(test.user_2).save().then(user => {
+            done()
+        })
+    });
 })
 
 // GLOBALS ------------------------------------------------------------------------
@@ -51,12 +52,10 @@ describe('Agent Login ----------------------------------------------- \n', () =>
     })
 })
 
-// TRIP ROUTES --------------------------------------------------------------
+// TRIP OWNER AGENT ROUTES --------------------------------------------------------------
 
-describe('/trips - Routes --------------------------------------------------- \n ', () => {
-    // let TEST_TRIP_ID;
-    let TEST_DAY_ID;
-    // create child resources
+describe('/trips - OWNER - Routes --------------------------------------------------- \n ', () => {
+
     before(async (done) => {
         let new_day = new Day(test.save_day);
         new_day.save()
@@ -66,26 +65,24 @@ describe('/trips - Routes --------------------------------------------------- \n
             done()
     })
 
-    it("Should create trip", (done) => {
-        agent
-            .post('/trips')
-            .send(test.trip_1)
-            .expect(201)
-            .end((err, res) => {
-                let trip = res.body;
-                TEST_TRIP_ID = trip._id;
-                trip.budget.currency.should.equal("USD")
-                trip._id.should.equal(TEST_TRIP_ID)
-                done()
-            })
-    })
-
     it('Should get all trips array', (done) => {
         agent
             .get('/trips')
             .expect(200)
             .end((err, res) => {
                 should(res.body).is.Array;
+                done()
+            })
+    })
+
+    it("Should create a trip", (done) => {
+        agent
+            .post('/trips')
+            .send(test.trip_1)
+            .expect(201)
+            .end((err, res) => {
+                TEST_TRIP_ID = res.body._id;
+                res.body.budget.currency.should.equal('USD')
                 done()
             })
     })
@@ -126,17 +123,93 @@ describe('/trips - Routes --------------------------------------------------- \n
             })
     })
 
-    it('Should BLOCK and update to trips name', (done) => {
+    it('Should -NOT- LIKE a trip by id', (done) => {
         agent
-            .put(`/trips/${TEST_TRIP_ID}`)
-            .send({ name: 'Update test trip name' })
+            .put(`/trips/${TEST_TRIP_ID}/likes`)
             .expect(200)
             .end((err, res) => {
-                trip = res.body;
-                trip.name.should.equal("Update test trip name")
-                trip.slug.should.equal("update-test-trip-name")
+                let trip = res.body;
+                trip.meta.likes.should.equal(0)
                 done()
             })
+    })
+
+    it('Should -NOT- VIEW a trip by id', (done) => {
+        agent
+            .get(`/trips/${TEST_TRIP_ID}`)
+            .expect(200)
+            .end((err, res) => {
+                let trip = res.body;
+                trip.meta.viewCount.should.equal(0)
+                done()
+            })
+    })
+
+    it('Should delete trip by id', (done) => {
+        agent
+            .delete(`/trips/${TEST_TRIP_ID}`)
+            .expect(200)
+            .end((err, res) => {
+                res.body.msg.should.equal("Trip deleted succesfully")
+                done()
+            })
+    })
+
+    after((done) => {
+        Day.findByIdAndDelete(TEST_DAY_ID)
+            .then(d => {
+                done()
+            })
+    })
+})
+
+// TRIP VIEWER AGENT ROUTES --------------------------------------------------------------
+
+describe('/trips - VIEWER - Routes --------------------------------------------------- \n ', () => {
+
+    before(async (done) => {
+        let new_day = new Day(test.save_day);
+        new_day.save()
+            .then(day => {
+                TEST_DAY_ID = String(day._id);
+            })
+            done()
+    })
+
+    it('Should get all trips array', (done) => {
+        agent_2
+            .get('/trips')
+            .expect(200)
+            .end((err, res) => {
+                should(res.body).is.Array;
+                done()
+            })
+    })
+
+    it("Should create a trip -AGENT_1-", (done) => {
+        agent
+            .post('/trips')
+            .send(test.trip_1)
+            .expect(201)
+            .end((err, res) => {
+                TEST_TRIP_ID = res.body._id;
+                res.body.budget.currency.should.equal('USD')
+                done()
+            })
+    })
+
+    it('Should -NOT- add a day to the trip', (done) => {
+        agent_2
+            .post(`/trips/${TEST_TRIP_ID}/days`)            
+            .query({ dayid: TEST_DAY_ID })
+            .expect(401, done)
+    })
+
+    it('Should -NOT- update trip name', (done) => {
+        agent_2
+            .put(`/trips/${TEST_TRIP_ID}`)
+            .send({ name: 'Update test trip name' })
+            .expect(401, done)
     })
 
     it('Should LIKE a trip by id', (done) => {
@@ -161,6 +234,18 @@ describe('/trips - Routes --------------------------------------------------- \n
             })
     })
 
+    it('Should NOT delete trip by id', (done) => {
+        agent_2
+            .delete(`/trips/${TEST_TRIP_ID}`)
+            .expect(401, done)
+    })
+
+    it('Should -NOT- delete trip by id', (done) => {
+        agent_2
+            .delete(`/trips/${TEST_TRIP_ID}`)
+            .expect(401, done)
+    })
+
     it('Should delete trip by id', (done) => {
         agent
             .delete(`/trips/${TEST_TRIP_ID}`)
@@ -171,7 +256,6 @@ describe('/trips - Routes --------------------------------------------------- \n
             })
     })
 
-    // clean days
     after((done) => {
         Day.findByIdAndDelete(TEST_DAY_ID)
             .then(d => {
@@ -180,9 +264,14 @@ describe('/trips - Routes --------------------------------------------------- \n
     })
 })
 
-// DAY ROUTES ---------------------------------------------------------------
 
-describe('/days - Routes ---------------------------------------------------- \n', () => {
+
+
+
+
+// DAY OWNER AGENT ROUTES ---------------------------------------------------------------
+
+describe('/days - OWNER - Routes ---------------------------------------------------- \n', () => {
     let TEST_DAY_ID;
     let locationid;
 
