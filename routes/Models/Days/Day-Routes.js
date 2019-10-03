@@ -48,7 +48,7 @@ router.route('/:id/comments')
 
 router.route('/:id/likes')
     .get(getDayLikes)
-    .post(likeDay)
+    .put(likeDay)
     // .delete('unlike post')
 
 module.exports = router;

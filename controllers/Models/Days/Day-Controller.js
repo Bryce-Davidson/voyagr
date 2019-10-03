@@ -6,6 +6,8 @@ const flatten = require('flat');
 
 const ObjectId = require('mongoose').Types.ObjectId;
 
+const unauthorizedMsg = require('../../../util/http-response/unauthorized-msg');
+
 const slugify = require('../../../util/local-functions/slugify-string')
 const recursiveGenerateUniqueUrlid = require('../../../util/database/generate-unique-urlid');
 
@@ -63,16 +65,16 @@ const postDay = async function (req, res, next) {
 const getDay = async function (req, res, next) {
     let dayid = req.params.id;
     try {
-        let dayToSend = await Day.findById(dayid);
-        if (!dayToSend) return notExistMsg('Day', res);
-        if (isOwner(dayToSend, req.user))
-            return res.send(dayToSend);
-        if (!dayToSend.settings.public)
+        let day = await Day.findById(dayid);
+        if (!day) return resourceDoesNotExistMsg('day', res);
+        if (isOwner(day, req.user))
+            return res.send(day);
+        if (!day.settings.public)
             return unauthorizedMsg(res);
         else {
-            let updatedDay = await Day.findByIdAndUpdate(dayid, { $inc: { 'meta.viewCount': 1 } })
-            return res.send(updatedDay)
-        } 
+            let dayWithNewView = await Day.findByIdAndUpdate(dayid, { $inc: { 'meta.viewCount': 1 } }, {new:true});
+            return res.send(dayWithNewView);
+        }
     } catch (err) { next(err) }
 }
 
@@ -175,12 +177,15 @@ const getDayLikes = async function (req, res, next) {
 }
 
 const likeDay = async function (req, res, next) {
-    try {
-        let likedPost = await Day.findByIdAndUpdate(req.params.id, {
-            $inc: { 'meta.likes': 1 }
-        }, { new: true })
-        return res.send(likedPost);
-    } catch (err) { next(err) }
+    let dayid = req.params.id;
+    let day_to_be_liked = await Day.findById(dayid);
+    if (!day_to_be_liked) return resourceDoesNotExistMsg('Day', res);
+    if (isOwner(day_to_be_liked, req.user)) {
+        return res.send(day_to_be_liked)
+    } else {
+        let liked_day = await Day.findByIdAndUpdate(dayid, { $inc: { 'meta.likes': 1 } }, { new: true })
+        return res.send(liked_day);
+    }
 }
 
 const getDayComments = async function (req, res, next) {

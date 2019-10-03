@@ -11,8 +11,6 @@ const slugify = require('../../../util/local-functions/slugify-string');
 const resourceDoesNotExistMsg = require('../../../util/http-response/resource-does-not-exist-msg');
 const unauthorizedMsg = require('../../../util/http-response/unauthorized-msg');
 
-const { keysContainString } = require('../../../util/auth/instance-validation');
-
 const Pipeline = require('../../../modules/aggregation/pipeline-queue');
 const {
     trip_Project,
@@ -194,7 +192,7 @@ const likeTrip = async function (req, res, next) {
     //TODO: make sure users who have already liked the post can't like again
     let tripid = req.params.id;
     let trip_to_be_liked = await Trip.findById(tripid);
-    if (!trip_to_be_liked) return resourceDoesNotExistMsg('Day', res);
+    if (!trip_to_be_liked) return resourceDoesNotExistMsg('Trip', res);
     if (isOwner(trip_to_be_liked, req.user)) {
         return res.send(trip_to_be_liked)
     } else {

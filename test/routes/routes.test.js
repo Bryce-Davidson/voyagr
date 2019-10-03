@@ -23,6 +23,7 @@ before((done) => {
 
 let TEST_TRIP_ID;
 let TEST_DAY_ID;
+let TEST_LOCATION_ID;
 
 describe('Agent Login ----------------------------------------------- \n', () => {
     it('Should log user 1 in', (done) => {
@@ -318,6 +319,28 @@ describe('/days - OWNER - Routes -----------------------------------------------
             })
     })
 
+    it('Should -NOT- LIKE a day by id', (done) => {
+        agent
+            .put(`/days/${TEST_DAY_ID}/likes`)
+            .expect(200)
+            .end((err, res) => {
+                let day = res.body;
+                day.meta.likes.should.equal(0)
+                done()
+            })
+    })
+
+    it('Should -NOT- VIEW a day by id', (done) => {
+        agent
+            .get(`/days/${TEST_DAY_ID}`)
+            .expect(200)
+            .end((err, res) => {
+                let day = res.body;
+                day.meta.viewCount.should.equal(0)
+                done()
+            })
+    })
+
     it('Should add a location to a day', (done) => {
         agent
             .post(`/days/${TEST_DAY_ID}/locations`)
@@ -361,6 +384,99 @@ describe('/days - OWNER - Routes -----------------------------------------------
     })
 
 })
+
+
+
+describe('/days - VIEWER - Routes --------------------------------------------------- \n ', () => {
+
+    before((done) => {
+        let location = new Location(test.save_location).save()
+            .then(loc => {
+                TEST_LOCATION_ID = String(loc._id);
+                done()
+            })
+    })
+
+    it("Should create a day -AGENT_1-", (done) => {
+        agent
+            .post('/days')
+            .send(test.day_1)
+            .expect(201)
+            .end((err, res) => {
+                TEST_DAY_ID = res.body._id;
+                res.body.budget.currency.should.equal('CAD')
+                done()
+            })
+    })
+
+    it('Should -NOT- add a location to the day', (done) => {
+        agent_2
+            .post(`/days/${TEST_DAY_ID}/locations`)            
+            .query({ locationid: TEST_LOCATION_ID })
+            .expect(401, done)
+    })
+
+    it('Should -NOT- update day name', (done) => {
+        agent_2
+            .put(`/days/${TEST_DAY_ID}`)
+            .send({ name: 'Update test trip name' })
+            .expect(401, done)
+    })
+
+    it('Should LIKE a day by id', (done) => {
+        agent_2
+            .put(`/days/${TEST_DAY_ID}/likes`)
+            .expect(200)
+            .end((err, res) => {
+                let trip = res.body;
+                trip.meta.likes.should.equal(1)
+                done()
+            })
+    })
+
+    it('Should VIEW a day by id', (done) => {
+        agent_2
+            .get(`/days/${TEST_DAY_ID}`)
+            .expect(200)
+            .end((err, res) => {
+                let day = res.body;
+                day.meta.viewCount.should.equal(1)
+                done()
+            })
+    })
+
+    it('Should -NOT- delete day by id', (done) => {
+        agent_2
+            .delete(`/days/${TEST_DAY_ID}`)
+            .expect(401, done)
+    })
+
+    it('Should -NOT- delete day by id', (done) => {
+        agent_2
+            .delete(`/days/${TEST_DAY_ID}`)
+            .expect(401, done)
+    })
+
+    it('Should delete day by id', (done) => {
+        agent
+            .delete(`/days/${TEST_DAY_ID}`)
+            .expect(200)
+            .end((err, res) => {
+                res.body.msg.should.equal("Day deleted succesfully")
+                done()
+            })
+    })
+
+    after((done) => {
+        Location.findByIdAndDelete(TEST_DAY_ID)
+            .then(d => {
+                done()
+            })
+    })
+})
+
+
+//  LOCATION TESTING
 
 after("Log user out and delete", (done) => {
 
