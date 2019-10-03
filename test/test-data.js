@@ -42,6 +42,16 @@ module.exports = {
         "currency": "cad",
         "public": true
     },
+    location_1: {
+        "name": "Test Location",
+        "type": "Restaurant",
+        "description": "Test location and should be deleted",
+        "tags": ["one", "two", "three"],
+        "upperBound": 1000,
+        "lowerBound": 500,
+        "currency": 'usd',
+        "coordinates": [40.7143528, -74.0059731],
+    },
     save_day: {
         "name": "Sailing in Rome",
         "slug": "just-a-test-day",

@@ -15,12 +15,12 @@ const getLocations = async function (req, res, next) {
 }
 
 const postLocation = async function (req, res, next) {
-  const { coordinates, name, tags, upperBound, lowerBound, type } = req.body
+  const { coordinates, name, tags, upperBound, lowerBound, type, currency } = req.body
   let slug = await slugify(name);
   coordinates.reverse();
   let uniqueid = await recursiveGenerateUniqueUrlid(slug, Location);
 
-  let saved_location = new Location({
+  let saved_location = await new Location({
     "name": name,
     "slug": slug,
     "user": req.user,
@@ -31,10 +31,10 @@ const postLocation = async function (req, res, next) {
     },
     "tags": tags,
     "meta": { urlid: uniqueid },
-    "budget": { upperBound, lowerBound }
+    "budget": { upperBound, lowerBound, currency }
   }).save();
   await User.findByIdAndUpdate(req.user, {posts: {locations: saved_location._id}})
-  return res.send(saved_trip)
+  return res.send(saved_location)
 }
 
 const getLocation = async function (req, res, next) {
