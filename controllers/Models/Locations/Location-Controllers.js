@@ -5,13 +5,35 @@ const { isOwner } = require('../../../util/auth/instance-validation');
 const recursiveGenerateUniqueUrlid = require('../../../util/database/generate-unique-urlid');
 const slugify = require('../../../util/local-functions/slugify-string');
 
+const {
+  location_Project,
+  location_Match,
+  location_Featured,
+  location_Limit
+} = require('../../../modules/aggregation/Location/location-stages');
+
+const Pipeline = require('../../../modules/aggregation/pipeline-queue')
+
 const flatten = require('flat');
 
-const AWS = require('aws-sdk')
-const S3 = new AWS.S3()
-
 const getLocations = async function (req, res, next) {
-  //TODO: integrate new api
+  let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by, sort_by  } = req.query;
+    let limit = Number(pagenation) || 15;
+    try {
+        let pipe = new Pipeline();
+        let match_stage = new location_Match()
+            .text(text)
+            .tags(tags)
+            .budget(min_budget, max_budget)
+        let project_stage = new location_Project()
+            .paths(paths)
+            .omit(omit)
+        let featured_stage  = new location_Featured(null, -1).by(featured_by)
+        let limit_stage  = new location_Limit(null, limit)
+        pipe.enqueue_many(match_stage, project_stage, featured_stage , limit_stage )
+        let docs = await Location.aggregate(pipe.pipeline);
+        return res.send(docs);
+    } catch (err) { next(err) }
 }
 
 const postLocation = async function (req, res, next) {
@@ -87,6 +109,9 @@ const deleteLocation = async function (req, res, next) {
       return unauthorizedMsg(res);
   } catch (err) { next(err) };
 }
+
+// TODO: integrate owner for likes
+// TODO: integrate get likes from days or trips
 
 const likeLocation = async function (req, res, next) {
   let likedLocation = await Location.findByIdAndUpdate(req.params.id, {

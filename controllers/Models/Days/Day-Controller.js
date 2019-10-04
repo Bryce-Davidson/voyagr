@@ -23,6 +23,8 @@ const Pipeline = require('../../../modules/aggregation/pipeline-queue')
 const AWS = require('aws-sdk')
 const S3 = new AWS.S3()
 
+// TODO: integrate sort api into the find all functionality
+
 const getDays = async function (req, res, next) {
     let { text, tags, min_budget, max_budget, paths, omit, pagenation, featured_by, sort_by  } = req.query;
     let limit = Number(pagenation) || 15;
@@ -40,7 +42,8 @@ const getDays = async function (req, res, next) {
         pipe.enqueue_many(match_stage, project_stage, featured_stage , limit_stage )
         let docs = await Day.aggregate(pipe.pipeline);
         return res.send(docs);
-    } catch (err) { next(err) }}
+    } catch (err) { next(err) }
+}
 
 const postDay = async function (req, res, next) {
     let { name, description, tags, upperBound, lowerBound, public, currency } = req.body;

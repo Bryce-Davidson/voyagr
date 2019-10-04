@@ -9,7 +9,7 @@ const {
 const { 
   getLocation,
   updateLocation,
-  deleteLocation  
+  deleteLocation,
 } = require('../../../controllers/Models/Locations/location-controllers').LocationResource;
 
 router.post('*', isLoggedIn);
@@ -29,9 +29,9 @@ router.route('/:id')
     // .get('get all posts comments')
     // .post('add new comment')
 
-// router.route('/:id/likes')
-    // .get('get of users who like post')
-    // .post('like trip with user - {cant like own post}')
+router.route('/:id/likes')
+    .get('get of users who like post')
+    .put('like trip with user - {cant like own post}')
     // .delete('unlike post')
 
 

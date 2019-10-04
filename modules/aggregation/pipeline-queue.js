@@ -67,7 +67,6 @@ class v_Pipeline {
         // for each item in the this.items array
         // compare the (stage.index) to items[i].index
         for (var i = 0; i < this.items.length; i++) {
-            // if the .index of the [item] has a higher .index than (stage.index)
             // splice in the (stage) at the items[i]
             if (this.items[i].index >= stage.index) {
                 console.warn(`!!! WARNING !!! Atempted to enqueue a stage earlier than {$text} stage. inserted at index: ${i + 1} instead. Pleade check stage indexes.`);
