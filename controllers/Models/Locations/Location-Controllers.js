@@ -104,7 +104,7 @@ const deleteLocation = async function (req, res, next) {
     if (!location) return notExistMsg('Location', res);
     if (isOwner(location, req.user)) {
       await location.remove();
-      return res.status(200);
+      return res.status(200).json({ msg: "Location deleted succesfully" });
     } else
       return unauthorizedMsg(res);
   } catch (err) { next(err) };
@@ -114,10 +114,15 @@ const deleteLocation = async function (req, res, next) {
 // TODO: integrate get likes from days or trips
 
 const likeLocation = async function (req, res, next) {
-  let likedLocation = await Location.findByIdAndUpdate(req.params.id, {
-    $inc: { 'meta.likes': 1 }
-  }, { new: true });
-  return res.send(likeLocation);
+  let locationid = req.params.id;
+    let location_to_be_liked = await Location.findById(locationid);
+    if (!location_to_be_liked) return resourceDoesNotExistMsg('location', res);
+    if (isOwner(location_to_be_liked, req.user)) {
+        return res.send(location_to_be_liked)
+    } else {
+        let liked_location = await Location.findByIdAndUpdate(locationid, { $inc: { 'meta.likes': 1 } }, { new: true })
+        return res.send(liked_location);
+    }
 }
 
 const commentLocation = async function (req, res, next) {

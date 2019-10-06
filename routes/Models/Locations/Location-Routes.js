@@ -12,6 +12,11 @@ const {
   deleteLocation,
 } = require('../../../controllers/Models/Locations/location-controllers').LocationResource;
 
+const {
+  likeLocation,
+  commentLocation
+} = require('../../../controllers/models/Locations/location-controllers').LocationMeta
+
 router.post('*', isLoggedIn);
 router.put('*', isLoggedIn);
 router.delete('*', isLoggedIn);
@@ -30,8 +35,8 @@ router.route('/:id')
     // .post('add new comment')
 
 router.route('/:id/likes')
-    .get('get of users who like post')
-    .put('like trip with user - {cant like own post}')
+    // .get()
+    .put(likeLocation)
     // .delete('unlike post')
 
 

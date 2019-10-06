@@ -544,12 +544,12 @@ describe('/locations - OWNER - Routes ------------------------------------------
             })
     })
 
-    it('Should delete day by id', (done) => {
+    it('Should delete location by id', (done) => {
         agent
-            .delete(`/days/${TEST_DAY_ID}`)
+            .delete(`/locations/${TEST_LOCATION_ID}`)
             .expect(200)
             .end((err, res) => {
-                res.body.msg.should.equal("Day deleted succesfully")
+                res.body.msg.should.equal("Location deleted succesfully")
                 done()
             })
     })
