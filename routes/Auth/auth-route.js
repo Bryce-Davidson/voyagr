@@ -9,26 +9,13 @@ const {
 
 router.route('/signup')
   .get(signup.get)
-  .post(passport.authenticate('local-signup', {
-      successRedirect : '/',
-      failureRedirect : '/signup?alreadyExists=true',
-      failureFlash : true
-  }));
+  .post(signup.post)
 
 router.route('/login')
-// .get(loggedInRedirect, login.get)
-.post(login.post)
-// .post(passport.authenticate('local-login', {
-//     successRedirect : '/',
-//     failureRedirect : '/login',
-//     failureFlash : true
-// }));
+  .get(login.get)
+  .post(login.post)
 
-router.route('/logout')
-  .get((req, res, next) => {
-        req.logout();
-        req.session.destroy()
-        res.redirect('/');
-  })
+// router.route('/logout')
+  // .get()
 
 module.exports = router;
