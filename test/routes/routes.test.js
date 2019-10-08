@@ -169,6 +169,7 @@ describe('/trips - OWNER - Routes ----------------------------------------------
             })
             .end((err, res) => {
                 let trip = res.body;
+                TEST_TRIP_COMMENT_1 = trip.comments[0].id;
                 trip.meta.numberOfComments.should.equal(1);
                 trip.comments.length.should.equal(1);
                 done()
