@@ -52,7 +52,7 @@ app.use(function mongoErrors(err, req, res, next) {
 
 // INDEX ----------------------------------------------------------------------
 app.get('/', (req, res, next) => {
-    res.json({msg: 'Home'});
+  return res.json({msg: 'Home'})
 });
 
 module.exports = app;

@@ -2,8 +2,10 @@ const User = require('../../models/User/UserSchema');
 const jwt = require('jsonwebtoken');
 const { SECRET } = require('../../config/keys');
 
+const ONE_DAY_IN_MILLISECONDS = 86400000;
+
+
 // SIGNUP ---------------------------------------------------------------------
-// IMPLEMENT WITH JWT
 const signup = {
   post: async (req, res, next) => {
     let { email, password, username } = req.body;
@@ -20,7 +22,7 @@ const signup = {
         jwt.sign({ user: newUser.id }, SECRET, { expiresIn: '1d' }, (err, token) => {
           if (err) next(err);
           else {
-            res.header({'X-voyagr-token': token})
+            res.cookie('voyagr-authorization', token, {maxAge: ONE_DAY_IN_MILLISECONDS})
             res.redirect('/')
           }
         })
@@ -43,8 +45,10 @@ const login = {
       else {
         jwt.sign({ user: userToLogin.id }, SECRET, { expiresIn: '1d' }, (err, token) => {
           if (err) next(err);
-          else
-            return res.json({ token })
+          else {
+            res.cookie('voyagr-authorization', token, {maxAge: ONE_DAY_IN_MILLISECONDS})
+            return res.redirect('/')
+          }
         })
       }
     } catch (err) { next(err) }

@@ -24,8 +24,17 @@ before((done) => {
 let TEST_TRIP_ID;
 let TEST_DAY_ID;
 let TEST_LOCATION_ID;
-let TEST_TOKEN_1;
-let TEST_TOKEN_2;
+
+let TEST_TRIP_COMMENT_1;
+let TEST_TRIP_COMMENT_2;
+
+let TEST_DAY_COMMENT_1;
+let TEST_DAY_COMMENT_2;
+
+let TEST_LOCATION_COMMENT_1;
+let TEST_LOCATION_COMMENT_2;
+
+
 
 describe('Agent Login ----------------------------------------------- \n', () => {
     it('Should log user 1 in', (done) => {
@@ -37,7 +46,6 @@ describe('Agent Login ----------------------------------------------- \n', () =>
             })
             .expect(302)
             .end((err, res) => {
-                TEST_TOKEN_1 = res.body.token;
                 done()
             })
     })
@@ -51,7 +59,6 @@ describe('Agent Login ----------------------------------------------- \n', () =>
             })
             .expect(302)
             .end((err, res) => {
-                TEST_TOKEN_2 = res.body.token;
                 done()
             })
     })
@@ -84,7 +91,6 @@ describe('/trips - OWNER - Routes ----------------------------------------------
     it("Should create a trip", (done) => {
         agent
             .post('/trips')
-            .set({'authorization': TEST_TOKEN_1})
             .send(test.trip_1)
             .expect(201)
             .end((err, res) => {
@@ -99,7 +105,6 @@ describe('/trips - OWNER - Routes ----------------------------------------------
     it('Should get trip by id', (done) => {
         agent
             .get(`/trips/${TEST_TRIP_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 res.body.budget.middleBound.should.equal(750);
@@ -111,7 +116,6 @@ describe('/trips - OWNER - Routes ----------------------------------------------
     it('Should add a day to the trip', (done) => {
         agent
             .post(`/trips/${TEST_TRIP_ID}/days`)
-            .set({'authorization': TEST_TOKEN_1})
             .query({ dayid: TEST_DAY_ID })
             .expect(200)
             .end((err, res) => {
@@ -124,7 +128,6 @@ describe('/trips - OWNER - Routes ----------------------------------------------
     it('Should update trip name', (done) => {
         agent
             .put(`/trips/${TEST_TRIP_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .send({ name: 'Update test trip name' })
             .expect(200)
             .end((err, res) => {
@@ -138,7 +141,6 @@ describe('/trips - OWNER - Routes ----------------------------------------------
     it('Should -NOT- LIKE a trip by id', (done) => {
         agent
             .put(`/trips/${TEST_TRIP_ID}/likes`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 let trip = res.body;
@@ -150,7 +152,6 @@ describe('/trips - OWNER - Routes ----------------------------------------------
     it('Should -NOT- VIEW a trip by id', (done) => {
         agent
             .get(`/trips/${TEST_TRIP_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 let trip = res.body;
@@ -159,10 +160,23 @@ describe('/trips - OWNER - Routes ----------------------------------------------
             })
     })
 
+    it('Should add a comment to a trip by id', (done) => {
+        agent
+            .post(`trips/${TEST_TRIP_ID}/comments`)
+            .send({
+                commentBody: "this is a test comment and should be deleted",
+                title: "test comment"
+            })
+            .end((err, res) => {
+                let trip = res.body;
+                trip.meta.numberOfComments.should.equal(1);
+                trip.comments.length.should.equal(1);
+            })
+    })
+
     it('Should delete trip by id', (done) => {
         agent
             .delete(`/trips/${TEST_TRIP_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 res.body.msg.should.equal("Trip deleted succesfully")
@@ -204,7 +218,6 @@ describe('/trips - VIEWER - Routes ---------------------------------------------
     it("Should create a trip -AGENT_1-", (done) => {
         agent
             .post('/trips')
-            .set({'authorization': TEST_TOKEN_1})
             .send(test.trip_1)
             .expect(201)
             .end((err, res) => {
@@ -216,8 +229,7 @@ describe('/trips - VIEWER - Routes ---------------------------------------------
 
     it('Should -NOT- add a day to the trip', (done) => {
         agent_2
-            .post(`/trips/${TEST_TRIP_ID}/days`)
-            .set({'authorization': TEST_TOKEN_2})       
+            .post(`/trips/${TEST_TRIP_ID}/days`)       
             .query({ dayid: TEST_DAY_ID })
             .expect(401, done)
     })
@@ -225,7 +237,6 @@ describe('/trips - VIEWER - Routes ---------------------------------------------
     it('Should -NOT- update trip name', (done) => {
         agent_2
             .put(`/trips/${TEST_TRIP_ID}`)
-            .set({'authorization': TEST_TOKEN_2})
             .send({ name: 'Update test trip name' })
             .expect(401, done)
     })
@@ -233,7 +244,6 @@ describe('/trips - VIEWER - Routes ---------------------------------------------
     it('Should LIKE a trip by id', (done) => {
         agent_2
             .put(`/trips/${TEST_TRIP_ID}/likes`)
-            .set({'authorization': TEST_TOKEN_2})
             .expect(200)
             .end((err, res) => {
                 let trip = res.body;
@@ -256,14 +266,12 @@ describe('/trips - VIEWER - Routes ---------------------------------------------
     it('Should -NOT- delete trip by id', (done) => {
         agent_2
             .delete(`/trips/${TEST_TRIP_ID}`)
-            .set({'authorization': TEST_TOKEN_2})
             .expect(401, done)
     })
 
     it('Should delete trip by id', (done) => {
         agent
             .delete(`/trips/${TEST_TRIP_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 res.body.msg.should.equal("Trip deleted succesfully")
@@ -298,7 +306,6 @@ describe('/days - OWNER - Routes -----------------------------------------------
     it("Should create a day", (done) => {
         agent
             .post('/days')
-            .set({'authorization': TEST_TOKEN_1})
             .send(test.day_1)
             .expect(201)
             .end((err, res) => {
@@ -321,7 +328,6 @@ describe('/days - OWNER - Routes -----------------------------------------------
     it('Should get day by id', (done) => {
         agent
             .get(`/days/${TEST_DAY_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 let day = res.body;
@@ -334,7 +340,6 @@ describe('/days - OWNER - Routes -----------------------------------------------
     it('Should -NOT- LIKE a day by id', (done) => {
         agent
             .put(`/days/${TEST_DAY_ID}/likes`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 let day = res.body;
@@ -346,7 +351,6 @@ describe('/days - OWNER - Routes -----------------------------------------------
     it('Should -NOT- VIEW a day by id', (done) => {
         agent
             .get(`/days/${TEST_DAY_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 let day = res.body;
@@ -358,7 +362,6 @@ describe('/days - OWNER - Routes -----------------------------------------------
     it('Should add a location to a day', (done) => {
         agent
             .post(`/days/${TEST_DAY_ID}/locations`)
-            .set({'authorization': TEST_TOKEN_1})
             .query({locationid:locationid})
             .expect(200)
             .end((err, res) => {
@@ -371,7 +374,6 @@ describe('/days - OWNER - Routes -----------------------------------------------
     it('Should update day name', (done) => {
         agent
             .put(`/days/${TEST_DAY_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .send({ name: 'Update test day name' })
             .expect(200)
             .end((err, res) => {
@@ -385,7 +387,6 @@ describe('/days - OWNER - Routes -----------------------------------------------
     it('Should delete day by id', (done) => {
         agent
             .delete(`/days/${TEST_DAY_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 res.body.msg.should.equal("Day deleted succesfully")
@@ -418,7 +419,6 @@ describe('/days - VIEWER - Routes ----------------------------------------------
     it("Should create a day -AGENT_1-", (done) => {
         agent
             .post('/days')
-            .set({'authorization': TEST_TOKEN_1})
             .send(test.day_1)
             .expect(201)
             .end((err, res) => {
@@ -430,8 +430,7 @@ describe('/days - VIEWER - Routes ----------------------------------------------
 
     it('Should -NOT- add a location to the day', (done) => {
         agent_2
-            .post(`/days/${TEST_DAY_ID}/locations`)  
-            .set({'authorization': TEST_TOKEN_2})          
+            .post(`/days/${TEST_DAY_ID}/locations`)            
             .query({ locationid: TEST_LOCATION_ID })
             .expect(401, done)
     })
@@ -439,7 +438,6 @@ describe('/days - VIEWER - Routes ----------------------------------------------
     it('Should -NOT- update day name', (done) => {
         agent_2
             .put(`/days/${TEST_DAY_ID}`)
-            .set({'authorization': TEST_TOKEN_2})
             .send({ name: 'Update test trip name' })
             .expect(401, done)
     })
@@ -447,7 +445,6 @@ describe('/days - VIEWER - Routes ----------------------------------------------
     it('Should LIKE a day by id', (done) => {
         agent_2
             .put(`/days/${TEST_DAY_ID}/likes`)
-            .set({'authorization': TEST_TOKEN_2})
             .expect(200)
             .end((err, res) => {
                 let trip = res.body;
@@ -482,7 +479,6 @@ describe('/days - VIEWER - Routes ----------------------------------------------
     it('Should delete day by id', (done) => {
         agent
             .delete(`/days/${TEST_DAY_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 res.body.msg.should.equal("Day deleted succesfully")
@@ -505,7 +501,6 @@ describe('/locations - OWNER - Routes ------------------------------------------
     it("Should create a location", (done) => {
         agent
             .post('/locations')
-            .set({'authorization': TEST_TOKEN_1})
             .send(test.location_1)
             .expect(201)
             .end((err, res) => {
@@ -528,7 +523,6 @@ describe('/locations - OWNER - Routes ------------------------------------------
     it('Should get location by id', (done) => {
         agent
             .get(`/locations/${TEST_LOCATION_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 res.body._id.should.equal(TEST_LOCATION_ID)
@@ -539,7 +533,6 @@ describe('/locations - OWNER - Routes ------------------------------------------
     it('Should -NOT- LIKE a location by id', (done) => {
         agent
             .put(`/locations/${TEST_LOCATION_ID}/likes`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 let location = res.body;
@@ -551,7 +544,6 @@ describe('/locations - OWNER - Routes ------------------------------------------
     it('Should -NOT- VIEW a location by id', (done) => {
         agent
             .get(`/locations/${TEST_LOCATION_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 let location = res.body;
@@ -563,7 +555,6 @@ describe('/locations - OWNER - Routes ------------------------------------------
     it('Should update location name', (done) => {
         agent
             .put(`/locations/${TEST_LOCATION_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .send({ name: 'Update test location name' })
             .expect(200)
             .end((err, res) => {
@@ -577,7 +568,6 @@ describe('/locations - OWNER - Routes ------------------------------------------
     it('Should delete location by id', (done) => {
         agent
             .delete(`/locations/${TEST_LOCATION_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 res.body.msg.should.equal("Location deleted succesfully")
@@ -592,7 +582,6 @@ describe('/locations - VIEWER - Routes -----------------------------------------
     it("Should create a location -Agent1-", (done) => {
         agent
             .post('/locations')
-            .set({'authorization': TEST_TOKEN_1})
             .send(test.location_1)
             .expect(201)
             .end((err, res) => {
@@ -615,7 +604,6 @@ describe('/locations - VIEWER - Routes -----------------------------------------
     it('Should LIKE a location by id', (done) => {
         agent_2
             .put(`/locations/${TEST_LOCATION_ID}/likes`)
-            .set({'authorization': TEST_TOKEN_2})
             .expect(200)
             .end((err, res) => {
                 let location = res.body;
@@ -627,7 +615,6 @@ describe('/locations - VIEWER - Routes -----------------------------------------
     it('Should VIEW a location by id', (done) => {
         agent_2
             .get(`/locations/${TEST_LOCATION_ID}`)
-            .set({'authorization': TEST_TOKEN_2})
             .expect(200)
             .end((err, res)=> {
                 let location = res.body;
@@ -640,7 +627,6 @@ describe('/locations - VIEWER - Routes -----------------------------------------
     it('Should -NOT- update location name', (done) => {
         agent_2
             .put(`/locations/${TEST_LOCATION_ID}`)
-            .set({'authorization': TEST_TOKEN_2})
             .send({ name: 'Update test location name' })
             .expect(401, done)
     })
@@ -648,7 +634,6 @@ describe('/locations - VIEWER - Routes -----------------------------------------
     it('Should delete location by id', (done) => {
         agent
             .delete(`/locations/${TEST_LOCATION_ID}`)
-            .set({'authorization': TEST_TOKEN_1})
             .expect(200)
             .end((err, res) => {
                 res.body.msg.should.equal("Location deleted succesfully")

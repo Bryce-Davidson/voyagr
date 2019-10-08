@@ -214,16 +214,16 @@ const getTripComments = async function (req, res, next) {
     } catch (err) { next(err) };
 }
 
-// We have these written pretty wet to increase the functionality of future releases
 const postCommentTrip = async function (req, res, next) {
     let postid = req.params.id;
-    let comment = new Comment({
-        'tripid': postid,
-        "user": req.user,
-        "body": req.body.body
-    });
+    let { commentBody, title } = req.body;
     try {
-        let savedComment = comment.save()
+        let savedComment = await new Comment({
+            'tripid': postid,
+            "user": req.user,
+            "body": commentBody,
+            title
+        }).save();
         let tripWithComment = await Trip.findByIdAndUpdate(req.params.id, {
             $inc: { 'meta.numberOfComments': 1 },
             $push: { comments: savedComment._id }
