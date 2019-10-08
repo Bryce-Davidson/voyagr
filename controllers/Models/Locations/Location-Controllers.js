@@ -1,6 +1,8 @@
 const Location = require('../../../models/Location/LocationSchema');
 const User = require('../../../models/User/UserSchema');
 const { isOwner } = require('../../../util/auth/instance-validation');
+const unauthorizedMsg = require('../../../util/http-response/unauthorized-msg');
+
 
 const recursiveGenerateUniqueUrlid = require('../../../util/database/generate-unique-urlid');
 const slugify = require('../../../util/local-functions/slugify-string');
@@ -69,7 +71,7 @@ const getLocation = async function (req, res, next) {
     if (!locationToSend.settings.public)
       return unauthorizedMsg(res);
     else {
-      let updatdLocation = Location.findByIdAndUpdate(locationid, { $inc: { 'meta.viewCount': 1 } })
+      let updatdLocation = await Location.findByIdAndUpdate(locationid, { $inc: { 'meta.viewCount': 1 } }, {new: true})
       return res.send(updatdLocation);
     }
   } catch (err) { next(err) }

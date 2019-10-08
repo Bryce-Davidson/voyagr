@@ -586,6 +586,78 @@ describe('/locations - OWNER - Routes ------------------------------------------
     })
 })
 
+//  LOCATION VIEW TESTING -------------------------------------------------------------
+
+describe('/locations - VIEWER - Routes --------------------------------------------------- \n ', () => {
+    it("Should create a location -Agent1-", (done) => {
+        agent
+            .post('/locations')
+            .set({'authorization': TEST_TOKEN_1})
+            .send(test.location_1)
+            .expect(201)
+            .end((err, res) => {
+                TEST_LOCATION_ID = res.body._id;
+                done()
+            })
+    })
+
+    it('Should get all locations array', (done) => {
+        agent_2
+            .get('/locations')
+            .expect(200)
+            .end((err, res) => {
+                should(res.body).is.Array;
+                res.body.length.should.be.lessThanOrEqual(15)
+                done()
+            })
+    })
+
+    it('Should LIKE a location by id', (done) => {
+        agent_2
+            .put(`/locations/${TEST_LOCATION_ID}/likes`)
+            .set({'authorization': TEST_TOKEN_2})
+            .expect(200)
+            .end((err, res) => {
+                let location = res.body;
+                location.meta.likes.should.equal(1)
+                done()
+            })
+    })
+
+    it('Should VIEW a location by id', (done) => {
+        agent_2
+            .get(`/locations/${TEST_LOCATION_ID}`)
+            .set({'authorization': TEST_TOKEN_2})
+            .expect(200)
+            .end((err, res)=> {
+                let location = res.body;
+                location.meta.viewCount.should.equal(1)
+                done()
+            })
+
+    })
+
+    it('Should -NOT- update location name', (done) => {
+        agent_2
+            .put(`/locations/${TEST_LOCATION_ID}`)
+            .set({'authorization': TEST_TOKEN_2})
+            .send({ name: 'Update test location name' })
+            .expect(401, done)
+    })
+
+    it('Should delete location by id', (done) => {
+        agent
+            .delete(`/locations/${TEST_LOCATION_ID}`)
+            .set({'authorization': TEST_TOKEN_1})
+            .expect(200)
+            .end((err, res) => {
+                res.body.msg.should.equal("Location deleted succesfully")
+                done()
+            })
+    })
+})
+
+
 after("Log user out and delete", (done) => {
 
     User.findOneAndDelete({
