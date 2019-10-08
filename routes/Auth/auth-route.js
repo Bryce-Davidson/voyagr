@@ -17,11 +17,12 @@ router.route('/signup')
 
 router.route('/login')
 .get(loggedInRedirect, login.get)
-.post(passport.authenticate('local-login', {
-    successRedirect : '/',
-    failureRedirect : '/login',
-    failureFlash : true
-}));
+.post(login.post)
+// .post(passport.authenticate('local-login', {
+//     successRedirect : '/',
+//     failureRedirect : '/login',
+//     failureFlash : true
+// }));
 
 router.route('/logout')
   .get((req, res, next) => {

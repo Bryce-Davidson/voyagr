@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { isLoggedIn } = require('../../../util/auth/auth-status');
+const jwt = require('jsonwebtoken');
+const verifyToken    = require('../../../util/middleware/verifyToken');
 const { 
     getTrips, 
     postTrip 
@@ -21,7 +23,7 @@ const {
     getTripLikes
 } = require('../../../controllers/Models/Trip/trip-controller').tripMeta;
 
-router.post('*', isLoggedIn);
+// router.post('*', isLoggedIn);
 router.put('*', isLoggedIn);
 router.delete('*', isLoggedIn);
 
@@ -29,7 +31,17 @@ router.delete('*', isLoggedIn);
 
 router.route('/')
     .get(getTrips)
-    .post(postTrip)
+    .post(verifyToken, (req, res, next) => {
+        jwt.verify(req.token, '89786fyvibounih08g7', {}, (err, authData) => {
+            if(err) {
+                return res.send("Forbidden")
+            } else {
+                console.log("TOKEN_DATA: ", authData)
+                return next();
+            }
+        })
+    } ,postTrip)
+    // .post(postTrip)
 
 router.route('/:id')
     .get(getTrip)
