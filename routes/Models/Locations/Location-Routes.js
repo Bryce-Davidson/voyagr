@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-// const { isLoggedIn } = require('../../../util/auth/auth-status')
+const verifyToken = require('../../../util/middleware/auth/verifyToken');
+const validateToken = require('../../../util/middleware/auth/validateToken');
+const mountUser     = require('../../../util/middleware/auth/mountUser');
 
 const { 
   getLocations,
@@ -17,9 +19,13 @@ const {
   commentLocation
 } = require('../../../controllers/models/Locations/location-controllers').LocationMeta
 
-// router.post('*', isLoggedIn);
-// router.put('*', isLoggedIn);
-// router.delete('*', isLoggedIn);
+const authValidation = [verifyToken, validateToken]
+const mountUserId  = [mountUser, validateToken]
+
+router.get('*', mountUserId)
+router.post('*', authValidation);
+router.put('*', authValidation);
+router.delete('*', authValidation);
 
 router.route('/')
   .get(getLocations)

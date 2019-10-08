@@ -1,7 +1,8 @@
 const express        = require('express');
 const router         = express.Router();
-// const { isLoggedIn } = require('../../../util/auth/auth-status');
-// const Day            = require('../../../models/Day/DaySchema');
+const verifyToken = require('../../../util/middleware/auth/verifyToken');
+const validateToken = require('../../../util/middleware/auth/validateToken');
+const mountUser     = require('../../../util/middleware/auth/mountUser');
 
 const {
     getDays,
@@ -24,9 +25,13 @@ const {
     getDayLikes
 } = require('../../../controllers/Models/Days/Day-Controller').dayMeta;
 
-// router.post('*', isLoggedIn)
-// router.put('*', isLoggedIn)
-// router.delete('*', isLoggedIn)
+const authValidation = [verifyToken, validateToken]
+const mountUserId  = [mountUser, validateToken]
+
+router.get('*', mountUserId)
+router.post('*', authValidation)
+router.put('*', authValidation)
+router.delete('*', authValidation)
 
 router.route('/')
     .get(getDays)

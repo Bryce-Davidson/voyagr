@@ -1,8 +1,9 @@
-module.exports =  async function verifyToken(req, res, next) {
+module.exports =  async function mountUser(req, res, next) {
+    // GET TOKEN FROM HEADER
     const token = req.headers['authorization']
     if (typeof token !== 'undefined') {
         req.token = token;
         return next();
-    } else 
-        return res.status(401).json({msg: "Not authorized."})
+    } else
+        next();
 }

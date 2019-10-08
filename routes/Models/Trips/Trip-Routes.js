@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const verifyToken = require('../../../util/middleware/auth/verifyToken');
 const validateToken = require('../../../util/middleware/auth/validateToken');
+const mountUser     = require('../../../util/middleware/auth/mountUser');
 
 const { 
     getTrips, 
@@ -23,8 +24,10 @@ const {
     getTripLikes
 } = require('../../../controllers/Models/Trip/trip-controller').tripMeta;
 
-let authValidation = [verifyToken, validateToken]
+const authValidation = [verifyToken, validateToken]
+const mountUserId  = [mountUser, validateToken]
 
+router.get('*', mountUserId)
 router.post('*', authValidation);
 router.put('*', authValidation);
 router.delete('*', authValidation);
