@@ -162,7 +162,7 @@ describe('/trips - OWNER - Routes ----------------------------------------------
 
     it('Should add a comment to a trip by id', (done) => {
         agent
-            .post(`trips/${TEST_TRIP_ID}/comments`)
+            .post(`/trips/${TEST_TRIP_ID}/comments`)
             .send({
                 commentBody: "this is a test comment and should be deleted",
                 title: "test comment"
@@ -171,6 +171,18 @@ describe('/trips - OWNER - Routes ----------------------------------------------
                 let trip = res.body;
                 trip.meta.numberOfComments.should.equal(1);
                 trip.comments.length.should.equal(1);
+                done()
+            })
+    })
+
+    it('Should get a trips comments', (done) => {
+        agent
+            .get(`/trips/${TEST_TRIP_ID}/comments`)
+            .expect(201)
+            .end((err, res) => {
+                let comments = res.body;
+                comments.length.should.equal(1)
+                done()
             })
     })
 

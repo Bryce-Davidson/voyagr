@@ -1,6 +1,7 @@
 const Trip = require('../../../models/Trip/TripSchema');
 const Day = require('../../../models/Day/DaySchema');
 const User = require('../../../models/User/UserSchema');
+const Comment = require('../../../models/Comment/CommentSchema');
 const { isOwner } = require('../../../util/auth/instance-validation');
 
 const ObjectId = require('mongoose').Types.ObjectId;
@@ -228,7 +229,7 @@ const postCommentTrip = async function (req, res, next) {
             $inc: { 'meta.numberOfComments': 1 },
             $push: { comments: savedComment._id }
         }, { new: true });
-        return res.send(tripWithComment)
+        return res.status(201).send(tripWithComment)
     } catch (err) { next(err) };
 }
 
