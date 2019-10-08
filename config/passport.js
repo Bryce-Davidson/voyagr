@@ -2,6 +2,8 @@ const User               = require('../models/User/UserSchema');
 const passport           = require('passport');
 var LocalStrategy        = require('passport-local').Strategy;
 
+// TODO: strip out passport
+
 passport.serializeUser((user, done) => {
     done(null, user.id);
 });

@@ -1,7 +1,7 @@
 const passport                = require('../../config/passport');
 var express                   = require('express');
 var router                    = express.Router();
-const { loggedInRedirect } = require('../../util/auth/auth-status');
+// const { loggedInRedirect } = require('../../util/auth/auth-status');
 const {
   signup,
   login
@@ -16,7 +16,7 @@ router.route('/signup')
   }));
 
 router.route('/login')
-.get(loggedInRedirect, login.get)
+// .get(loggedInRedirect, login.get)
 .post(login.post)
 // .post(passport.authenticate('local-login', {
 //     successRedirect : '/',

@@ -1,7 +1,7 @@
 const express        = require('express');
 const router         = express.Router();
-const { isLoggedIn } = require('../../../util/auth/auth-status');
-const Day            = require('../../../models/Day/DaySchema');
+// const { isLoggedIn } = require('../../../util/auth/auth-status');
+// const Day            = require('../../../models/Day/DaySchema');
 
 const {
     getDays,
@@ -24,9 +24,9 @@ const {
     getDayLikes
 } = require('../../../controllers/Models/Days/Day-Controller').dayMeta;
 
-router.post('*', isLoggedIn)
-router.put('*', isLoggedIn)
-router.delete('*', isLoggedIn)
+// router.post('*', isLoggedIn)
+// router.put('*', isLoggedIn)
+// router.delete('*', isLoggedIn)
 
 router.route('/')
     .get(getDays)

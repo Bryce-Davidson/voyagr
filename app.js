@@ -9,6 +9,7 @@ const helmet           = require('helmet');
 const db               = require('./database');
 const { SESSION_KEYS } = require('./config/keys')
 
+// TODO: strip out passport
 
 // APP GLOBALS
 const oneDay = 86400000;

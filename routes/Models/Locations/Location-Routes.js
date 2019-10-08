@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { isLoggedIn } = require('../../../util/auth/auth-status')
+// const { isLoggedIn } = require('../../../util/auth/auth-status')
 
 const { 
   getLocations,
@@ -17,9 +17,9 @@ const {
   commentLocation
 } = require('../../../controllers/models/Locations/location-controllers').LocationMeta
 
-router.post('*', isLoggedIn);
-router.put('*', isLoggedIn);
-router.delete('*', isLoggedIn);
+// router.post('*', isLoggedIn);
+// router.put('*', isLoggedIn);
+// router.delete('*', isLoggedIn);
 
 router.route('/')
   .get(getLocations)

@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { isLoggedIn } = require('../../../util/auth/auth-status');
-const jwt = require('jsonwebtoken');
-const verifyToken    = require('../../../util/middleware/verifyToken');
+const verifyToken = require('../../../util/middleware/auth/verifyToken');
+const validateToken = require('../../../util/middleware/auth/validateToken');
+
 const { 
     getTrips, 
     postTrip 
@@ -23,25 +23,17 @@ const {
     getTripLikes
 } = require('../../../controllers/Models/Trip/trip-controller').tripMeta;
 
-// router.post('*', isLoggedIn);
-router.put('*', isLoggedIn);
-router.delete('*', isLoggedIn);
+let authValidation = [verifyToken, validateToken]
+
+router.post('*', authValidation);
+router.put('*', authValidation);
+router.delete('*', authValidation);
 
 // CURRENTLY ON - /trips
 
 router.route('/')
     .get(getTrips)
-    .post(verifyToken, (req, res, next) => {
-        jwt.verify(req.token, '89786fyvibounih08g7', {}, (err, authData) => {
-            if(err) {
-                return res.send("Forbidden")
-            } else {
-                console.log("TOKEN_DATA: ", authData)
-                return next();
-            }
-        })
-    } ,postTrip)
-    // .post(postTrip)
+    .post(postTrip)
 
 router.route('/:id')
     .get(getTrip)
