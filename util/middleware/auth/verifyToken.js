@@ -4,5 +4,5 @@ module.exports =  async function verifyToken(req, res, next) {
         req.token = token;
         return next();
     } else 
-        return res.status(401).json({msg: "Not authorized."})
+        return res.status(401).json({msg: "User not logged in"})
 }

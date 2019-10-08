@@ -1,11 +1,9 @@
-const passport                = require('../../config/passport');
-var express                   = require('express');
-var router                    = express.Router();
-// const { loggedInRedirect } = require('../../util/auth/auth-status');
+const express                   = require('express');
+const router                    = express.Router();
 const {
   signup,
   login
-  }                           = require('../../controllers/Auth/auth-controller');
+}                               = require('../../controllers/Auth/auth-controller');
 
 router.route('/signup')
   .get(signup.get)

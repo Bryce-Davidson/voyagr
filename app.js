@@ -1,9 +1,6 @@
 const express          = require('express');
-const passport         = require('passport');
 const bodyParser       = require('body-parser');
 const cookieParser     = require('cookie-parser');
-const session          = require('express-session');
-const MongoStore       = require('connect-mongo')(session);
 const morgan           = require('morgan');
 const helmet           = require('helmet');
 const db               = require('./database');
@@ -23,20 +20,6 @@ app.use(morgan('dev'));
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(session({
-  name: "ml-co923bk-we23",
-  secret: SESSION_KEYS,
-  resave: false,
-  saveUninitialized: true,
-  store: new MongoStore({ mongooseConnection: db }),
-  cookie: {
-    maxAge: oneDay,
-    httpOnly: true
-  }
-}));
-app.use(passport.initialize());
-app.use(passport.session());
-
 
 // ROUTES ---------------------------------------------------------------------
 app.use('/', require('./routes/Auth/auth-route'));
