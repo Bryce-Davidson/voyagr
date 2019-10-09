@@ -22,6 +22,7 @@ const {
     likeDay,
     postCommentDay,
     getDayComments,
+    deleteCommentDay,
     getDayLikes
 } = require('../../../controllers/Models/Days/Day-Controller').dayMeta;
 
@@ -50,6 +51,7 @@ router.route('/:id/locations')
 router.route('/:id/comments')
     .get(getDayComments)
     .post(postCommentDay)
+    .delete(deleteCommentDay)
 
 router.route('/:id/likes')
     .get(getDayLikes)

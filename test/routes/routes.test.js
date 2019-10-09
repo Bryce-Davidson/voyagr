@@ -400,6 +400,45 @@ describe('/days - OWNER - Routes -----------------------------------------------
             })
     })
 
+    it('Should add a comment to a day by id', (done) => {
+        agent
+            .post(`/days/${TEST_DAY_ID}/comments`)
+            .send({
+                commentBody: "this is a test comment and should be deleted",
+                title: "test comment"
+            })
+            .end((err, res) => {
+                let day = res.body;
+                TEST_DAY_COMMENT_1 = day.comments[0]
+                day.meta.numberOfComments.should.equal(1);
+                day.comments.length.should.equal(1);
+                done()
+            })
+    })
+
+    it('Should get a days comments', (done) => {
+        agent
+            .get(`/days/${TEST_DAY_ID}/comments`)
+            .expect(201)
+            .end((err, res) => {
+                let comments = res.body;
+                comments.length.should.equal(1)
+                done()
+            })
+    })
+
+    it('Should delete a comment by id', (done) => {
+        agent
+            .delete(`/days/${TEST_DAY_ID}/comments`)
+            .query({commentid: TEST_DAY_COMMENT_1})
+            .expect(200)
+            .end((err, res) => {
+                let day = res.body;
+                day.comments.length.should.equal(0)
+                done()
+            })
+    })
+
     it('Should add a location to a day', (done) => {
         agent
             .put(`/days/${TEST_DAY_ID}/locations`)

@@ -2,6 +2,7 @@ const User = require('../../../models/User/UserSchema');
 const Day = require('../../../models/Day/DaySchema');
 const Location = require('../../../models/Location/LocationSchema');
 const ObjectId = require('mongoose').Types.ObjectId;
+const Comment = require('../../../models/Comment/CommentSchema');
 
 const unauthorizedMsg = require('../../../util/http-response/unauthorized-msg');
 
@@ -224,6 +225,19 @@ const postCommentDay = async function (req, res, next) {
     } catch(err) { next(err) }
 }
 
+const deleteCommentDay = async function (req, res, next) {
+    let postid = req.params.id;
+    let commentid = req.query.commentid;
+    try {
+        let dayWithCommentRemoved = await Day.findByIdAndUpdate(postid, { 
+            $pull: { comments: commentid }, 
+            $inc: {'meta.numberOfComments': -1}}, 
+            {new: true});
+        await Comment.findByIdAndDelete(commentid);
+        return res.send(dayWithCommentRemoved);
+    } catch (err) { next(err) };
+}
+
 module.exports = {
     daysRoot: {
         getDays,
@@ -242,6 +256,7 @@ module.exports = {
         likeDay,
         postCommentDay,
         getDayComments,
+        deleteCommentDay,
         getDayLikes
     }
 };
