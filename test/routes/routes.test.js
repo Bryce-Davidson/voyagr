@@ -115,7 +115,7 @@ describe('/trips - OWNER - Routes ----------------------------------------------
 
     it('Should add a day to the trip', (done) => {
         agent
-            .post(`/trips/${TEST_TRIP_ID}/days`)
+            .put(`/trips/${TEST_TRIP_ID}/days`)
             .query({ dayid: TEST_DAY_ID })
             .expect(200)
             .end((err, res) => {
@@ -169,7 +169,7 @@ describe('/trips - OWNER - Routes ----------------------------------------------
             })
             .end((err, res) => {
                 let trip = res.body;
-                TEST_TRIP_COMMENT_1 = trip.comments[0].id;
+                TEST_TRIP_COMMENT_1 = trip.comments[0]
                 trip.meta.numberOfComments.should.equal(1);
                 trip.comments.length.should.equal(1);
                 done()
@@ -183,6 +183,18 @@ describe('/trips - OWNER - Routes ----------------------------------------------
             .end((err, res) => {
                 let comments = res.body;
                 comments.length.should.equal(1)
+                done()
+            })
+    })
+
+    it('Should delete a comment by id', (done) => {
+        agent
+            .delete(`/trips/${TEST_TRIP_ID}/comments`)
+            .query({commentid: TEST_TRIP_COMMENT_1})
+            .expect(200)
+            .end((err, res) => {
+                let trip = res.body;
+                trip.comments.length.should.equal(0)
                 done()
             })
     })
@@ -242,7 +254,7 @@ describe('/trips - VIEWER - Routes ---------------------------------------------
 
     it('Should -NOT- add a day to the trip', (done) => {
         agent_2
-            .post(`/trips/${TEST_TRIP_ID}/days`)       
+            .put(`/trips/${TEST_TRIP_ID}/days`)       
             .query({ dayid: TEST_DAY_ID })
             .expect(401, done)
     })
@@ -272,6 +284,22 @@ describe('/trips - VIEWER - Routes ---------------------------------------------
             .end((err, res) => {
                 let trip = res.body;
                 trip.meta.viewCount.should.equal(1)
+                done()
+            })
+    })
+
+    it('Should add a comment to a trip by id', (done) => {
+        agent_2
+            .post(`/trips/${TEST_TRIP_ID}/comments`)
+            .send({
+                commentBody: "this is a test comment and should be deleted",
+                title: "test comment"
+            })
+            .end((err, res) => {
+                let trip = res.body;
+                TEST_TRIP_COMMENT_2 = trip.comments[0]
+                trip.meta.numberOfComments.should.equal(1);
+                trip.comments.length.should.equal(1);
                 done()
             })
     })
@@ -374,7 +402,7 @@ describe('/days - OWNER - Routes -----------------------------------------------
 
     it('Should add a location to a day', (done) => {
         agent
-            .post(`/days/${TEST_DAY_ID}/locations`)
+            .put(`/days/${TEST_DAY_ID}/locations`)
             .query({locationid:locationid})
             .expect(200)
             .end((err, res) => {
@@ -443,7 +471,7 @@ describe('/days - VIEWER - Routes ----------------------------------------------
 
     it('Should -NOT- add a location to the day', (done) => {
         agent_2
-            .post(`/days/${TEST_DAY_ID}/locations`)            
+            .put(`/days/${TEST_DAY_ID}/locations`)            
             .query({ locationid: TEST_LOCATION_ID })
             .expect(401, done)
     })

@@ -14,7 +14,7 @@ async function deleteUndefinedKeys(obj) {
     }
 }
 
-async function qurantineUpdate(update) { 
+async function generateUpdate(update) { 
     // key selection
     let qurantined = ({name, description, budget, settings} = update, {name, description, budget, settings})
     if (qurantined.name)
@@ -25,4 +25,4 @@ async function qurantineUpdate(update) {
     return qurantined;
 }
 
-module.exports = qurantineUpdate;
+module.exports = generateUpdate;

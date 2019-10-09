@@ -21,6 +21,7 @@ const {
     likeTrip,
     postCommentTrip,
     getTripComments,
+    deleteCommentTrip,
     getTripLikes
 } = require('../../../controllers/Models/Trip/trip-controller').tripMeta;
 
@@ -45,13 +46,14 @@ router.route('/:id')
 
 router.route('/:id/days')
     .get(getTripDays)
-    .post(addDayToTrip)
+    .put(addDayToTrip)
     .delete(deleteDaysFromTrip)
     // .put('OWNER - change the status of the days in the trip')
 
 router.route('/:id/comments')
     .get(getTripComments)
     .post(postCommentTrip)
+    .delete(deleteCommentTrip)
 
 router.route('/:id/likes')
     .get(getTripLikes)

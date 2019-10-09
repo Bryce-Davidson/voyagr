@@ -1,15 +1,16 @@
 const User = require('../../../models/User/UserSchema');
 const Day = require('../../../models/Day/DaySchema');
 const Location = require('../../../models/Location/LocationSchema');
-const { isOwner } = require('../../../util/auth/instance-validation');
-const flatten = require('flat');
-
 const ObjectId = require('mongoose').Types.ObjectId;
 
 const unauthorizedMsg = require('../../../util/http-response/unauthorized-msg');
 
 const slugify = require('../../../util/local-functions/slugify-string')
 const recursiveGenerateUniqueUrlid = require('../../../util/database/generate-unique-urlid');
+const generateUpdate = require('../../../util/local-functions/quarantine-update');
+const flatten = require('flat');
+
+const { isOwner } = require('../../../util/auth/instance-validation');
 
 const {
     day_Project,
@@ -84,10 +85,12 @@ const getDay = async function (req, res, next) {
 const updateDay = async function (req, res, next) {
     let dayid = req.params.id;
     let update = flatten(req.body);
-    if (update.name)
-        update.slug = await slugify(update.name);
-
     try {
+        update = await generateUpdate(update);
+        if (update.name) {
+            updatedSlug = await slugify(update.name);
+            update.slug = updatedSlug;
+        };
         let dayTobeModified = await Day.findById(dayid);
         if (!dayTobeModified) return notExistMsg('Day', res);
         if (isOwner(dayTobeModified, req.user)) {
@@ -148,8 +151,8 @@ const addLocationToDay = async function (req, res, next) {
 
 const deleteLocationsFromDay = async function (req, res, next) {
     let dayid = req.params.id;
+    if (!req.query.locationids) return res.status(400).json({ msg: 'Please Provide at least one locations.' });
     let locationids = req.query.locationids.split(',');
-    if (!locationids) return res.status(400).json({ msg: 'Please Provide at least one locations.' });
     locationids.forEach(id => {
         if (!ObjectId.isValid(id))
             return res.status(422).json({ msg: "Invalid location id.", id });

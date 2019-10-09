@@ -4,7 +4,7 @@ const arrayLengthVal = require('../validators/array-length-validator');
 const DaySchema = new mongoose.Schema({
   name: { type: String, required: true, maxlength: [100, 'Name must be less than 100 characters'] },
   slug: { type: String, index: true, required: true },
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', immutable: true },
   trips: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Trip' }],
   locations: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Location' }],
   description: { type: String, required: true, maxlength: [500, 'Description must be less than 500 characters'] },

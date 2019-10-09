@@ -3,6 +3,7 @@ const User = require('../../../models/User/UserSchema');
 const { isOwner } = require('../../../util/auth/instance-validation');
 const unauthorizedMsg = require('../../../util/http-response/unauthorized-msg');
 
+const generateUpdate = require('../../../util/local-functions/quarantine-update');
 
 const recursiveGenerateUniqueUrlid = require('../../../util/database/generate-unique-urlid');
 const slugify = require('../../../util/local-functions/slugify-string');
@@ -15,7 +16,6 @@ const {
 } = require('../../../modules/aggregation/Location/location-stages');
 
 const Pipeline = require('../../../modules/aggregation/pipeline-queue')
-
 const flatten = require('flat');
 
 const getLocations = async function (req, res, next) {
@@ -81,9 +81,11 @@ const updateLocation = async function (req, res, next) {
   let locationid = req.params.id;
   let update = flatten(req.body);
   try {
-    if (update.name)
-      update.slug = await slugify(update.name);
-
+    update = await generateUpdate(update);
+    if (update.name) {
+        updatedSlug = await slugify(update.name);
+        update.slug = updatedSlug;
+    };
     let locationTobeModified = await Location.findById(locationid);
     if (!locationTobeModified) return notExistMsg('Location', res);
     if (isOwner(locationTobeModified, req.user)) {

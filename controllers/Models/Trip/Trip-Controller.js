@@ -8,6 +8,7 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const flatten = require('flat');
 const recursiveGenerateUniqueUrlid = require('../../../util/database/generate-unique-urlid');
 const slugify = require('../../../util/local-functions/slugify-string');
+const generateUpdate = require('../../../util/local-functions/quarantine-update');
 
 const resourceDoesNotExistMsg = require('../../../util/http-response/resource-does-not-exist-msg');
 const unauthorizedMsg = require('../../../util/http-response/unauthorized-msg');
@@ -77,7 +78,7 @@ const getTrip = async function (req, res, next) {
         if (!trip.settings.public)
             return unauthorizedMsg(res);
         else {
-            let tripWithNewView = await Trip.findByIdAndUpdate(tripid, { $inc: { 'meta.viewCount': 1 } }, {new:true});
+            let tripWithNewView = await Trip.findByIdAndUpdate(tripid, { $inc: { 'meta.viewCount': 1 } }, { new: true });
             return res.send(tripWithNewView);
         }
     } catch (err) { next(err) }
@@ -86,15 +87,12 @@ const getTrip = async function (req, res, next) {
 const updateTrip = async function (req, res, next) {
     let tripid = req.params.id;
     let update = flatten(req.body);
-
-    //TODO: implement quarantine update
-
-    if (update.name) {
-        updatedSlug = await slugify(update.name);      
-        update.slug = updatedSlug;
-    }
-
     try {
+        update = await generateUpdate(update);
+        if (update.name) {
+            updatedSlug = await slugify(update.name);
+            update.slug = updatedSlug;
+        };
         let tripTobeModified = await Trip.findById(tripid);
         if (!tripTobeModified) return resourceDoesNotExistMsg('Trip', res);
         if (isOwner(tripTobeModified, req.user)) {
@@ -202,6 +200,10 @@ const likeTrip = async function (req, res, next) {
     }
 }
 
+// const deleteLikeTrip = async function(req, res, next) {
+
+// }
+
 const getTripComments = async function (req, res, next) {
     let tripid = req.params.id;
     try {
@@ -233,6 +235,19 @@ const postCommentTrip = async function (req, res, next) {
     } catch (err) { next(err) };
 }
 
+const deleteCommentTrip = async function (req, res, next) {
+    let postid = req.params.id;
+    let commentid = req.query.commentid;
+    try {
+        let tripWithCommentRemoved = await Trip.findByIdAndUpdate(postid, { 
+            $pull: { comments: commentid }, 
+            $inc: {'meta.numberOfComments': -1}}, 
+            {new: true});
+        await Comment.findByIdAndDelete(commentid);
+        return res.send(tripWithCommentRemoved);
+    } catch (err) { next(err) };
+}
+
 module.exports = {
     tripsRoot: {
         getTrips,
@@ -252,6 +267,7 @@ module.exports = {
         postCommentTrip,
         getTripLikes,
         getTripComments,
+        deleteCommentTrip,
         changeDaysPublicStatus
     }
 };

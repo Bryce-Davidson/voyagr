@@ -5,7 +5,7 @@ const arrayLengthVal      = require('../validators/array-length-validator');
 const LocationSchema = new mongoose.Schema({
   name: {type: String, required: true},
   slug: {type: String, index: true, required: true},
-  user: {type: mongoose.Schema.Types.ObjectId, ref: 'User'},
+  user: {type: mongoose.Schema.Types.ObjectId, ref: 'User', immutable: true},
   trips: [{type: mongoose.Schema.Types.ObjectId, ref: 'Trip'}],
   days: [{type: mongoose.Schema.Types.ObjectId, ref: 'Day'}],
   description: String,

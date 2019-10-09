@@ -44,7 +44,7 @@ router.route('/:id')
 
 router.route('/:id/locations')
     .get(getDayLocations)
-    .post(addLocationToDay)
+    .put(addLocationToDay)
     .delete(deleteLocationsFromDay)
 
 router.route('/:id/comments')
