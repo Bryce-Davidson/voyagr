@@ -1,5 +1,6 @@
 const Location = require('../../../models/Location/LocationSchema');
 const User = require('../../../models/User/UserSchema');
+const Comment = require('../../../models/Comment/CommentSchema');
 const { isOwner } = require('../../../util/auth/instance-validation');
 const unauthorizedMsg = require('../../../util/http-response/unauthorized-msg');
 
@@ -114,8 +115,18 @@ const deleteLocation = async function (req, res, next) {
   } catch (err) { next(err) };
 }
 
-// TODO: integrate owner for likes
-// TODO: integrate get likes from days or trips
+const getlocationLikes = async function (req, res, next) {
+  let locationid = req.params.id;
+  try {
+      let location = await Location.findById(locationid).populate('likes')
+          .select('likes')
+          .select('-_id -user');
+      if (!location) return resourceDoesNotExistMsg('location', res);
+      if (!location.likes) return res.status(404).json({ msg: "location currently has 0 likes" });
+      else
+          return res.send(location.likes);
+  } catch (err) { next(err) };
+}
 
 const likeLocation = async function (req, res, next) {
   let locationid = req.params.id;
@@ -129,21 +140,48 @@ const likeLocation = async function (req, res, next) {
     }
 }
 
-const commentLocation = async function (req, res, next) {
-  let postid = req.params.id;
-  let comment = new Comment({
-    'locationid': postid,
-    "user": req.user,
-    "body": req.body.body
-  });
+const getLocationComments = async function (req, res, next) {
+  let locationid = req.params.id;
   try {
-    let savedComment = await comment.save();
-    let locationWithComment = await Location.findByIdAndUpdate(req.params.id, {
-      $inc: { 'meta.numberOfComments': 1 },
-      $push: { comments: savedComment._id }
-    }, { new: true });
-    return res.send(locationWithComment)
-  } catch (err) { next(err) }
+      let location = await Location.findById(locationid).populate('comments')
+          .select('comments')
+          .select('-_id -user');
+      if (!location) return resourceDoesNotExistMsg('location', res);
+      if (!location.comments) return res.status(404).json({ msg: "location currently has 0 comments" });
+      else
+          return res.send(location.comments);
+  } catch (err) { next(err) };
+}
+
+const postCommentLocation = async function (req, res, next) {
+  let postid = req.params.id;
+  let { commentBody, title } = req.body;
+  try {
+      let savedComment = await new Comment({
+          'locationid': postid,
+          "user": req.user,
+          "body": commentBody,
+          title
+      }).save();
+      let locationWithComment = await Location.findByIdAndUpdate(req.params.id, {
+          $inc: { 'meta.numberOfComments': 1 },
+          $push: { comments: savedComment._id }
+      }, { new: true });
+      return res.status(201).send(locationWithComment)
+  } catch (err) { next(err) };
+}
+
+const deleteCommentLocation = async function (req, res, next) {
+  let postid = req.params.id;
+  let commentid = req.query.commentid;
+  try {
+      let locationWithCommentRemoved = await Location.findByIdAndUpdate(postid, { 
+          $pull: { comments: commentid }, 
+          $inc: {'meta.numberOfComments': -1}}, 
+          {new: true});
+      await Comment.findByIdAndDelete(commentid);
+      return res.send(locationWithCommentRemoved);
+  } catch (err) { next(err) };
 }
 
 module.exports = {
@@ -158,6 +196,9 @@ module.exports = {
   },
   LocationMeta: {
     likeLocation,
-    commentLocation
+    getlocationLikes,
+    getLocationComments,
+    postCommentLocation,
+    deleteCommentLocation
   }
 };

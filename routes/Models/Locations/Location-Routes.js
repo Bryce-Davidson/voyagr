@@ -16,7 +16,10 @@ const {
 
 const {
   likeLocation,
-  commentLocation
+  getlocationLikes,
+  postCommentLocation,
+  getLocationComments,
+  deleteCommentLocation
 } = require('../../../controllers/models/Locations/location-controllers').LocationMeta
 
 const authValidation = [verifyToken, validateToken]
@@ -36,14 +39,15 @@ router.route('/:id')
   .put(updateLocation)
   .delete(deleteLocation)
 
-// router.route('/:id/comments')
-    // .get('get all posts comments')
-    // .post('add new comment')
+router.route('/:id/comments')
+    .get(getLocationComments)
+    .post(postCommentLocation)
+    .delete(deleteCommentLocation)
 
 router.route('/:id/likes')
-    // .get()
     .put(likeLocation)
-    // .delete('unlike post')
+    .get(getlocationLikes)
+    // .delete('unlike pSost')
 
 
 module.exports = router;

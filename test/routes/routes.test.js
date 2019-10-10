@@ -575,7 +575,7 @@ describe('/days - VIEWER - Routes ----------------------------------------------
 })
 
 
-//  LOCATION TESTING ------------------------------------------------------
+//  LOCATION OWNER TESTING ------------------------------------------------------
 
 describe('/locations - OWNER - Routes --------------------------------------------------- \n ', () => {
     it("Should create a location", (done) => {
@@ -628,6 +628,45 @@ describe('/locations - OWNER - Routes ------------------------------------------
             .end((err, res) => {
                 let location = res.body;
                 location.meta.viewCount.should.equal(0)
+                done()
+            })
+    })
+
+    it('Should add a comment to a location by id', (done) => {
+        agent
+            .post(`/locations/${TEST_LOCATION_ID}/comments`)
+            .send({
+                commentBody: "this is a test comment and should be deleted",
+                title: "test comment"
+            })
+            .end((err, res) => {
+                let location = res.body;
+                TEST_LOCATION_COMMENT_1 = location.comments[0]
+                location.meta.numberOfComments.should.equal(1);
+                location.comments.length.should.equal(1);
+                done()
+            })
+    })
+
+    it('Should get a locations comments', (done) => {
+        agent
+            .get(`/locations/${TEST_LOCATION_ID}/comments`)
+            .expect(201)
+            .end((err, res) => {
+                let comments = res.body;
+                comments.length.should.equal(1)
+                done()
+            })
+    })
+
+    it('Should delete a comment by id', (done) => {
+        agent
+            .delete(`/locations/${TEST_LOCATION_ID}/comments`)
+            .query({commentid: TEST_LOCATION_COMMENT_1})
+            .expect(200)
+            .end((err, res) => {
+                let location = res.body;
+                location.comments.length.should.equal(0)
                 done()
             })
     })
