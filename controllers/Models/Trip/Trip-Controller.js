@@ -194,7 +194,6 @@ const likeTrip = async function (req, res, next) {
         let trip_to_be_liked = await Trip.findById(tripid);
         if (!trip_to_be_liked) return resourceDoesNotExistMsg('Trip', res);
         let userHasLiked = (~trip_to_be_liked.meta.userLikeReference.indexOf(String(userid)))
-        let owner = isOwner(trip_to_be_liked, req.user);
         if (isOwner(trip_to_be_liked, req.user) || userHasLiked)
             return res.send(trip_to_be_liked)
         let liked_trip_with_new_reference = await Trip.findByIdAndUpdate(tripid, {
@@ -206,9 +205,23 @@ const likeTrip = async function (req, res, next) {
     } catch (err) { next(err) }
 }
 
-// const deleteLikeTrip = async function(req, res, next) {
-
-// }
+const deleteLikeTrip = async function(req, res, next) {
+    let userid = req.user;
+    let tripid = req.params.id
+    try {
+        let trip_to_be_unliked = await Trip.findById(tripid);
+        if (!trip_to_be_unliked) return resourceDoesNotExistMsg('Trip', res);
+        let userHasLiked = (~trip_to_be_unliked.meta.userLikeReference.indexOf(String(userid)))
+        if (isOwner(trip_to_be_unliked, req.user) || !userHasLiked)
+            return res.send(trip_to_be_unliked)
+        let unliked_trip_without_user_reference = await Trip.findByIdAndUpdate(tripid, {
+            $inc: { 'meta.numberOflikes': -1 },
+            $pull: { 'meta.userLikeReference': userid }
+        },
+            { new: true })
+        return res.send(unliked_trip_without_user_reference);
+    } catch (err) { next(err) }
+}
 
 const getTripComments = async function (req, res, next) {
     let tripid = req.params.id;
@@ -273,6 +286,7 @@ module.exports = {
         likeTrip,
         postCommentTrip,
         getTripLikes,
+        deleteLikeTrip,
         getTripComments,
         deleteCommentTrip,
         changeDaysPublicStatus

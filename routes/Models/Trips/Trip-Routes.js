@@ -19,10 +19,11 @@ const {
 
 const {
     likeTrip,
+    getTripLikes,
+    deleteLikeTrip,
     postCommentTrip,
     getTripComments,
     deleteCommentTrip,
-    getTripLikes
 } = require('../../../controllers/Models/Trip/trip-controller').tripMeta;
 
 const authValidation = [verifyToken, validateToken]
@@ -58,6 +59,6 @@ router.route('/:id/comments')
 router.route('/:id/likes')
     .get(getTripLikes)
     .put(likeTrip)
-    // .delete('unlike post')
+    .delete(deleteLikeTrip)
 
 module.exports = router;
