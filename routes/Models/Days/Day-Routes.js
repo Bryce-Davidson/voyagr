@@ -21,7 +21,7 @@ const {
 const {
     likeDay,
     getDayLikes,
-    deleteLikeday,
+    deleteLikeDay,
     postCommentDay,
     getDayComments,
     deleteCommentDay,
@@ -57,6 +57,6 @@ router.route('/:id/comments')
 router.route('/:id/likes')
     .get(getDayLikes)
     .put(likeDay)
-    .delete(deleteLikeday)
+    .delete(deleteLikeDay)
 
 module.exports = router;
