@@ -277,6 +277,18 @@ describe('/trips - VIEWER - Routes ---------------------------------------------
             })
     })
 
+    it("Should UNLIKE a trip by id", (done) => {
+        agent_2
+            .delete(`/trips/${TEST_TRIP_ID}/likes`)
+            .expect(200)
+            .end((err, res) => {
+                let trip = res.body;
+                trip.meta.numberOflikes.should.equal(0)
+                trip.meta.userLikeReference.length.should.equal(0)
+                done()
+            })
+    })
+
     it('Should VIEW a trip by id', (done) => {
         agent_2
             .get(`/trips/${TEST_TRIP_ID}`)
@@ -384,7 +396,7 @@ describe('/days - OWNER - Routes -----------------------------------------------
             .expect(200)
             .end((err, res) => {
                 let day = res.body;
-                day.meta.likes.should.equal(0)
+                day.meta.numberOflikes.should.equal(0)
                 done()
             })
     })
@@ -527,11 +539,24 @@ describe('/days - VIEWER - Routes ----------------------------------------------
             .put(`/days/${TEST_DAY_ID}/likes`)
             .expect(200)
             .end((err, res) => {
-                let trip = res.body;
-                trip.meta.likes.should.equal(1)
+                let day = res.body;
+                day.meta.numberOflikes.should.equal(1)
                 done()
             })
     })
+
+    it("Should UNLIKE a day by id", (done) => {
+        agent_2
+            .delete(`/days/${TEST_DAY_ID}/likes`)
+            .expect(200)
+            .end((err, res) => {
+                let day = res.body;
+                day.meta.numberOflikes.should.equal(0)
+                day.meta.userLikeReference.length.should.equal(0)
+                done()
+            })
+    })
+
 
     it('Should VIEW a day by id', (done) => {
         agent_2

@@ -186,7 +186,7 @@ const getTripLikes = async function (req, res, next) {
             return res.send(trip.likes);
     } catch (err) { next(err) };
 }
-// working tests are wrong
+
 const likeTrip = async function (req, res, next) {
     let userid = req.user;
     let tripid = req.params.id
