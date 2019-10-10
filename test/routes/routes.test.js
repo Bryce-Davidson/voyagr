@@ -144,7 +144,7 @@ describe('/trips - OWNER - Routes ----------------------------------------------
             .expect(200)
             .end((err, res) => {
                 let trip = res.body;
-                trip.meta.likes.should.equal(0)
+                trip.meta.numberOflikes.should.equal(0)
                 done()
             })
     })
@@ -272,7 +272,7 @@ describe('/trips - VIEWER - Routes ---------------------------------------------
             .expect(200)
             .end((err, res) => {
                 let trip = res.body;
-                trip.meta.likes.should.equal(1)
+                trip.meta.numberOflikes.should.equal(1)
                 done()
             })
     })

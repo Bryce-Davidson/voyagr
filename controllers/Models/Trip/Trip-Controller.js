@@ -186,18 +186,24 @@ const getTripLikes = async function (req, res, next) {
             return res.send(trip.likes);
     } catch (err) { next(err) };
 }
-
+// working tests are wrong
 const likeTrip = async function (req, res, next) {
-    //TODO: make sure users who have already liked the post can't like again
-    let tripid = req.params.id;
-    let trip_to_be_liked = await Trip.findById(tripid);
-    if (!trip_to_be_liked) return resourceDoesNotExistMsg('Trip', res);
-    if (isOwner(trip_to_be_liked, req.user)) {
-        return res.send(trip_to_be_liked)
-    } else {
-        let liked_trip = await Trip.findByIdAndUpdate(tripid, { $inc: { 'meta.likes': 1 } }, { new: true })
-        return res.send(liked_trip);
-    }
+    let userid = req.user;
+    let tripid = req.params.id
+    try {
+        let trip_to_be_liked = await Trip.findById(tripid);
+        if (!trip_to_be_liked) return resourceDoesNotExistMsg('Trip', res);
+        let userHasLiked = (~trip_to_be_liked.meta.userLikeReference.indexOf(String(userid)))
+        let owner = isOwner(trip_to_be_liked, req.user);
+        if (isOwner(trip_to_be_liked, req.user) || userHasLiked)
+            return res.send(trip_to_be_liked)
+        let liked_trip_with_new_reference = await Trip.findByIdAndUpdate(tripid, {
+            $inc: { 'meta.numberOflikes': 1 },
+            $push: { 'meta.userLikeReference': userid }
+        },
+            { new: true })
+        return res.send(liked_trip_with_new_reference);
+    } catch (err) { next(err) }
 }
 
 // const deleteLikeTrip = async function(req, res, next) {
@@ -239,10 +245,11 @@ const deleteCommentTrip = async function (req, res, next) {
     let postid = req.params.id;
     let commentid = req.query.commentid;
     try {
-        let tripWithCommentRemoved = await Trip.findByIdAndUpdate(postid, { 
-            $pull: { comments: commentid }, 
-            $inc: {'meta.numberOfComments': -1}}, 
-            {new: true});
+        let tripWithCommentRemoved = await Trip.findByIdAndUpdate(postid, {
+            $pull: { comments: commentid },
+            $inc: { 'meta.numberOfComments': -1 }
+        },
+            { new: true });
         await Comment.findByIdAndDelete(commentid);
         return res.send(tripWithCommentRemoved);
     } catch (err) { next(err) };
