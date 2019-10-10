@@ -129,15 +129,39 @@ const getlocationLikes = async function (req, res, next) {
 }
 
 const likeLocation = async function (req, res, next) {
-  let locationid = req.params.id;
-    let location_to_be_liked = await Location.findById(locationid);
-    if (!location_to_be_liked) return resourceDoesNotExistMsg('location', res);
-    if (isOwner(location_to_be_liked, req.user)) {
-        return res.send(location_to_be_liked)
-    } else {
-        let liked_location = await Location.findByIdAndUpdate(locationid, { $inc: { 'meta.likes': 1 } }, { new: true })
-        return res.send(liked_location);
-    }
+  let userid = req.user;
+  let locationid = req.params.id
+  try {
+      let location_to_be_liked = await Location.findById(locationid);
+      if (!location_to_be_liked) return resourceDoesNotExistMsg('location', res);
+      let userHasLiked = (~location_to_be_liked.meta.userLikeReference.indexOf(String(userid)))
+      if (isOwner(location_to_be_liked, req.user) || userHasLiked)
+          return res.send(location_to_be_liked)
+      let liked_location_with_new_reference = await Location.findByIdAndUpdate(locationid, {
+          $inc: { 'meta.numberOflikes': 1 },
+          $push: { 'meta.userLikeReference': userid }
+      },
+          { new: true })
+      return res.send(liked_location_with_new_reference);
+  } catch (err) { next(err) }
+}
+
+const deleteLikeLocation = async function(req, res, next) {
+  let userid = req.user;
+  let locationid = req.params.id
+  try {
+      let location_to_be_unliked = await Location.findById(locationid);
+      if (!location_to_be_unliked) return resourceDoesNotExistMsg('location', res);
+      let userHasLiked = (~location_to_be_unliked.meta.userLikeReference.indexOf(String(userid)))
+      if (isOwner(location_to_be_unliked, req.user) || !userHasLiked)
+          return res.send(location_to_be_unliked)
+      let unliked_location_without_user_reference = await Location.findByIdAndUpdate(locationid, {
+          $inc: { 'meta.numberOflikes': -1 },
+          $pull: { 'meta.userLikeReference': userid }
+      },
+          { new: true })
+      return res.send(unliked_location_without_user_reference);
+  } catch (err) { next(err) }
 }
 
 const getLocationComments = async function (req, res, next) {
@@ -197,6 +221,7 @@ module.exports = {
   LocationMeta: {
     likeLocation,
     getlocationLikes,
+    deleteLikeLocation,
     getLocationComments,
     postCommentLocation,
     deleteCommentLocation

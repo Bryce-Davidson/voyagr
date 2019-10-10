@@ -17,6 +17,7 @@ const {
 const {
   likeLocation,
   getlocationLikes,
+  deleteLikeLocation,
   postCommentLocation,
   getLocationComments,
   deleteCommentLocation
@@ -47,7 +48,7 @@ router.route('/:id/comments')
 router.route('/:id/likes')
     .put(likeLocation)
     .get(getlocationLikes)
-    // .delete('unlike pSost')
+    .delete(deleteLikeLocation)
 
 
 module.exports = router;

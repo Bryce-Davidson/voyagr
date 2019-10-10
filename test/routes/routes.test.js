@@ -641,7 +641,7 @@ describe('/locations - OWNER - Routes ------------------------------------------
             .expect(200)
             .end((err, res) => {
                 let location = res.body;
-                location.meta.likes.should.equal(0)
+                location.meta.numberOflikes.should.equal(0)
                 done()
             })
     })
@@ -751,7 +751,19 @@ describe('/locations - VIEWER - Routes -----------------------------------------
             .expect(200)
             .end((err, res) => {
                 let location = res.body;
-                location.meta.likes.should.equal(1)
+                location.meta.numberOflikes.should.equal(1)
+                done()
+            })
+    })
+
+    it("Should UNLIKE a location by id", (done) => {
+        agent_2
+            .delete(`/locations/${TEST_LOCATION_ID}/likes`)
+            .expect(200)
+            .end((err, res) => {
+                let location = res.body;
+                location.meta.numberOflikes.should.equal(0)
+                location.meta.userLikeReference.length.should.equal(0)
                 done()
             })
     })

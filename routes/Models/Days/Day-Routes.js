@@ -20,11 +20,11 @@ const {
 
 const {
     likeDay,
+    getDayLikes,
     deleteLikeday,
     postCommentDay,
     getDayComments,
     deleteCommentDay,
-    getDayLikes
 } = require('../../../controllers/Models/Days/Day-Controller').dayMeta;
 
 const authValidation = [verifyToken, validateToken]

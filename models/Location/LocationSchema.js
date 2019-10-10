@@ -26,7 +26,8 @@ const LocationSchema = new mongoose.Schema({
     urlid: {type: String, required: true, index: true, immutable: true},
     created: { type : Date, default: Date.now, immutable: true },
     viewCount: {type: Number, default: 0},
-    likes: {type: Number, default: 0},
+    numberOflikes: { type: Number, default: 0 },
+    userLikeReference: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     numberOfComments: {type: Number, default: 0},
     numberOfShares: {type: Number, default: 0}
   },

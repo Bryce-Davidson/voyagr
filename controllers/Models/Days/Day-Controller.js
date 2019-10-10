@@ -188,7 +188,7 @@ const likeDay = async function (req, res, next) {
     let dayid = req.params.id
     try {
         let day_to_be_liked = await Day.findById(dayid);
-        if (!day_to_be_liked) return resourceDoesNotExistMsg('day', res);
+        if (!day_to_be_liked) return resourceDoesNotExistMsg('Day', res);
         let userHasLiked = (~day_to_be_liked.meta.userLikeReference.indexOf(String(userid)))
         if (isOwner(day_to_be_liked, req.user) || userHasLiked)
             return res.send(day_to_be_liked)
@@ -201,12 +201,12 @@ const likeDay = async function (req, res, next) {
     } catch (err) { next(err) }
 }
 
-const deleteLikeday = async function(req, res, next) {
+const deleteLikeDay = async function(req, res, next) {
     let userid = req.user;
     let dayid = req.params.id
     try {
         let day_to_be_unliked = await Day.findById(dayid);
-        if (!day_to_be_unliked) return resourceDoesNotExistMsg('day', res);
+        if (!day_to_be_unliked) return resourceDoesNotExistMsg('Day', res);
         let userHasLiked = (~day_to_be_unliked.meta.userLikeReference.indexOf(String(userid)))
         if (isOwner(day_to_be_unliked, req.user) || !userHasLiked)
             return res.send(day_to_be_unliked)
@@ -278,7 +278,7 @@ module.exports = {
     },
     dayMeta: {
         likeDay,
-        deleteLikeday,
+        deleteLikeDay,
         postCommentDay,
         getDayComments,
         deleteCommentDay,
