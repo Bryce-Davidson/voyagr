@@ -1,6 +1,6 @@
 /**
  * Data-Structure: priority-queue 
- * a pipeline structure for inserting into a mongodb aggregation query
+ * a pipeline structure for inserting into a mongoose API aggregation query
  * @example
  * let pipe = new v_Pipeline(); 
  * let stage = new v_MatchStage().text('Some text for searching');

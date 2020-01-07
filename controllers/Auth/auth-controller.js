@@ -4,8 +4,6 @@ const { SECRET } = require('../../config/keys');
 
 const ONE_DAY_IN_MILLISECONDS = 86400000;
 
-// TODO: SET everything back to useing the authorization header protocol
-
 // SIGNUP ---------------------------------------------------------------------
 const signup = {
   post: async (req, res, next) => {
